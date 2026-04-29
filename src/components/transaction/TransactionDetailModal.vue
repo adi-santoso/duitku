@@ -114,4 +114,25 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'deleted'
+const emit = defineEmits(['close', 'deleted', 'edit'])
+
+const { deleteTransaction } = useTransactions()
+const showImageModal = ref(false)
+
+const getRecurringLabel = (frequency) => {
+  const labels = {
+    daily: 'Harian',
+    weekly: 'Mingguan',
+    monthly: 'Bulanan',
+    yearly: 'Tahunan'
+  }
+  return labels[frequency] || frequency
+}
+
+const handleDelete = () => {
+  if (confirm('Yakin ingin menghapus transaksi ini?')) {
+    deleteTransaction(props.transaction.id)
+    emit('deleted')
+  }
+}
+</script>

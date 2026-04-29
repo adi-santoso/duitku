@@ -238,4 +238,35 @@ const handleSubmit = async () => {
     return
   }
 
-  l
+  loading.value = true
+
+  try {
+    const data = {
+      type: props.type,
+      categoryId: form.value.categoryId,
+      amount: parseFloat(form.value.amount),
+      transactionDate: form.value.transactionDate,
+      description: form.value.description,
+      receiptImage: form.value.receiptImage,
+      isRecurring: form.value.isRecurring,
+      recurringFrequency: form.value.isRecurring ? form.value.recurringFrequency : null
+    }
+
+    if (isEditing.value) {
+      await updateTransaction(props.transaction.id, data)
+    } else {
+      await addTransaction(data)
+    }
+
+    emit('saved')
+  } catch (error) {
+    alert('Gagal menyimpan transaksi: ' + error.message)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadCategories()
+})
+</script>

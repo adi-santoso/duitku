@@ -583,4 +583,28 @@ const handleDeleted = () => {
 const handleEdit = (transaction) => {
   selectedTransaction.value = null
   transactionType.value = transaction.type
-  editingTransaction.value = transact
+  editingTransaction.value = transaction
+  showModal.value = true
+}
+
+const viewTransaction = (transaction) => {
+  selectedTransaction.value = transaction
+}
+
+onMounted(() => {
+  loadCategories()
+  loadTransactions()
+})
+</script>
+
+<style scoped>
+.fab-menu-enter-active,
+.fab-menu-leave-active {
+  transition: opacity 0.2s, transform 0.2s;
+}
+.fab-menu-enter-from,
+.fab-menu-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+</style>
