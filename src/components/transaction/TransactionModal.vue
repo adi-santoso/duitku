@@ -9,9 +9,9 @@
       <div class="sticky top-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-5 py-4 flex items-center justify-between z-10">
         <div>
           <h2 class="text-lg font-bold text-slate-900 dark:text-white">
-            {{ type === 'income' ? 'Tambah Pemasukan' : 'Tambah Pengeluaran' }}
+            {{ isEditing ? 'Edit Transaksi' : (type === 'income' ? 'Tambah Pemasukan' : 'Tambah Pengeluaran') }}
           </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Isi detail transaksi</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ isEditing ? 'Ubah detail transaksi' : 'Isi detail transaksi' }}</p>
         </div>
         <button @click="$emit('close')" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
           <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -154,7 +154,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            {{ loading ? 'Menyimpan...' : 'Simpan' }}
+            {{ loading ? 'Menyimpan...' : (isEditing ? 'Update' : 'Simpan') }}
           </button>
         </div>
       </form>
@@ -174,13 +174,19 @@ const props = defineProps({
     type: String,
     required: true,
     validator: (value) => ['income', 'expense'].includes(value)
+  },
+  transaction: {
+    type: Object,
+    default: null
   }
 })
 
 const emit = defineEmits(['close', 'saved'])
 
+const isEditing = computed(() => !!props.transaction)
+
 const { loadCategories, categories: allCategories } = useCategories()
-const { addTransaction } = useTransactions()
+const { addTransaction, updateTransaction } = useTransactions()
 const { compressImage, validateImage } = useImageCompression()
 
 const loading = ref(false)
@@ -188,13 +194,13 @@ const imageError = ref('')
 const fileInput = ref(null)
 
 const form = ref({
-  categoryId: null,
-  amount: '',
-  transactionDate: formatDateInput(new Date()),
-  description: '',
-  receiptImage: null,
-  isRecurring: false,
-  recurringFrequency: 'monthly'
+  categoryId: props.transaction ? props.transaction.category_id : null,
+  amount: props.transaction ? props.transaction.amount : '',
+  transactionDate: props.transaction ? props.transaction.transaction_date : formatDateInput(new Date()),
+  description: props.transaction ? (props.transaction.description || '') : '',
+  receiptImage: props.transaction ? props.transaction.receipt_image : null,
+  isRecurring: props.transaction ? !!props.transaction.is_recurring : false,
+  recurringFrequency: props.transaction ? (props.transaction.recurring_frequency || 'monthly') : 'monthly'
 })
 
 const today = formatDateInput(new Date())
@@ -232,29 +238,4 @@ const handleSubmit = async () => {
     return
   }
 
-  loading.value = true
-
-  try {
-    await addTransaction({
-      type: props.type,
-      categoryId: form.value.categoryId,
-      amount: parseFloat(form.value.amount),
-      transactionDate: form.value.transactionDate,
-      description: form.value.description,
-      receiptImage: form.value.receiptImage,
-      isRecurring: form.value.isRecurring,
-      recurringFrequency: form.value.isRecurring ? form.value.recurringFrequency : null
-    })
-
-    emit('saved')
-  } catch (error) {
-    alert('Gagal menyimpan transaksi: ' + error.message)
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  loadCategories()
-})
-</script>
+  l

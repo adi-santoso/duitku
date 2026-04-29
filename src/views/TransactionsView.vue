@@ -413,10 +413,11 @@
       @click="showAddMenu = false"
     />
 
-    <!-- Transaction Modal -->
+    <!-- Transaction Modal (Add/Edit) -->
     <TransactionModal
       v-if="showModal"
       :type="transactionType"
+      :transaction="editingTransaction"
       @close="closeModal"
       @saved="handleSaved"
     />
@@ -427,6 +428,7 @@
       :transaction="selectedTransaction"
       @close="selectedTransaction = null"
       @deleted="handleDeleted"
+      @edit="handleEdit"
     />
   </div>
 </template>
@@ -454,6 +456,7 @@ const showModal = ref(false)
 const showAddMenu = ref(false)
 const transactionType = ref('expense')
 const selectedTransaction = ref(null)
+const editingTransaction = ref(null)
 
 const typeFilters = [
   { value: null, label: 'Semua', activeClass: 'bg-primary-500 text-white shadow-sm shadow-primary-500/25' },
@@ -556,16 +559,19 @@ watch([filterType, filterCategory, filterMonth, searchQuery, perPage], () => {
 
 const showAddTransaction = (type) => {
   transactionType.value = type
+  editingTransaction.value = null
   showModal.value = true
   showAddMenu.value = false
 }
 
 const closeModal = () => {
   showModal.value = false
+  editingTransaction.value = null
 }
 
 const handleSaved = () => {
   showModal.value = false
+  editingTransaction.value = null
   loadTransactions()
 }
 
@@ -574,24 +580,7 @@ const handleDeleted = () => {
   loadTransactions()
 }
 
-const viewTransaction = (transaction) => {
-  selectedTransaction.value = transaction
-}
-
-onMounted(() => {
-  loadCategories()
-  loadTransactions()
-})
-</script>
-
-<style scoped>
-.fab-menu-enter-active,
-.fab-menu-leave-active {
-  transition: opacity 0.2s, transform 0.2s;
-}
-.fab-menu-enter-from,
-.fab-menu-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-}
-</style>
+const handleEdit = (transaction) => {
+  selectedTransaction.value = null
+  transactionType.value = transaction.type
+  editingTransaction.value = transact
