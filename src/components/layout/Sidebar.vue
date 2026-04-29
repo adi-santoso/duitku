@@ -131,9 +131,9 @@ const closeMobile = () => {
   emit('close')
 }
 
-const handleLogout = () => {
+const handleLogout = async () => {
   if (confirm('Yakin ingin keluar?')) {
-    logout()
+    await logout()
     router.push('/login')
   }
 }

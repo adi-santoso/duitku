@@ -9,10 +9,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
-  optimizeDeps: {
-    exclude: ['sql.js']
-  },
-   server: {
+  server: {
     port: 3001,
   },
 })

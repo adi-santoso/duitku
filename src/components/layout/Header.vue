@@ -37,9 +37,9 @@
         <!-- User avatar -->
         <div class="flex items-center gap-2 ml-1 pl-3 border-l border-slate-200 dark:border-slate-700">
           <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-sm font-bold shadow-sm">
-            S
+            {{ getUserDisplayName().charAt(0).toUpperCase() }}
           </div>
-          <span class="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:block">Santoso</span>
+          <span class="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:block">{{ getUserDisplayName() }}</span>
         </div>
       </div>
     </div>
@@ -50,11 +50,13 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useDarkMode } from '@/composables/useDarkMode'
+import { useAuth } from '@/composables/useAuth'
 
 defineEmits(['toggle-sidebar'])
 
 const route = useRoute()
 const { isDark, toggleDark } = useDarkMode()
+const { getUserDisplayName } = useAuth()
 
 const pageMeta = computed(() => {
   const meta = {

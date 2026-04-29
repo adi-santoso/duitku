@@ -62,7 +62,7 @@ import { useCategories } from '@/composables/useCategories'
 
 const { expenseCategories, incomeCategories, loadCategories } = useCategories()
 
-onMounted(() => {
-  loadCategories()
+onMounted(async () => {
+  await loadCategories()
 })
 </script>

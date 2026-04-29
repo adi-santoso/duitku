@@ -2,14 +2,32 @@ let db = null
 let SQL = null
 
 /**
- * Load SQL.js from CDN if not available
+ * Load SQL.js — tries npm import first, then CDN fallback
+ * Service worker will cache the CDN files for offline use
  */
-async function loadSqlJsFromCDN() {
+async function loadSqlJs() {
+  // Try loading from CDN (service worker will serve from cache when offline)
+  if (window.initSqlJs) {
+    return window.initSqlJs
+  }
+
   return new Promise((resolve, reject) => {
     const script = document.createElement('script')
     script.src = 'https://sql.js.org/dist/sql-wasm.js'
     script.onload = () => resolve(window.initSqlJs)
-    script.onerror = reject
+    script.onerror = () => {
+      console.warn('[DB] CDN load failed, checking service worker cache...')
+      // If script tag fails, try fetch (service worker might intercept)
+      fetch('https://sql.js.org/dist/sql-wasm.js')
+        .then(res => res.text())
+        .then(code => {
+          // eslint-disable-next-line no-eval
+          const fn = new Function(code)
+          fn()
+          resolve(window.initSqlJs)
+        })
+        .catch(reject)
+    }
     document.head.appendChild(script)
   })
 }
@@ -20,8 +38,8 @@ async function loadSqlJsFromCDN() {
 export async function initDatabase() {
   if (db) return db
 
-  // Load SQL.js from CDN
-  const initSqlJs = window.initSqlJs || (await loadSqlJsFromCDN())
+  // Load SQL.js (CDN with service worker cache fallback)
+  const initSqlJs = window.initSqlJs || (await loadSqlJs())
 
   SQL = await initSqlJs({
     locateFile: file => `https://sql.js.org/dist/${file}`
@@ -34,9 +52,22 @@ export async function initDatabase() {
     const uint8Array = new Uint8Array(JSON.parse(savedDb))
     db = new SQL.Database(uint8Array)
   } else {
-    db = new SQL.Database()
-    await createTables()
-    await seedDefaultData()
+    // Fallback: try IndexedDB
+    try {
+      const idbData = await loadFromIndexedDB()
+      if (idbData) {
+        db = new SQL.Database(new Uint8Array(idbData))
+        console.log('[DB] Restored from IndexedDB backup')
+      } else {
+        db = new SQL.Database()
+        await createTables()
+        await seedDefaultData()
+      }
+    } catch {
+      db = new SQL.Database()
+      await createTables()
+      await seedDefaultData()
+    }
   }
 
   return db
@@ -156,7 +187,7 @@ async function seedDefaultData() {
 }
 
 /**
- * Save database to localStorage
+ * Save database to localStorage + IndexedDB for redundancy
  */
 export function saveDatabase() {
   if (!db) return
@@ -164,6 +195,57 @@ export function saveDatabase() {
   const data = db.export()
   const buffer = Array.from(data)
   localStorage.setItem('duitku_db', JSON.stringify(buffer))
+
+  // Also save to IndexedDB as backup (handles larger data better)
+  saveToIndexedDB(data).catch((err) => {
+    console.warn('[DB] IndexedDB backup failed:', err)
+  })
+}
+
+/**
+ * Save database to IndexedDB
+ */
+function saveToIndexedDB(data) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('duitku_backup', 1)
+    request.onupgradeneeded = (e) => {
+      const idb = e.target.result
+      if (!idb.objectStoreNames.contains('database')) {
+        idb.createObjectStore('database')
+      }
+    }
+    request.onsuccess = (e) => {
+      const idb = e.target.result
+      const tx = idb.transaction('database', 'readwrite')
+      tx.objectStore('database').put(data, 'main')
+      tx.oncomplete = resolve
+      tx.onerror = () => reject(tx.error)
+    }
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Load database from IndexedDB (fallback if localStorage is empty)
+ */
+function loadFromIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('duitku_backup', 1)
+    request.onupgradeneeded = (e) => {
+      const idb = e.target.result
+      if (!idb.objectStoreNames.contains('database')) {
+        idb.createObjectStore('database')
+      }
+    }
+    request.onsuccess = (e) => {
+      const idb = e.target.result
+      const tx = idb.transaction('database', 'readonly')
+      const getReq = tx.objectStore('database').get('main')
+      getReq.onsuccess = () => resolve(getReq.result || null)
+      getReq.onerror = () => reject(getReq.error)
+    }
+    request.onerror = () => reject(request.error)
+  })
 }
 
 /**

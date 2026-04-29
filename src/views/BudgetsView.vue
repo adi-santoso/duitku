@@ -310,10 +310,10 @@ const editBudget = (budget) => {
   showEditModal.value = true
 }
 
-const confirmDelete = (budget) => {
+const confirmDelete = async (budget) => {
   if (confirm(`Hapus anggaran untuk "${budget.category_name}"?`)) {
-    deleteBudget(budget.id)
-    loadBudgets(currentYear, currentMonth)
+    await deleteBudget(budget.id)
+    await loadBudgets(currentYear, currentMonth)
   }
 }
 
@@ -324,28 +324,28 @@ const closeModals = () => {
   form.value = { categoryId: null, amount: '' }
 }
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (!form.value.amount || form.value.amount <= 0) {
     alert('Masukkan jumlah anggaran')
     return
   }
 
   if (showEditModal.value && editingBudget.value) {
-    updateBudget(editingBudget.value.id, parseFloat(form.value.amount))
+    await updateBudget(editingBudget.value.id, parseFloat(form.value.amount))
   } else {
     if (!form.value.categoryId) {
       alert('Pilih kategori terlebih dahulu')
       return
     }
-    addBudget(form.value.categoryId, parseFloat(form.value.amount))
+    await addBudget(form.value.categoryId, parseFloat(form.value.amount))
   }
 
   closeModals()
-  loadBudgets(currentYear, currentMonth)
+  await loadBudgets(currentYear, currentMonth)
 }
 
-onMounted(() => {
-  loadCategories()
-  loadBudgets(currentYear, currentMonth)
+onMounted(async () => {
+  await loadCategories()
+  await loadBudgets(currentYear, currentMonth)
 })
 </script>

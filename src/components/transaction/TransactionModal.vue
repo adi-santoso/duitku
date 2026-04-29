@@ -266,7 +266,7 @@ const handleSubmit = async () => {
   }
 }
 
-onMounted(() => {
-  loadCategories()
+onMounted(async () => {
+  await loadCategories()
 })
 </script>

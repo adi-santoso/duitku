@@ -6,10 +6,11 @@ Aplikasi pencatatan keuangan personal dengan fokus mobile-first, menggunakan Vue
 ## Tech Stack
 - **Frontend**: Vue 3 (Composition API) + Vite
 - **Styling**: Tailwind CSS
-- **Database**: SQL.js (SQLite in browser)
-- **Charts**: Chart.js / ApexCharts
+- **Database**: Supabase (PostgreSQL)
+- **Auth**: Supabase Auth (email/password)
+- **Charts**: Chart.js / vue-chartjs
 - **Deployment**: Vercel
-- **Storage**: IndexedDB + SQL.js for structured data
+- **Storage**: Supabase cloud database
 
 ## Core Features
 1. ✅ Pencatatan pemasukan & pengeluaran
@@ -24,10 +25,10 @@ Aplikasi pencatatan keuangan personal dengan fokus mobile-first, menggunakan Vue
 10. ✅ Dark mode
 
 ## Authentication
-- Dummy hardcoded account
-- Username: `santoso`
-- Password: `santoso123`
-- No real backend, session stored in localStorage
+- Supabase Auth (email + password)
+- Supports user registration and login
+- Session managed by Supabase SDK
+- Row Level Security (RLS) ensures data isolation per user
 
 ## Database Schema
 
@@ -261,11 +262,13 @@ duitku/
 - [ ] Financial insights & recommendations
 
 ## Notes
-- Data stored in browser (SQL.js + IndexedDB)
-- No real authentication (demo purposes)
-- Images compressed to max 200KB
+- Data stored in Supabase cloud (PostgreSQL)
+- Authentication via Supabase Auth (email/password)
+- Row Level Security (RLS) enabled on all tables
+- Images compressed to max 200KB (stored as base64 in DB)
 - Export limited to 1000 transactions per file
 - Budget notifications shown on dashboard only
+- Environment variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 
 ---
-Last updated: 2026-04-28
+Last updated: 2026-04-29

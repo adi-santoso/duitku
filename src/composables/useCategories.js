@@ -1,24 +1,33 @@
 import { ref, computed } from 'vue'
-import { queryAll, insert, query } from '@/utils/db'
+import { supabase } from '@/utils/supabase'
 import { useAuth } from './useAuth'
 
 /**
- * Composable for categories management
+ * Composable for categories management with Supabase
  */
 export function useCategories() {
   const { getUserId } = useAuth()
   const categories = ref([])
 
   /**
-   * Load all categories
+   * Load all categories (default + user's own)
    */
-  const loadCategories = () => {
+  const loadCategories = async () => {
     const userId = getUserId()
-    categories.value = queryAll(`
-      SELECT * FROM categories
-      WHERE is_default = 1 OR user_id = ?
-      ORDER BY type, name
-    `, [userId])
+
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .or(`is_default.eq.true,user_id.eq.${userId}`)
+      .order('type')
+      .order('name')
+
+    if (error) {
+      console.error('Error loading categories:', error)
+      return
+    }
+
+    categories.value = data || []
   }
 
   /**
@@ -47,40 +56,65 @@ export function useCategories() {
   /**
    * Add new category
    */
-  const addCategory = (name, type, icon, color) => {
+  const addCategory = async (name, type, icon, color) => {
     const userId = getUserId()
-    const id = insert(`
-      INSERT INTO categories (name, type, icon, color, is_default, user_id)
-      VALUES (?, ?, ?, ?, 0, ?)
-    `, [name, type, icon, color, userId])
 
-    loadCategories()
-    return id
+    const { data, error } = await supabase
+      .from('categories')
+      .insert({
+        name,
+        type,
+        icon,
+        color,
+        is_default: false,
+        user_id: userId
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error adding category:', error)
+      throw error
+    }
+
+    await loadCategories()
+    return data.id
   }
 
   /**
    * Update category
    */
-  const updateCategory = (id, name, icon, color) => {
-    query(`
-      UPDATE categories
-      SET name = ?, icon = ?, color = ?
-      WHERE id = ? AND is_default = 0
-    `, [name, icon, color, id])
+  const updateCategory = async (id, name, icon, color) => {
+    const { error } = await supabase
+      .from('categories')
+      .update({ name, icon, color })
+      .eq('id', id)
+      .eq('is_default', false)
 
-    loadCategories()
+    if (error) {
+      console.error('Error updating category:', error)
+      throw error
+    }
+
+    await loadCategories()
   }
 
   /**
    * Delete category
    */
-  const deleteCategory = (id) => {
-    query(`
-      DELETE FROM categories
-      WHERE id = ? AND is_default = 0
-    `, [id])
+  const deleteCategory = async (id) => {
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id)
+      .eq('is_default', false)
 
-    loadCategories()
+    if (error) {
+      console.error('Error deleting category:', error)
+      throw error
+    }
+
+    await loadCategories()
   }
 
   /**

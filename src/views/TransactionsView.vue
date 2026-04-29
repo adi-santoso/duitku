@@ -569,15 +569,15 @@ const closeModal = () => {
   editingTransaction.value = null
 }
 
-const handleSaved = () => {
+const handleSaved = async () => {
   showModal.value = false
   editingTransaction.value = null
-  loadTransactions()
+  await loadTransactions()
 }
 
-const handleDeleted = () => {
+const handleDeleted = async () => {
   selectedTransaction.value = null
-  loadTransactions()
+  await loadTransactions()
 }
 
 const handleEdit = (transaction) => {
@@ -591,9 +591,9 @@ const viewTransaction = (transaction) => {
   selectedTransaction.value = transaction
 }
 
-onMounted(() => {
-  loadCategories()
-  loadTransactions()
+onMounted(async () => {
+  await loadCategories()
+  await loadTransactions()
 })
 </script>
 

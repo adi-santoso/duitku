@@ -129,9 +129,9 @@ const getRecurringLabel = (frequency) => {
   return labels[frequency] || frequency
 }
 
-const handleDelete = () => {
+const handleDelete = async () => {
   if (confirm('Yakin ingin menghapus transaksi ini?')) {
-    deleteTransaction(props.transaction.id)
+    await deleteTransaction(props.transaction.id)
     emit('deleted')
   }
 }
