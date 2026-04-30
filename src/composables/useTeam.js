@@ -161,7 +161,7 @@ export function useTeam() {
   }
 
   /**
-   * Load members of a specific team
+   * Load members of a specific team (uses RPC to get emails securely)
    */
   const loadTeamMembers = async (teamId) => {
     loading.value = true
@@ -169,32 +169,11 @@ export function useTeam() {
 
     try {
       const { data, error: err } = await supabase
-        .from('team_members')
-        .select('*')
-        .eq('team_id', teamId)
-        .order('joined_at', { ascending: true })
+        .rpc('get_team_members_with_email', { target_team_id: teamId })
 
       if (err) throw err
 
-      // Fetch user emails for each member
-      const members = []
-      for (const member of (data || [])) {
-        // Get user info from auth.users via a lookup
-        const { data: userData } = await supabase
-          .from('team_members')
-          .select('user_id')
-          .eq('user_id', member.user_id)
-          .single()
-
-        members.push({
-          ...member,
-          email: member.user_id === getUserId()
-            ? currentUser.value?.email
-            : `user-${member.user_id.substring(0, 8)}`
-        })
-      }
-
-      teamMembers.value = members
+      teamMembers.value = data || []
     } catch (err) {
       console.error('Error loading team members:', err)
       error.value = err.message

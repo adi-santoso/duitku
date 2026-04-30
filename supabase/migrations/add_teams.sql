@@ -120,6 +120,46 @@ AS $$
   );
 $$;
 
+-- Helper: get current user's email (auth.users not accessible by authenticated role)
+CREATE OR REPLACE FUNCTION get_my_email()
+RETURNS TEXT
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT email FROM auth.users WHERE id = auth.uid();
+$$;
+
+-- Helper: get team members with their emails (for frontend display)
+CREATE OR REPLACE FUNCTION get_team_members_with_email(target_team_id UUID)
+RETURNS TABLE (
+  id UUID,
+  team_id UUID,
+  user_id UUID,
+  role TEXT,
+  joined_at TIMESTAMPTZ,
+  email TEXT
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    tm.id,
+    tm.team_id,
+    tm.user_id,
+    tm.role,
+    tm.joined_at,
+    u.email
+  FROM team_members tm
+  JOIN auth.users u ON u.id = tm.user_id
+  WHERE tm.team_id = target_team_id
+    AND tm.team_id IN (SELECT get_my_team_ids())
+  ORDER BY tm.joined_at;
+$$;
+
 
 -- ============================================
 -- STEP 4: ENABLE RLS
@@ -195,7 +235,7 @@ CREATE POLICY "team_invitations_select"
   ON team_invitations FOR SELECT
   USING (
     team_id IN (SELECT get_my_team_ids())
-    OR invited_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+    OR invited_email = get_my_email()
   );
 
 -- INSERT: only team members can invite
@@ -207,7 +247,7 @@ CREATE POLICY "team_invitations_insert"
 CREATE POLICY "team_invitations_update"
   ON team_invitations FOR UPDATE
   USING (
-    invited_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+    invited_email = get_my_email()
     OR invited_by = auth.uid()
   );
 
