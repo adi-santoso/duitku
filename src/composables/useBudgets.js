@@ -14,6 +14,11 @@ export function useBudgets() {
    */
   const loadBudgets = async (year, month) => {
     const userId = getUserId()
+    if (!userId) {
+      console.warn('loadBudgets: user not authenticated yet')
+      return
+    }
+
     const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
     const endDate = new Date(year, month + 1, 0)
     const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
@@ -74,6 +79,8 @@ export function useBudgets() {
    */
   const addBudget = async (categoryId, amount, period = 'monthly') => {
     const userId = getUserId()
+    if (!userId) throw new Error('User not authenticated')
+
     const now = new Date()
     const startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
 

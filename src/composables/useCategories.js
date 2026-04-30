@@ -14,6 +14,10 @@ export function useCategories() {
    */
   const loadCategories = async () => {
     const userId = getUserId()
+    if (!userId) {
+      console.warn('loadCategories: user not authenticated yet')
+      return
+    }
 
     const { data, error } = await supabase
       .from('categories')
@@ -58,6 +62,7 @@ export function useCategories() {
    */
   const addCategory = async (name, type, icon, color) => {
     const userId = getUserId()
+    if (!userId) throw new Error('User not authenticated')
 
     const { data, error } = await supabase
       .from('categories')

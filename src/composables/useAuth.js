@@ -5,6 +5,19 @@ const currentUser = ref(null)
 const isAuthenticated = ref(false)
 const authLoading = ref(true)
 
+// Auto-restore session on module load
+// This ensures currentUser is set after page refresh
+supabase.auth.onAuthStateChange((event, session) => {
+  if (session?.user) {
+    currentUser.value = session.user
+    isAuthenticated.value = true
+  } else {
+    currentUser.value = null
+    isAuthenticated.value = false
+  }
+  authLoading.value = false
+})
+
 /**
  * Composable for Supabase authentication
  */

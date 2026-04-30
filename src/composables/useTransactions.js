@@ -25,6 +25,10 @@ export function useTransactions() {
    */
   const loadTransactions = async (filters = {}) => {
     const userId = getUserId()
+    if (!userId) {
+      console.warn('loadTransactions: user not authenticated yet')
+      return
+    }
 
     let query = supabase
       .from('transactions')
@@ -86,6 +90,8 @@ export function useTransactions() {
    */
   const getTransactionsByMonth = async (year, month) => {
     const userId = getUserId()
+    if (!userId) return []
+
     const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
     const endDate = new Date(year, month + 1, 0)
     const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
@@ -124,6 +130,7 @@ export function useTransactions() {
    */
   const addTransaction = async (data) => {
     const userId = getUserId()
+    if (!userId) throw new Error('User not authenticated')
 
     const { data: result, error } = await supabase
       .from('transactions')
@@ -228,6 +235,7 @@ export function useTransactions() {
    */
   const getSummary = async (startDate, endDate) => {
     const userId = getUserId()
+    if (!userId) return { income: 0, expense: 0, balance: 0 }
 
     // Get income total
     const { data: incomeData, error: incomeError } = await supabase
@@ -267,6 +275,7 @@ export function useTransactions() {
    */
   const getExpenseByCategory = async (startDate, endDate) => {
     const userId = getUserId()
+    if (!userId) return []
 
     const { data, error } = await supabase
       .from('transactions')
@@ -341,6 +350,8 @@ export function useTransactions() {
    */
   const bulkImport = async (dataArray) => {
     const userId = getUserId()
+    if (!userId) throw new Error('User not authenticated')
+
     let imported = 0
 
     // Process in batches of 50
