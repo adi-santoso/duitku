@@ -41,6 +41,23 @@
           </svg>
         </router-link>
 
+        <router-link to="/team" class="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Kelola Tim</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Undang anggota & keuangan bersama</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </router-link>
+
         <button @click="exportData" class="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -51,6 +68,23 @@
             <div class="text-left">
               <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Export Data</p>
               <p class="text-xs text-slate-400 dark:text-slate-500">Download data transaksi (JSON)</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
+
+        <button @click="importFromSpreadsheet" class="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group" :disabled="importing">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ importing ? 'Mengimport...' : 'Import Data Spreadsheet' }}</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Import transaksi dari data spreadsheet</p>
             </div>
           </div>
           <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -146,16 +180,39 @@ import { ref, computed, onMounted } from 'vue'
 import { useTransactions } from '@/composables/useTransactions'
 import { useAuth } from '@/composables/useAuth'
 import { usePWA } from '@/composables/usePWA'
+import { importData } from '@/utils/importData'
 
-const { transactions, loadTransactions } = useTransactions()
+const { transactions, loadTransactions, bulkImport } = useTransactions()
 const { currentUser } = useAuth()
 const { isOnline, canInstall, isInstalled, installApp } = usePWA()
+const importing = ref(false)
 
 const userEmail = computed(() => currentUser.value?.email || '-')
 
 onMounted(async () => {
   await loadTransactions()
 })
+
+const importFromSpreadsheet = async () => {
+  if (importing.value) return
+
+  const count = importData.length
+  if (!confirm(`Import ${count} transaksi dari spreadsheet?\n\nData: Agustus 2025 - April 2026`)) {
+    return
+  }
+
+  importing.value = true
+
+  try {
+    const imported = await bulkImport(importData)
+    alert(`Berhasil import ${imported} transaksi!`)
+    window.location.reload()
+  } catch (error) {
+    alert('Gagal import: ' + error.message)
+  } finally {
+    importing.value = false
+  }
+}
 
 const exportData = () => {
   try {

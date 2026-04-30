@@ -23,6 +23,7 @@ Aplikasi pencatatan keuangan personal dengan fokus mobile-first, menggunakan Vue
 8. ✅ Budget limit per kategori
 9. ✅ Attach foto struk (optional, compressed base64)
 10. ✅ Dark mode
+11. ✅ Team management (keuangan bersama)
 
 ## Authentication
 - Supabase Auth (email + password)
@@ -92,6 +93,44 @@ CREATE TABLE budgets (
 );
 ```
 
+### teams
+```sql
+CREATE TABLE teams (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### team_members
+```sql
+CREATE TABLE team_members (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('owner', 'member')),
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(team_id, user_id)
+);
+```
+
+### team_invitations
+```sql
+CREATE TABLE team_invitations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  invited_email TEXT NOT NULL,
+  invited_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '7 days'),
+  UNIQUE(team_id, invited_email, status)
+);
+```
+
 ## Default Categories
 
 ### Expense Categories
@@ -151,6 +190,7 @@ duitku/
 │   │   ├── useTransactions.js
 │   │   ├── useCategories.js
 │   │   ├── useBudgets.js
+│   │   ├── useTeam.js
 │   │   ├── useImageCompression.js
 │   │   └── useDarkMode.js
 │   ├── utils/
@@ -165,6 +205,7 @@ duitku/
 │   │   ├── CategoriesView.vue
 │   │   ├── BudgetsView.vue
 │   │   ├── ReportsView.vue
+│   │   ├── TeamView.vue
 │   │   └── SettingsView.vue
 │   ├── router/
 │   │   └── index.js
@@ -271,4 +312,4 @@ duitku/
 - Environment variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 
 ---
-Last updated: 2026-04-29
+Last updated: 2026-04-30

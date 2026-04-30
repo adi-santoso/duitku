@@ -4,13 +4,24 @@ import { useAuth } from './useAuth'
 
 /**
  * Composable for transactions management with Supabase
+ * Supports personal and team-shared transactions
  */
 export function useTransactions() {
   const { getUserId } = useAuth()
   const transactions = ref([])
+  const activeTeamId = ref(null)
+
+  /**
+   * Set active team filter for shared transactions
+   * Pass null to show only personal transactions
+   */
+  const setActiveTeam = (teamId) => {
+    activeTeamId.value = teamId
+  }
 
   /**
    * Load all transactions with category info
+   * If activeTeamId is set, also loads team-shared transactions
    */
   const loadTransactions = async (filters = {}) => {
     const userId = getUserId()
@@ -25,7 +36,13 @@ export function useTransactions() {
           color
         )
       `)
-      .eq('user_id', userId)
+
+    // If team is active, load both personal and team transactions
+    if (activeTeamId.value) {
+      query = query.or(`user_id.eq.${userId},team_id.eq.${activeTeamId.value}`)
+    } else {
+      query = query.eq('user_id', userId)
+    }
 
     if (filters.type) {
       query = query.eq('type', filters.type)
@@ -59,7 +76,8 @@ export function useTransactions() {
       ...t,
       category_name: t.categories?.name,
       category_icon: t.categories?.icon,
-      category_color: t.categories?.color
+      category_color: t.categories?.color,
+      is_team: !!t.team_id
     }))
   }
 
@@ -102,6 +120,7 @@ export function useTransactions() {
 
   /**
    * Add new transaction
+   * Optionally assign to a team for shared visibility
    */
   const addTransaction = async (data) => {
     const userId = getUserId()
@@ -117,7 +136,8 @@ export function useTransactions() {
         receipt_image: data.receiptImage || null,
         transaction_date: data.transactionDate,
         is_recurring: data.isRecurring || false,
-        recurring_frequency: data.recurringFrequency || null
+        recurring_frequency: data.recurringFrequency || null,
+        team_id: data.teamId || null
       })
       .select()
       .single()
@@ -359,6 +379,8 @@ export function useTransactions() {
     totalIncome,
     totalExpense,
     balance,
+    activeTeamId,
+    setActiveTeam,
     loadTransactions,
     getTransactionsByMonth,
     addTransaction,
