@@ -4,17 +4,18 @@ import { useAuth } from './useAuth'
 
 /**
  * Composable for categories management with Supabase
+ * Staff and owner share the same categories via getDataOwnerId()
  */
 export function useCategories() {
-  const { getUserId } = useAuth()
+  const { getDataOwnerId } = useAuth()
   const categories = ref([])
 
   /**
-   * Load all categories (default + user's own)
+   * Load all categories (default + owner's custom)
    */
   const loadCategories = async () => {
-    const userId = getUserId()
-    if (!userId) {
+    const ownerId = getDataOwnerId()
+    if (!ownerId) {
       console.warn('loadCategories: user not authenticated yet')
       return
     }
@@ -22,7 +23,7 @@ export function useCategories() {
     const { data, error } = await supabase
       .from('categories')
       .select('*')
-      .or(`is_default.eq.true,user_id.eq.${userId}`)
+      .or(`is_default.eq.true,user_id.eq.${ownerId}`)
       .order('type')
       .order('name')
 
@@ -61,8 +62,8 @@ export function useCategories() {
    * Add new category
    */
   const addCategory = async (name, type, icon, color) => {
-    const userId = getUserId()
-    if (!userId) throw new Error('User not authenticated')
+    const ownerId = getDataOwnerId()
+    if (!ownerId) throw new Error('User not authenticated')
 
     const { data, error } = await supabase
       .from('categories')
@@ -72,7 +73,7 @@ export function useCategories() {
         icon,
         color,
         is_default: false,
-        user_id: userId
+        user_id: ownerId
       })
       .select()
       .single()

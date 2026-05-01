@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { supabase } from '@/utils/supabase'
+import { useAuth } from '@/composables/useAuth'
 
 const routes = [
   {
@@ -58,12 +58,13 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  const { data: { session } } = await supabase.auth.getSession()
-  const isAuthenticated = !!session
+  // Wait for auth to finish initializing before making routing decisions
+  const { authReady, isAuthenticated } = useAuth()
+  await authReady
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
+  if (to.meta.requiresAuth && !isAuthenticated.value) {
     next('/login')
-  } else if (to.meta.requiresGuest && isAuthenticated) {
+  } else if (to.meta.requiresGuest && isAuthenticated.value) {
     next('/')
   } else {
     next()

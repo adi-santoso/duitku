@@ -4,28 +4,24 @@ import { useAuth } from './useAuth'
 
 /**
  * Composable for transactions management with Supabase
- * Supports personal and team-shared transactions
+ * Staff and owner share the same data via getDataOwnerId()
  */
 export function useTransactions() {
-  const { getUserId } = useAuth()
+  const { getDataOwnerId } = useAuth()
   const transactions = ref([])
-  const activeTeamId = ref(null)
 
   /**
-   * Set active team filter for shared transactions
-   * Pass null to show only personal transactions
+   * @deprecated No longer needed — data sharing is automatic via getDataOwnerId()
    */
-  const setActiveTeam = (teamId) => {
-    activeTeamId.value = teamId
-  }
+  const setActiveTeam = (teamId) => {}
 
   /**
    * Load all transactions with category info
-   * If activeTeamId is set, also loads team-shared transactions
+   * Uses getDataOwnerId() so staff sees owner's data
    */
   const loadTransactions = async (filters = {}) => {
-    const userId = getUserId()
-    if (!userId) {
+    const ownerId = getDataOwnerId()
+    if (!ownerId) {
       console.warn('loadTransactions: user not authenticated yet')
       return
     }
@@ -40,13 +36,7 @@ export function useTransactions() {
           color
         )
       `)
-
-    // If team is active, load both personal and team transactions
-    if (activeTeamId.value) {
-      query = query.or(`user_id.eq.${userId},team_id.eq.${activeTeamId.value}`)
-    } else {
-      query = query.eq('user_id', userId)
-    }
+      .eq('user_id', ownerId)
 
     if (filters.type) {
       query = query.eq('type', filters.type)
@@ -80,8 +70,7 @@ export function useTransactions() {
       ...t,
       category_name: t.categories?.name,
       category_icon: t.categories?.icon,
-      category_color: t.categories?.color,
-      is_team: !!t.team_id
+      category_color: t.categories?.color
     }))
   }
 
@@ -89,8 +78,8 @@ export function useTransactions() {
    * Get transactions for specific month
    */
   const getTransactionsByMonth = async (year, month) => {
-    const userId = getUserId()
-    if (!userId) return []
+    const ownerId = getDataOwnerId()
+    if (!ownerId) return []
 
     const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
     const endDate = new Date(year, month + 1, 0)
@@ -106,7 +95,7 @@ export function useTransactions() {
           color
         )
       `)
-      .eq('user_id', userId)
+      .eq('user_id', ownerId)
       .gte('transaction_date', startDate)
       .lte('transaction_date', endDateStr)
       .order('transaction_date', { ascending: false })
@@ -126,16 +115,16 @@ export function useTransactions() {
 
   /**
    * Add new transaction
-   * Optionally assign to a team for shared visibility
+   * Uses getDataOwnerId() so staff inserts into owner's data
    */
   const addTransaction = async (data) => {
-    const userId = getUserId()
-    if (!userId) throw new Error('User not authenticated')
+    const ownerId = getDataOwnerId()
+    if (!ownerId) throw new Error('User not authenticated')
 
     const { data: result, error } = await supabase
       .from('transactions')
       .insert({
-        user_id: userId,
+        user_id: ownerId,
         category_id: data.categoryId,
         type: data.type,
         amount: data.amount,
@@ -143,8 +132,7 @@ export function useTransactions() {
         receipt_image: data.receiptImage || null,
         transaction_date: data.transactionDate,
         is_recurring: data.isRecurring || false,
-        recurring_frequency: data.recurringFrequency || null,
-        team_id: data.teamId || null
+        recurring_frequency: data.recurringFrequency || null
       })
       .select()
       .single()
@@ -234,26 +222,25 @@ export function useTransactions() {
    * Get summary statistics
    */
   const getSummary = async (startDate, endDate) => {
-    const userId = getUserId()
-    if (!userId) return { income: 0, expense: 0, balance: 0 }
+    const ownerId = getDataOwnerId()
+    if (!ownerId) return { income: 0, expense: 0, balance: 0 }
 
-    // Get income total
-    const { data: incomeData, error: incomeError } = await supabase
-      .from('transactions')
-      .select('amount')
-      .eq('user_id', userId)
-      .eq('type', 'income')
-      .gte('transaction_date', startDate)
-      .lte('transaction_date', endDate)
-
-    // Get expense total
-    const { data: expenseData, error: expenseError } = await supabase
-      .from('transactions')
-      .select('amount')
-      .eq('user_id', userId)
-      .eq('type', 'expense')
-      .gte('transaction_date', startDate)
-      .lte('transaction_date', endDate)
+    const [{ data: incomeData, error: incomeError }, { data: expenseData, error: expenseError }] = await Promise.all([
+      supabase
+        .from('transactions')
+        .select('amount')
+        .eq('user_id', ownerId)
+        .eq('type', 'income')
+        .gte('transaction_date', startDate)
+        .lte('transaction_date', endDate),
+      supabase
+        .from('transactions')
+        .select('amount')
+        .eq('user_id', ownerId)
+        .eq('type', 'expense')
+        .gte('transaction_date', startDate)
+        .lte('transaction_date', endDate)
+    ])
 
     if (incomeError || expenseError) {
       console.error('Error getting summary:', incomeError || expenseError)
@@ -274,8 +261,8 @@ export function useTransactions() {
    * Get expense by category
    */
   const getExpenseByCategory = async (startDate, endDate) => {
-    const userId = getUserId()
-    if (!userId) return []
+    const ownerId = getDataOwnerId()
+    if (!ownerId) return []
 
     const { data, error } = await supabase
       .from('transactions')
@@ -289,7 +276,7 @@ export function useTransactions() {
           color
         )
       `)
-      .eq('user_id', userId)
+      .eq('user_id', ownerId)
       .eq('type', 'expense')
       .gte('transaction_date', startDate)
       .lte('transaction_date', endDate)
@@ -349,8 +336,8 @@ export function useTransactions() {
    * Bulk import transactions from array
    */
   const bulkImport = async (dataArray) => {
-    const userId = getUserId()
-    if (!userId) throw new Error('User not authenticated')
+    const ownerId = getDataOwnerId()
+    if (!ownerId) throw new Error('User not authenticated')
 
     let imported = 0
 
@@ -358,7 +345,7 @@ export function useTransactions() {
     const batchSize = 50
     for (let i = 0; i < dataArray.length; i += batchSize) {
       const batch = dataArray.slice(i, i + batchSize).map(item => ({
-        user_id: userId,
+        user_id: ownerId,
         category_id: item.category_id,
         type: item.type,
         amount: item.amount,
@@ -390,7 +377,6 @@ export function useTransactions() {
     totalIncome,
     totalExpense,
     balance,
-    activeTeamId,
     setActiveTeam,
     loadTransactions,
     getTransactionsByMonth,

@@ -79,6 +79,12 @@ self.addEventListener('fetch', (event) => {
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) return
 
+  // Skip Supabase API calls — never cache auth/database requests
+  if (url.hostname.includes('supabase.co') || url.hostname.includes('supabase.in')) return
+
+  // Skip Vite dev server HMR/websocket requests
+  if (url.pathname.startsWith('/@') || url.pathname.startsWith('/__') || url.pathname.startsWith('/node_modules/')) return
+
   // Strategy: Cache First for static assets, Network First for navigation
   if (isStaticAsset(url)) {
     event.respondWith(cacheFirst(request))
@@ -164,16 +170,29 @@ async function staleWhileRevalidate(request) {
   const cached = await caches.match(request)
 
   const fetchPromise = fetch(request)
-    .then((response) => {
+    .then(async (response) => {
       if (response.ok) {
-        const cache = caches.open(DYNAMIC_CACHE)
-        cache.then((c) => c.put(request, response.clone()))
+        try {
+          const cache = await caches.open(DYNAMIC_CACHE)
+          // Clone BEFORE the response body is consumed
+          await cache.put(request, response.clone())
+        } catch (e) {
+          // Ignore cache write errors
+        }
       }
       return response
     })
     .catch(() => null)
 
-  return cached || (await fetchPromise) || new Response('Offline', { status: 503 })
+  // If we have a cached version, return it immediately
+  // The fetch will update the cache in the background
+  if (cached) {
+    fetchPromise.catch(() => {}) // prevent unhandled rejection
+    return cached
+  }
+
+  // No cache — wait for network
+  return (await fetchPromise) || new Response('Offline', { status: 503 })
 }
 
 // Listen for messages from the app

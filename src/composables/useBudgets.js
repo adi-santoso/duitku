@@ -4,17 +4,18 @@ import { useAuth } from './useAuth'
 
 /**
  * Composable for budget management with Supabase
+ * Staff and owner share the same budgets via getDataOwnerId()
  */
 export function useBudgets() {
-  const { getUserId } = useAuth()
+  const { getDataOwnerId } = useAuth()
   const budgets = ref([])
 
   /**
    * Load all budgets with category info and spending data
    */
   const loadBudgets = async (year, month) => {
-    const userId = getUserId()
-    if (!userId) {
+    const ownerId = getDataOwnerId()
+    if (!ownerId) {
       console.warn('loadBudgets: user not authenticated yet')
       return
     }
@@ -34,7 +35,7 @@ export function useBudgets() {
           color
         )
       `)
-      .eq('user_id', userId)
+      .eq('user_id', ownerId)
       .order('created_at')
 
     if (budgetError) {
@@ -46,7 +47,7 @@ export function useBudgets() {
     const { data: spendingData, error: spendingError } = await supabase
       .from('transactions')
       .select('category_id, amount')
-      .eq('user_id', userId)
+      .eq('user_id', ownerId)
       .eq('type', 'expense')
       .gte('transaction_date', startDate)
       .lte('transaction_date', endDateStr)
@@ -78,8 +79,8 @@ export function useBudgets() {
    * Add a new budget
    */
   const addBudget = async (categoryId, amount, period = 'monthly') => {
-    const userId = getUserId()
-    if (!userId) throw new Error('User not authenticated')
+    const ownerId = getDataOwnerId()
+    if (!ownerId) throw new Error('User not authenticated')
 
     const now = new Date()
     const startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
@@ -89,7 +90,7 @@ export function useBudgets() {
       .from('budgets')
       .upsert(
         {
-          user_id: userId,
+          user_id: ownerId,
           category_id: categoryId,
           amount,
           period,

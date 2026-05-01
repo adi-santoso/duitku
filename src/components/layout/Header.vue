@@ -19,7 +19,15 @@
       </div>
 
       <!-- Right: Actions -->
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-2">
+        <!-- Staff badge -->
+        <span v-if="isStaffUser" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-400">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          </svg>
+          Staff
+        </span>
+
         <!-- Dark mode toggle (mobile only, desktop is in sidebar) -->
         <button
           @click="toggleDark"
@@ -56,16 +64,19 @@ defineEmits(['toggle-sidebar'])
 
 const route = useRoute()
 const { isDark, toggleDark } = useDarkMode()
-const { getUserDisplayName } = useAuth()
+const { getUserDisplayName, isStaff } = useAuth()
+
+const isStaffUser = computed(() => isStaff())
 
 const pageMeta = computed(() => {
   const meta = {
-    Dashboard: { title: 'Dashboard', subtitle: 'Ringkasan keuangan bulan ini' },
+    Dashboard: { title: 'Dashboard', subtitle: 'Ringkasan keuangan' },
     Transactions: { title: 'Transaksi', subtitle: 'Riwayat pemasukan & pengeluaran' },
     Categories: { title: 'Kategori', subtitle: 'Kelola kategori transaksi' },
     Budgets: { title: 'Anggaran', subtitle: 'Atur budget per kategori' },
     Reports: { title: 'Laporan', subtitle: 'Analisis keuangan bulanan' },
-    Settings: { title: 'Pengaturan', subtitle: 'Konfigurasi aplikasi' }
+    Settings: { title: 'Pengaturan', subtitle: 'Konfigurasi aplikasi' },
+    Team: { title: 'Staff', subtitle: 'Kelola akun staff' }
   }
   return meta[route.name] || { title: 'DuitKu', subtitle: '' }
 })
