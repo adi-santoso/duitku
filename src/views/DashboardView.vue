@@ -1,17 +1,85 @@
 <template>
   <div class="space-y-6 pb-20 lg:pb-0 animate-fade-in">
-    <!-- Loading State -->
-    <div v-if="isLoading" class="flex items-center justify-center py-20">
-      <div class="text-center">
-        <svg class="w-8 h-8 animate-spin text-primary-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
+    <!-- Skeleton Loading State -->
+    <div v-if="isLoading" class="space-y-6">
+      <!-- Filter Skeleton -->
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-48 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
+      </div>
+
+      <!-- Summary Cards Skeleton -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div v-for="i in 3" :key="i" class="card">
+          <div class="flex items-center justify-between">
+            <div class="space-y-2">
+              <div class="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+              <div class="h-7 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+          </div>
+          <div class="mt-3 h-5 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+        </div>
+      </div>
+
+      <!-- Charts Skeleton -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        <div class="card">
+          <div class="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-4"></div>
+          <div class="h-56 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+        </div>
+        <div class="card">
+          <div class="h-5 w-40 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-4"></div>
+          <div class="h-56 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Section Skeleton -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+        <div class="card lg:col-span-1">
+          <div class="h-5 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-4"></div>
+          <div class="space-y-3">
+            <div class="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+            <div class="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+        <div class="card lg:col-span-2">
+          <div class="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-4"></div>
+          <div class="space-y-3">
+            <div v-for="i in 5" :key="i" class="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
       </div>
     </div>
 
     <template v-else>
+      <!-- Month Filter (Select Dropdown) -->
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <select
+            :value="selectedMonthValue"
+            @change="handleFilterChange($event)"
+            class="appearance-none pl-4 pr-10 py-2.5 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all cursor-pointer"
+          >
+            <option value="all">Semua Waktu</option>
+            <option
+              v-for="m in monthOptions"
+              :key="`${m.year}-${m.month}`"
+              :value="`${m.year}-${m.month}`"
+            >
+              {{ m.label }}
+            </option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </div>
+        </div>
+        <span v-if="selectedMonth" class="text-xs text-slate-400 dark:text-slate-500">
+          vs {{ prevMonthLabel }}
+        </span>
+      </div>
+
       <!-- Summary Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="stat-card group">
@@ -27,7 +95,7 @@
             </div>
           </div>
           <div class="mt-3 flex items-center gap-1.5">
-            <span class="badge badge-green">Bulan ini</span>
+            <span class="badge badge-green">{{ filterLabel }}</span>
             <span v-if="incomeChange !== null" class="text-xs font-medium" :class="incomeChange >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'">
               {{ incomeChange >= 0 ? '+' : '' }}{{ incomeChange.toFixed(0) }}%
             </span>
@@ -47,7 +115,7 @@
             </div>
           </div>
           <div class="mt-3 flex items-center gap-1.5">
-            <span class="badge badge-red">Bulan ini</span>
+            <span class="badge badge-red">{{ filterLabel }}</span>
             <span v-if="expenseChange !== null" class="text-xs font-medium" :class="expenseChange <= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'">
               {{ expenseChange >= 0 ? '+' : '' }}{{ expenseChange.toFixed(0) }}%
             </span>
@@ -348,13 +416,55 @@ const now = new Date()
 const currentMonth = now.getMonth()
 const currentYear = now.getFullYear()
 
-// Percentage changes
+// Filter state: null = semua, { year, month } = bulan tertentu
+const selectedMonth = ref(null)
+
+// Generate month options (last 12 months)
+const monthOptions = computed(() => {
+  const options = []
+  for (let i = 0; i < 12; i++) {
+    let m = currentMonth - i
+    let y = currentYear
+    if (m < 0) { m += 12; y-- }
+    options.push({
+      year: y,
+      month: m,
+      label: `${getMonthName(m)} ${y}`
+    })
+  }
+  return options
+})
+
+// Computed value for select binding
+const selectedMonthValue = computed(() => {
+  if (selectedMonth.value === null) return 'all'
+  return `${selectedMonth.value.year}-${selectedMonth.value.month}`
+})
+
+// Label for badge
+const filterLabel = computed(() => {
+  if (selectedMonth.value === null) return 'Semua'
+  return `${getMonthName(selectedMonth.value.month).substring(0, 3)} ${selectedMonth.value.year}`
+})
+
+// Previous month label for comparison hint
+const prevMonthLabel = computed(() => {
+  if (!selectedMonth.value) return ''
+  let prevM = selectedMonth.value.month - 1
+  let prevY = selectedMonth.value.year
+  if (prevM < 0) { prevM = 11; prevY-- }
+  return `${getMonthName(prevM).substring(0, 3)} ${prevY}`
+})
+
+// Percentage changes (only shown when a month is selected)
 const incomeChange = computed(() => {
+  if (selectedMonth.value === null) return null
   if (prevSummary.value.income === 0) return null
   return ((summary.value.income - prevSummary.value.income) / prevSummary.value.income) * 100
 })
 
 const expenseChange = computed(() => {
+  if (selectedMonth.value === null) return null
   if (prevSummary.value.expense === 0) return null
   return ((summary.value.expense - prevSummary.value.expense) / prevSummary.value.expense) * 100
 })
@@ -375,9 +485,7 @@ const trendChartOptions = {
       padding: 10,
       cornerRadius: 8,
       callbacks: {
-        label: (ctx) => {
-          return `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
-        }
+        label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
       }
     }
   },
@@ -449,6 +557,21 @@ const handleTransactionSaved = () => {
   loadData()
 }
 
+const setFilter = (month) => {
+  selectedMonth.value = month
+  loadData()
+}
+
+const handleFilterChange = (event) => {
+  const val = event.target.value
+  if (val === 'all') {
+    setFilter(null)
+  } else {
+    const [year, month] = val.split('-').map(Number)
+    setFilter({ year, month, label: `${getMonthName(month).substring(0, 3)} ${year}` })
+  }
+}
+
 const buildTrendChart = async () => {
   const labels = []
   const incomeData = []
@@ -498,33 +621,54 @@ const loadData = async () => {
   try {
     await loadCategories()
 
-    const { start, end } = getMonthRange(currentYear, currentMonth)
-    const startDate = start.toISOString().split('T')[0]
-    const endDate = end.toISOString().split('T')[0]
+    let startDate = null
+    let endDate = null
 
-    // Load data in parallel where possible
-    const [summaryData, expenseByCat] = await Promise.all([
-      getSummary(startDate, endDate),
-      getExpenseByCategory(startDate, endDate)
-    ])
+    if (selectedMonth.value) {
+      // Filtered by specific month
+      const { start, end } = getMonthRange(selectedMonth.value.year, selectedMonth.value.month)
+      startDate = start.toISOString().split('T')[0]
+      endDate = end.toISOString().split('T')[0]
+    }
 
-    summary.value = summaryData
-    expenseByCategory.value = expenseByCat
+    // Load summary and expense by category
+    if (startDate && endDate) {
+      const [summaryData, expenseByCat] = await Promise.all([
+        getSummary(startDate, endDate),
+        getExpenseByCategory(startDate, endDate)
+      ])
+      summary.value = summaryData
+      expenseByCategory.value = expenseByCat
 
-    // Previous month for comparison
-    let prevMonth = currentMonth - 1
-    let prevYear = currentYear
-    if (prevMonth < 0) { prevMonth = 11; prevYear-- }
-    const prevRange = getMonthRange(prevYear, prevMonth)
-    prevSummary.value = await getSummary(
-      prevRange.start.toISOString().split('T')[0],
-      prevRange.end.toISOString().split('T')[0]
-    )
+      // Previous month for comparison
+      let prevMonth = selectedMonth.value.month - 1
+      let prevYear = selectedMonth.value.year
+      if (prevMonth < 0) { prevMonth = 11; prevYear-- }
+      const prevRange = getMonthRange(prevYear, prevMonth)
+      prevSummary.value = await getSummary(
+        prevRange.start.toISOString().split('T')[0],
+        prevRange.end.toISOString().split('T')[0]
+      )
+    } else {
+      // All time: no date filter
+      const [summaryData, expenseByCat] = await Promise.all([
+        getSummary('2000-01-01', '2099-12-31'),
+        getExpenseByCategory('2000-01-01', '2099-12-31')
+      ])
+      summary.value = summaryData
+      expenseByCategory.value = expenseByCat
+      prevSummary.value = { income: 0, expense: 0, balance: 0 }
+    }
 
-    await loadTransactions()
+    // Load transactions (filtered or all)
+    if (startDate && endDate) {
+      await loadTransactions({ startDate, endDate })
+    } else {
+      await loadTransactions()
+    }
     recentTransactions.value = transactions.value.slice(0, 7)
 
-    // Budget data
+    // Budget data (always current month)
     await loadBudgets(currentYear, currentMonth)
     budgetSummary.value = budgets.value
     budgetAlerts.value = await getBudgetAlerts(currentYear, currentMonth)
