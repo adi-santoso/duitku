@@ -10,7 +10,6 @@ export function useTeam() {
   const teams = ref([])
   const currentTeam = ref(null)
   const teamMembers = ref([])
-  const teamInvitations = ref([])
   const loading = ref(false)
   const error = ref(null)
 
@@ -23,6 +22,7 @@ export function useTeam() {
 
     try {
       const userId = getUserId()
+      if (!userId) return
 
       const { data, error: err } = await supabase
         .from('team_members')
@@ -63,6 +63,7 @@ export function useTeam() {
 
     try {
       const userId = getUserId()
+      if (!userId) throw new Error('User not authenticated')
 
       // Create team
       const { data: team, error: teamErr } = await supabase
@@ -143,11 +144,9 @@ export function useTeam() {
 
       if (err) throw err
 
-      // Clear current team if it was deleted
       if (currentTeam.value?.id === teamId) {
         currentTeam.value = null
         teamMembers.value = []
-        teamInvitations.value = []
       }
 
       await loadTeams()
@@ -183,42 +182,30 @@ export function useTeam() {
   }
 
   /**
-   * Invite a user by email
+   * Add existing user to team by email (owner only)
+   * Uses RPC function that looks up user and adds them directly
    */
-  const inviteMember = async (teamId, email) => {
+  const addMemberByEmail = async (teamId, email) => {
     loading.value = true
     error.value = null
 
     try {
-      // Check if already invited
-      const { data: existing } = await supabase
-        .from('team_invitations')
-        .select('id')
-        .eq('team_id', teamId)
-        .eq('invited_email', email)
-        .eq('status', 'pending')
-        .maybeSingle()
+      const { data, error: err } = await supabase
+        .rpc('add_team_member_by_email', {
+          target_team_id: teamId,
+          member_email: email
+        })
 
-      if (existing) {
-        throw new Error('Email ini sudah diundang dan menunggu konfirmasi')
+      if (err) throw err
+
+      if (!data.success) {
+        throw new Error(data.error)
       }
 
-      const { data, error: err } = await supabase
-        .from('team_invitations')
-        .insert({
-          team_id: teamId,
-          invited_email: email,
-          invited_by: getUserId()
-        })
-        .select()
-        .single()
-
-      if (err) throw err
-
-      await loadInvitations(teamId)
+      await loadTeamMembers(teamId)
       return data
     } catch (err) {
-      console.error('Error inviting member:', err)
+      console.error('Error adding member:', err)
       error.value = err.message
       throw err
     } finally {
@@ -227,143 +214,31 @@ export function useTeam() {
   }
 
   /**
-   * Load invitations for a team
+   * Create a new account and add to team (owner only)
+   * Uses RPC function that creates user in auth.users and adds to team
    */
-  const loadInvitations = async (teamId) => {
-    try {
-      const { data, error: err } = await supabase
-        .from('team_invitations')
-        .select('*')
-        .eq('team_id', teamId)
-        .order('created_at', { ascending: false })
-
-      if (err) throw err
-
-      teamInvitations.value = data || []
-    } catch (err) {
-      console.error('Error loading invitations:', err)
-      error.value = err.message
-    }
-  }
-
-  /**
-   * Load pending invitations for the current user
-   */
-  const loadMyInvitations = async () => {
-    try {
-      const email = currentUser.value?.email
-      if (!email) return []
-
-      const { data, error: err } = await supabase
-        .from('team_invitations')
-        .select(`
-          *,
-          teams (
-            id,
-            name,
-            description
-          )
-        `)
-        .eq('invited_email', email)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-
-      if (err) throw err
-
-      return data || []
-    } catch (err) {
-      console.error('Error loading my invitations:', err)
-      return []
-    }
-  }
-
-  /**
-   * Accept an invitation
-   */
-  const acceptInvitation = async (invitationId) => {
+  const createMemberAccount = async (teamId, email, password) => {
     loading.value = true
     error.value = null
 
     try {
-      // Get invitation details
-      const { data: invitation, error: invErr } = await supabase
-        .from('team_invitations')
-        .select('*')
-        .eq('id', invitationId)
-        .single()
-
-      if (invErr) throw invErr
-
-      // Update invitation status
-      const { error: updateErr } = await supabase
-        .from('team_invitations')
-        .update({ status: 'accepted' })
-        .eq('id', invitationId)
-
-      if (updateErr) throw updateErr
-
-      // Add user as team member
-      const { error: memberErr } = await supabase
-        .from('team_members')
-        .insert({
-          team_id: invitation.team_id,
-          user_id: getUserId(),
-          role: 'member'
+      const { data, error: err } = await supabase
+        .rpc('create_team_member_account', {
+          target_team_id: teamId,
+          member_email: email,
+          member_password: password
         })
 
-      if (memberErr) throw memberErr
-
-      await loadTeams()
-    } catch (err) {
-      console.error('Error accepting invitation:', err)
-      error.value = err.message
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  /**
-   * Decline an invitation
-   */
-  const declineInvitation = async (invitationId) => {
-    loading.value = true
-    error.value = null
-
-    try {
-      const { error: err } = await supabase
-        .from('team_invitations')
-        .update({ status: 'declined' })
-        .eq('id', invitationId)
-
-      if (err) throw err
-    } catch (err) {
-      console.error('Error declining invitation:', err)
-      error.value = err.message
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  /**
-   * Cancel a pending invitation (owner only)
-   */
-  const cancelInvitation = async (invitationId, teamId) => {
-    loading.value = true
-    error.value = null
-
-    try {
-      const { error: err } = await supabase
-        .from('team_invitations')
-        .delete()
-        .eq('id', invitationId)
-
       if (err) throw err
 
-      await loadInvitations(teamId)
+      if (!data.success) {
+        throw new Error(data.error)
+      }
+
+      await loadTeamMembers(teamId)
+      return data
     } catch (err) {
-      console.error('Error canceling invitation:', err)
+      console.error('Error creating member account:', err)
       error.value = err.message
       throw err
     } finally {
@@ -450,34 +325,21 @@ export function useTeam() {
    */
   const memberCount = computed(() => teamMembers.value.length)
 
-  /**
-   * Get pending invitation count
-   */
-  const pendingInvitationCount = computed(() =>
-    teamInvitations.value.filter(i => i.status === 'pending').length
-  )
-
   return {
     teams,
     currentTeam,
     teamMembers,
-    teamInvitations,
     loading,
     error,
     isOwner,
     memberCount,
-    pendingInvitationCount,
     loadTeams,
     createTeam,
     updateTeam,
     deleteTeam,
     loadTeamMembers,
-    inviteMember,
-    loadInvitations,
-    loadMyInvitations,
-    acceptInvitation,
-    declineInvitation,
-    cancelInvitation,
+    addMemberByEmail,
+    createMemberAccount,
     removeMember,
     leaveTeam,
     setCurrentTeam

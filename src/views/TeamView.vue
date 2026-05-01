@@ -1,50 +1,6 @@
 <template>
   <div class="space-y-4 lg:space-y-6 pb-20 lg:pb-0 animate-fade-in">
 
-    <!-- Pending Invitations Banner -->
-    <div v-if="myInvitations.length > 0" class="card border-amber-200 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/5">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-sm font-bold text-amber-800 dark:text-amber-300">Undangan Tim</h3>
-          <p class="text-xs text-amber-600 dark:text-amber-400">Kamu punya {{ myInvitations.length }} undangan menunggu</p>
-        </div>
-      </div>
-
-      <div class="space-y-2">
-        <div
-          v-for="inv in myInvitations"
-          :key="inv.id"
-          class="flex items-center justify-between p-3 rounded-xl bg-white/80 dark:bg-slate-900/50"
-        >
-          <div>
-            <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ inv.teams?.name }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">{{ inv.teams?.description || 'Tidak ada deskripsi' }}</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button
-              @click="handleAcceptInvitation(inv.id)"
-              class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors"
-              :disabled="loading"
-            >
-              Terima
-            </button>
-            <button
-              @click="handleDeclineInvitation(inv.id)"
-              class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
-              :disabled="loading"
-            >
-              Tolak
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- My Teams -->
     <div class="card">
       <div class="flex items-center justify-between mb-4">
@@ -115,7 +71,7 @@
       </div>
     </div>
 
-    <!-- Team Detail (when a team is selected) -->
+    <!-- Team Detail -->
     <template v-if="selectedTeam">
       <!-- Team Info & Actions -->
       <div class="card">
@@ -137,7 +93,7 @@
             </button>
             <button
               v-if="isOwner"
-              @click="handleDeleteTeam"
+              @click="showDeleteConfirm = true"
               class="btn btn-ghost text-xs !px-2.5 !py-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
             >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -147,7 +103,7 @@
             </button>
             <button
               v-if="!isOwner"
-              @click="handleLeaveTeam"
+              @click="showLeaveConfirm = true"
               class="btn btn-ghost text-xs !px-2.5 !py-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
             >
               Keluar Tim
@@ -163,16 +119,26 @@
             <h3 class="text-sm font-bold text-slate-900 dark:text-white">Anggota ({{ teamMembers.length }})</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">Daftar anggota tim</p>
           </div>
-          <button
-            v-if="isOwner"
-            @click="showInviteModal = true"
-            class="btn btn-secondary text-xs !px-3 !py-1.5"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-            </svg>
-            Undang
-          </button>
+          <div v-if="isOwner" class="flex items-center gap-2">
+            <button
+              @click="showAddMemberModal = true"
+              class="btn btn-secondary text-xs !px-3 !py-1.5"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+              </svg>
+              Tambah
+            </button>
+            <button
+              @click="showCreateAccountModal = true"
+              class="btn btn-primary text-xs !px-3 !py-1.5"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              Buat Akun
+            </button>
+          </div>
         </div>
 
         <!-- Member List -->
@@ -198,7 +164,7 @@
             </div>
             <button
               v-if="isOwner && member.role !== 'owner'"
-              @click="handleRemoveMember(member)"
+              @click="confirmRemoveMember(member)"
               class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
               title="Hapus anggota"
             >
@@ -209,38 +175,9 @@
           </div>
         </div>
       </div>
-
-      <!-- Pending Invitations (owner view) -->
-      <div v-if="isOwner && pendingInvitations.length > 0" class="card">
-        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-3">Undangan Tertunda ({{ pendingInvitations.length }})</h3>
-
-        <div class="space-y-2">
-          <div
-            v-for="inv in pendingInvitations"
-            :key="inv.id"
-            class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50"
-          >
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center">
-                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ inv.invited_email }}</p>
-                <p class="text-xs text-slate-400 dark:text-slate-500">Diundang {{ formatDate(inv.created_at) }}</p>
-              </div>
-            </div>
-            <button
-              @click="handleCancelInvitation(inv.id)"
-              class="px-2.5 py-1 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-            >
-              Batalkan
-            </button>
-          </div>
-        </div>
-      </div>
     </template>
+
+    <!-- ==================== MODALS ==================== -->
 
     <!-- Create Team Modal -->
     <teleport to="body">
@@ -249,36 +186,19 @@
           <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showCreateModal = false"></div>
           <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-5 animate-slide-up">
             <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4">Buat Tim Baru</h3>
-
             <div class="space-y-3">
               <div>
                 <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Nama Tim</label>
-                <input
-                  v-model="newTeamName"
-                  type="text"
-                  class="input"
-                  placeholder="Contoh: Keluarga, Bisnis Kecil..."
-                  @keyup.enter="handleCreateTeam"
-                />
+                <input v-model="newTeamName" type="text" class="input" placeholder="Contoh: Keluarga, Bisnis..." @keyup.enter="handleCreateTeam" />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Deskripsi (opsional)</label>
-                <input
-                  v-model="newTeamDescription"
-                  type="text"
-                  class="input"
-                  placeholder="Deskripsi singkat tentang tim ini"
-                />
+                <input v-model="newTeamDescription" type="text" class="input" placeholder="Deskripsi singkat" />
               </div>
             </div>
-
             <div class="flex items-center gap-2 mt-5">
               <button @click="showCreateModal = false" class="btn btn-secondary flex-1">Batal</button>
-              <button
-                @click="handleCreateTeam"
-                class="btn btn-primary flex-1"
-                :disabled="!newTeamName.trim() || loading"
-              >
+              <button @click="handleCreateTeam" class="btn btn-primary flex-1" :disabled="!newTeamName.trim() || loading">
                 {{ loading ? 'Membuat...' : 'Buat Tim' }}
               </button>
             </div>
@@ -294,35 +214,19 @@
           <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showEditModal = false"></div>
           <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-5 animate-slide-up">
             <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4">Edit Tim</h3>
-
             <div class="space-y-3">
               <div>
                 <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Nama Tim</label>
-                <input
-                  v-model="editTeamName"
-                  type="text"
-                  class="input"
-                  placeholder="Nama tim"
-                />
+                <input v-model="editTeamName" type="text" class="input" placeholder="Nama tim" />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Deskripsi</label>
-                <input
-                  v-model="editTeamDescription"
-                  type="text"
-                  class="input"
-                  placeholder="Deskripsi tim"
-                />
+                <input v-model="editTeamDescription" type="text" class="input" placeholder="Deskripsi tim" />
               </div>
             </div>
-
             <div class="flex items-center gap-2 mt-5">
               <button @click="showEditModal = false" class="btn btn-secondary flex-1">Batal</button>
-              <button
-                @click="handleUpdateTeam"
-                class="btn btn-primary flex-1"
-                :disabled="!editTeamName.trim() || loading"
-              >
+              <button @click="handleUpdateTeam" class="btn btn-primary flex-1" :disabled="!editTeamName.trim() || loading">
                 {{ loading ? 'Menyimpan...' : 'Simpan' }}
               </button>
             </div>
@@ -331,37 +235,123 @@
       </transition>
     </teleport>
 
-    <!-- Invite Modal -->
+    <!-- Add Member Modal (existing user by email) -->
     <teleport to="body">
       <transition name="modal">
-        <div v-if="showInviteModal" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
-          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showInviteModal = false"></div>
+        <div v-if="showAddMemberModal" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeAddMemberModal"></div>
           <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-5 animate-slide-up">
-            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Undang Anggota</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Kirim undangan ke email untuk bergabung ke tim</p>
-
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Tambah Anggota</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Masukkan email user yang sudah terdaftar di DuitKu</p>
             <div>
               <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Email</label>
-              <input
-                v-model="inviteEmail"
-                type="email"
-                class="input"
-                placeholder="contoh@email.com"
-                @keyup.enter="handleInvite"
-              />
+              <input v-model="addMemberEmail" type="email" class="input" placeholder="contoh@email.com" @keyup.enter="handleAddMember" />
             </div>
-
-            <p v-if="inviteError" class="text-xs text-red-500 mt-2">{{ inviteError }}</p>
-            <p v-if="inviteSuccess" class="text-xs text-emerald-500 mt-2">{{ inviteSuccess }}</p>
-
+            <p v-if="modalError" class="text-xs text-red-500 mt-2">{{ modalError }}</p>
+            <p v-if="modalSuccess" class="text-xs text-emerald-500 mt-2">{{ modalSuccess }}</p>
             <div class="flex items-center gap-2 mt-5">
-              <button @click="closeInviteModal" class="btn btn-secondary flex-1">Tutup</button>
-              <button
-                @click="handleInvite"
-                class="btn btn-primary flex-1"
-                :disabled="!inviteEmail.trim() || loading"
-              >
-                {{ loading ? 'Mengirim...' : 'Kirim Undangan' }}
+              <button @click="closeAddMemberModal" class="btn btn-secondary flex-1">Tutup</button>
+              <button @click="handleAddMember" class="btn btn-primary flex-1" :disabled="!addMemberEmail.trim() || loading">
+                {{ loading ? 'Menambahkan...' : 'Tambah' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </teleport>
+
+    <!-- Create Account Modal (new user) -->
+    <teleport to="body">
+      <transition name="modal">
+        <div v-if="showCreateAccountModal" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeCreateAccountModal"></div>
+          <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-5 animate-slide-up">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Buat Akun Anggota</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Buat akun baru dan langsung masuk ke tim</p>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Email</label>
+                <input v-model="newAccountEmail" type="email" class="input" placeholder="email@contoh.com" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Password</label>
+                <input v-model="newAccountPassword" type="password" class="input" placeholder="Minimal 6 karakter" />
+              </div>
+            </div>
+            <p v-if="modalError" class="text-xs text-red-500 mt-2">{{ modalError }}</p>
+            <p v-if="modalSuccess" class="text-xs text-emerald-500 mt-2">{{ modalSuccess }}</p>
+            <div class="flex items-center gap-2 mt-5">
+              <button @click="closeCreateAccountModal" class="btn btn-secondary flex-1">Tutup</button>
+              <button @click="handleCreateAccount" class="btn btn-primary flex-1" :disabled="!newAccountEmail.trim() || !newAccountPassword || loading">
+                {{ loading ? 'Membuat...' : 'Buat & Tambah' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </teleport>
+
+    <!-- Delete Team Confirm Modal -->
+    <teleport to="body">
+      <transition name="modal">
+        <div v-if="showDeleteConfirm" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showDeleteConfirm = false"></div>
+          <div class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-5 animate-slide-up">
+            <div class="text-center mb-4">
+              <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/15 flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">Hapus Tim?</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Tim "{{ selectedTeam?.name }}" dan semua datanya akan dihapus permanen.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button @click="showDeleteConfirm = false" class="btn btn-secondary flex-1">Batal</button>
+              <button @click="handleDeleteTeam" class="btn btn-danger flex-1" :disabled="loading">
+                {{ loading ? 'Menghapus...' : 'Hapus' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </teleport>
+
+    <!-- Leave Team Confirm Modal -->
+    <teleport to="body">
+      <transition name="modal">
+        <div v-if="showLeaveConfirm" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showLeaveConfirm = false"></div>
+          <div class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-5 animate-slide-up">
+            <div class="text-center mb-4">
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">Keluar dari Tim?</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Kamu akan keluar dari tim "{{ selectedTeam?.name }}".</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button @click="showLeaveConfirm = false" class="btn btn-secondary flex-1">Batal</button>
+              <button @click="handleLeaveTeam" class="btn btn-danger flex-1" :disabled="loading">
+                {{ loading ? 'Keluar...' : 'Keluar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </teleport>
+
+    <!-- Remove Member Confirm Modal -->
+    <teleport to="body">
+      <transition name="modal">
+        <div v-if="showRemoveConfirm" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showRemoveConfirm = false"></div>
+          <div class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-5 animate-slide-up">
+            <div class="text-center mb-4">
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">Hapus Anggota?</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Hapus {{ memberToRemove?.email }} dari tim?</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button @click="showRemoveConfirm = false" class="btn btn-secondary flex-1">Batal</button>
+              <button @click="handleRemoveMember" class="btn btn-danger flex-1" :disabled="loading">
+                {{ loading ? 'Menghapus...' : 'Hapus' }}
               </button>
             </div>
           </div>
@@ -379,19 +369,14 @@ import { useAuth } from '@/composables/useAuth'
 const {
   teams,
   teamMembers,
-  teamInvitations,
   loading,
   loadTeams,
   createTeam,
   updateTeam,
   deleteTeam,
   loadTeamMembers,
-  inviteMember,
-  loadInvitations,
-  loadMyInvitations,
-  acceptInvitation,
-  declineInvitation,
-  cancelInvitation,
+  addMemberByEmail,
+  createMemberAccount,
   removeMember,
   leaveTeam
 } = useTeam()
@@ -400,25 +385,29 @@ const { getUserId } = useAuth()
 
 // State
 const selectedTeam = ref(null)
-const myInvitations = ref([])
 
 // Modals
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
-const showInviteModal = ref(false)
+const showAddMemberModal = ref(false)
+const showCreateAccountModal = ref(false)
+const showDeleteConfirm = ref(false)
+const showLeaveConfirm = ref(false)
+const showRemoveConfirm = ref(false)
 
-// Create form
+// Form data
 const newTeamName = ref('')
 const newTeamDescription = ref('')
-
-// Edit form
 const editTeamName = ref('')
 const editTeamDescription = ref('')
+const addMemberEmail = ref('')
+const newAccountEmail = ref('')
+const newAccountPassword = ref('')
+const memberToRemove = ref(null)
 
-// Invite form
-const inviteEmail = ref('')
-const inviteError = ref('')
-const inviteSuccess = ref('')
+// Modal feedback
+const modalError = ref('')
+const modalSuccess = ref('')
 
 // Computed
 const isOwner = computed(() => {
@@ -426,37 +415,27 @@ const isOwner = computed(() => {
   return selectedTeam.value.owner_id === getUserId()
 })
 
-const pendingInvitations = computed(() =>
-  teamInvitations.value.filter(i => i.status === 'pending')
-)
-
 // Methods
 const selectTeam = async (team) => {
   selectedTeam.value = team
-  await Promise.all([
-    loadTeamMembers(team.id),
-    loadInvitations(team.id)
-  ])
+  await loadTeamMembers(team.id)
 }
 
 const handleCreateTeam = async () => {
   if (!newTeamName.value.trim()) return
-
   try {
     const team = await createTeam(newTeamName.value.trim(), newTeamDescription.value.trim())
     showCreateModal.value = false
     newTeamName.value = ''
     newTeamDescription.value = ''
-    // Auto-select the new team
     await selectTeam({ ...team, myRole: 'owner' })
   } catch (err) {
-    alert('Gagal membuat tim: ' + err.message)
+    // error handled in composable
   }
 }
 
 const handleUpdateTeam = async () => {
   if (!editTeamName.value.trim() || !selectedTeam.value) return
-
   try {
     await updateTeam(selectedTeam.value.id, {
       name: editTeamName.value.trim(),
@@ -466,91 +445,91 @@ const handleUpdateTeam = async () => {
     selectedTeam.value.description = editTeamDescription.value.trim()
     showEditModal.value = false
   } catch (err) {
-    alert('Gagal mengupdate tim: ' + err.message)
+    // error handled in composable
   }
 }
 
 const handleDeleteTeam = async () => {
   if (!selectedTeam.value) return
-  if (!confirm(`Yakin ingin menghapus tim "${selectedTeam.value.name}"? Semua data tim akan hilang.`)) return
-
   try {
     await deleteTeam(selectedTeam.value.id)
     selectedTeam.value = null
+    showDeleteConfirm.value = false
   } catch (err) {
-    alert('Gagal menghapus tim: ' + err.message)
+    // error handled in composable
   }
 }
 
 const handleLeaveTeam = async () => {
   if (!selectedTeam.value) return
-  if (!confirm(`Yakin ingin keluar dari tim "${selectedTeam.value.name}"?`)) return
-
   try {
     await leaveTeam(selectedTeam.value.id)
     selectedTeam.value = null
+    showLeaveConfirm.value = false
   } catch (err) {
-    alert('Gagal keluar dari tim: ' + err.message)
+    // error handled in composable
   }
 }
 
-const handleInvite = async () => {
-  if (!inviteEmail.value.trim() || !selectedTeam.value) return
-
-  inviteError.value = ''
-  inviteSuccess.value = ''
-
+const handleAddMember = async () => {
+  if (!addMemberEmail.value.trim() || !selectedTeam.value) return
+  modalError.value = ''
+  modalSuccess.value = ''
   try {
-    await inviteMember(selectedTeam.value.id, inviteEmail.value.trim())
-    inviteSuccess.value = `Undangan berhasil dikirim ke ${inviteEmail.value}`
-    inviteEmail.value = ''
+    await addMemberByEmail(selectedTeam.value.id, addMemberEmail.value.trim())
+    modalSuccess.value = `${addMemberEmail.value} berhasil ditambahkan ke tim!`
+    addMemberEmail.value = ''
   } catch (err) {
-    inviteError.value = err.message
+    modalError.value = err.message
   }
 }
 
-const closeInviteModal = () => {
-  showInviteModal.value = false
-  inviteEmail.value = ''
-  inviteError.value = ''
-  inviteSuccess.value = ''
+const closeAddMemberModal = () => {
+  showAddMemberModal.value = false
+  addMemberEmail.value = ''
+  modalError.value = ''
+  modalSuccess.value = ''
 }
 
-const handleCancelInvitation = async (invitationId) => {
-  if (!confirm('Batalkan undangan ini?')) return
-
+const handleCreateAccount = async () => {
+  if (!newAccountEmail.value.trim() || !newAccountPassword.value || !selectedTeam.value) return
+  if (newAccountPassword.value.length < 6) {
+    modalError.value = 'Password minimal 6 karakter'
+    return
+  }
+  modalError.value = ''
+  modalSuccess.value = ''
   try {
-    await cancelInvitation(invitationId, selectedTeam.value.id)
+    await createMemberAccount(selectedTeam.value.id, newAccountEmail.value.trim(), newAccountPassword.value)
+    modalSuccess.value = `Akun ${newAccountEmail.value} berhasil dibuat dan ditambahkan ke tim!`
+    newAccountEmail.value = ''
+    newAccountPassword.value = ''
   } catch (err) {
-    alert('Gagal membatalkan undangan: ' + err.message)
+    modalError.value = err.message
   }
 }
 
-const handleRemoveMember = async (member) => {
-  if (!confirm(`Hapus ${member.email} dari tim?`)) return
-
-  try {
-    await removeMember(selectedTeam.value.id, member.user_id)
-  } catch (err) {
-    alert('Gagal menghapus anggota: ' + err.message)
-  }
+const closeCreateAccountModal = () => {
+  showCreateAccountModal.value = false
+  newAccountEmail.value = ''
+  newAccountPassword.value = ''
+  modalError.value = ''
+  modalSuccess.value = ''
 }
 
-const handleAcceptInvitation = async (invitationId) => {
-  try {
-    await acceptInvitation(invitationId)
-    myInvitations.value = await loadMyInvitations()
-  } catch (err) {
-    alert('Gagal menerima undangan: ' + err.message)
-  }
+const confirmRemoveMember = (member) => {
+  memberToRemove.value = member
+  showRemoveConfirm.value = true
 }
 
-const handleDeclineInvitation = async (invitationId) => {
+const handleRemoveMember = async () => {
+  if (!memberToRemove.value || !selectedTeam.value) return
   try {
-    await declineInvitation(invitationId)
-    myInvitations.value = myInvitations.value.filter(i => i.id !== invitationId)
+    await removeMember(selectedTeam.value.id, memberToRemove.value.user_id)
+    showRemoveConfirm.value = false
+    memberToRemove.value = null
   } catch (err) {
-    alert('Gagal menolak undangan: ' + err.message)
+    // error handled in composable
   }
 }
 
@@ -560,7 +539,7 @@ const formatDate = (dateStr) => {
   return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-// Watch for edit modal open
+// Watch for edit modal
 watch(showEditModal, (val) => {
   if (val && selectedTeam.value) {
     editTeamName.value = selectedTeam.value.name
@@ -571,7 +550,6 @@ watch(showEditModal, (val) => {
 // Init
 onMounted(async () => {
   await loadTeams()
-  myInvitations.value = await loadMyInvitations()
 })
 </script>
 

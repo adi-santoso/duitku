@@ -63,7 +63,7 @@
 
       <!-- Logout -->
       <button
-        @click="handleLogout"
+        @click="showLogoutModal = true"
         class="sidebar-link w-full text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
       >
         <ArrowRightOnRectangleIcon class="w-5 h-5 flex-shrink-0" />
@@ -80,10 +80,34 @@
       @click="closeMobile"
     />
   </transition>
+
+  <!-- Logout Confirmation Modal -->
+  <teleport to="body">
+    <transition name="fade-overlay">
+      <div v-if="showLogoutModal" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showLogoutModal = false"></div>
+        <div class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-5">
+          <div class="text-center mb-4">
+            <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/15 flex items-center justify-center mx-auto mb-3">
+              <svg class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+              </svg>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Keluar dari Akun?</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Kamu perlu login kembali untuk mengakses data.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button @click="showLogoutModal = false" class="btn btn-secondary flex-1">Batal</button>
+            <button @click="handleLogout" class="btn btn-danger flex-1">Keluar</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+  </teleport>
 </template>
 
 <script setup>
-import { computed, h } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useDarkMode } from '@/composables/useDarkMode'
@@ -98,6 +122,8 @@ const route = useRoute()
 const router = useRouter()
 const { logout } = useAuth()
 const { isDark, toggleDark } = useDarkMode()
+
+const showLogoutModal = ref(false)
 
 // SVG Icon Components
 const HomeIcon = { render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', 'stroke-width': '1.5', stroke: 'currentColor' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25' })]) }
@@ -134,10 +160,9 @@ const closeMobile = () => {
 }
 
 const handleLogout = async () => {
-  if (confirm('Yakin ingin keluar?')) {
-    await logout()
-    router.push('/login')
-  }
+  showLogoutModal.value = false
+  await logout()
+  router.push('/login')
 }
 </script>
 
