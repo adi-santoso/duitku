@@ -277,6 +277,11 @@ duitku/
 - docs: Documentation
 - chore: Maintenance
 
+### Workflow Rules
+- **WAJIB commit setelah selesai mengerjakan setiap fitur/task baru**
+- Setiap commit harus bisa di-build tanpa error (`npm run build`)
+- Jangan gabung banyak fitur dalam satu commit, pisahkan per fitur/task
+
 ### Testing Checklist (Manual)
 - [ ] Mobile responsive (375px - 428px)
 - [ ] Tablet responsive (768px - 1024px)
