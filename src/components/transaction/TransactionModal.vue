@@ -167,6 +167,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useCategories } from '@/composables/useCategories'
 import { useTransactions } from '@/composables/useTransactions'
 import { useImageCompression } from '@/composables/useImageCompression'
+import { useToast } from '@/composables/useToast'
 import { formatDateInput } from '@/utils/dateHelpers'
 
 const props = defineProps({
@@ -188,6 +189,7 @@ const isEditing = computed(() => !!props.transaction)
 const { loadCategories, categories: allCategories } = useCategories()
 const { addTransaction, updateTransaction } = useTransactions()
 const { compressImage, validateImage } = useImageCompression()
+const toast = useToast()
 
 const loading = ref(false)
 const imageError = ref('')
@@ -234,7 +236,7 @@ const removeImage = () => {
 
 const handleSubmit = async () => {
   if (!form.value.categoryId) {
-    alert('Pilih kategori terlebih dahulu')
+    toast.warning('Pilih kategori terlebih dahulu')
     return
   }
 
@@ -260,7 +262,7 @@ const handleSubmit = async () => {
 
     emit('saved')
   } catch (error) {
-    alert('Gagal menyimpan transaksi: ' + error.message)
+    toast.error('Gagal menyimpan transaksi: ' + error.message)
   } finally {
     loading.value = false
   }

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { setAuthExpiredHandler } from '@/utils/api'
 
 const routes = [
   {
@@ -66,6 +67,13 @@ router.beforeEach((to, from, next) => {
     next('/')
   } else {
     next()
+  }
+})
+
+// Handle auth expiry from API (401 responses)
+setAuthExpiredHandler(() => {
+  if (router.currentRoute.value.path !== '/login') {
+    router.push('/login')
   }
 })
 

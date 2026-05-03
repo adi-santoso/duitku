@@ -11,11 +11,6 @@ export function useTransactions() {
   const transactions = ref([])
 
   /**
-   * @deprecated No longer needed
-   */
-  const setActiveTeam = (teamId) => {}
-
-  /**
    * Load all transactions with category info
    */
   const loadTransactions = async (filters = {}) => {
@@ -231,7 +226,6 @@ export function useTransactions() {
     totalIncome,
     totalExpense,
     balance,
-    setActiveTeam,
     loadTransactions,
     getTransactionsByMonth,
     addTransaction,

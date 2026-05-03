@@ -247,11 +247,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useCategories } from '@/composables/useCategories'
 import { useBudgets } from '@/composables/useBudgets'
+import { useToast } from '@/composables/useToast'
 import { formatCurrency } from '@/utils/formatters'
 import { getMonthName } from '@/utils/dateHelpers'
 
 const { categories, expenseCategories, loadCategories } = useCategories()
 const { budgets, loadBudgets, addBudget, updateBudget, deleteBudget } = useBudgets()
+const toast = useToast()
 
 const now = new Date()
 const currentMonth = now.getMonth()
@@ -326,7 +328,7 @@ const closeModals = () => {
 
 const handleSubmit = async () => {
   if (!form.value.amount || form.value.amount <= 0) {
-    alert('Masukkan jumlah anggaran')
+    toast.warning('Masukkan jumlah anggaran')
     return
   }
 
@@ -334,7 +336,7 @@ const handleSubmit = async () => {
     await updateBudget(editingBudget.value.id, parseFloat(form.value.amount))
   } else {
     if (!form.value.categoryId) {
-      alert('Pilih kategori terlebih dahulu')
+      toast.warning('Pilih kategori terlebih dahulu')
       return
     }
     await addBudget(form.value.categoryId, parseFloat(form.value.amount))

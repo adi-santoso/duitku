@@ -48,6 +48,9 @@
     :canInstall="canInstall"
     @install="installApp"
   />
+
+  <!-- Global Toast Notifications -->
+  <Toast />
 </template>
 
 <script setup>
@@ -61,6 +64,7 @@ import Header from '@/components/layout/Header.vue'
 import BottomNav from '@/components/layout/BottomNav.vue'
 import InstallPrompt from '@/components/pwa/InstallPrompt.vue'
 import OfflineIndicator from '@/components/pwa/OfflineIndicator.vue'
+import Toast from '@/components/common/Toast.vue'
 
 const route = useRoute()
 const { authLoading } = useAuth()

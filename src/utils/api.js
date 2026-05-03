@@ -49,6 +49,15 @@ export function removeStoredUser() {
 }
 
 /**
+ * Callback for handling auth expiry (set by router)
+ */
+let onAuthExpired = null
+
+export function setAuthExpiredHandler(handler) {
+  onAuthExpired = handler
+}
+
+/**
  * Make API request with auth header
  */
 async function request(endpoint, options = {}) {
@@ -67,6 +76,13 @@ async function request(endpoint, options = {}) {
   const data = await response.json()
 
   if (!response.ok || !data.success) {
+    // Auto-logout on 401 (token expired/invalid)
+    if (response.status === 401 && !endpoint.startsWith('/auth/')) {
+      removeToken()
+      localStorage.removeItem('duitku_user')
+      if (onAuthExpired) onAuthExpired()
+    }
+
     const error = new Error(data.error || 'Request failed')
     error.status = response.status
     throw error

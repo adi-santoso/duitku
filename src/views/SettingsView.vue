@@ -180,11 +180,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useTransactions } from '@/composables/useTransactions'
 import { useAuth } from '@/composables/useAuth'
 import { usePWA } from '@/composables/usePWA'
+import { useToast } from '@/composables/useToast'
 import { importData } from '@/utils/importData'
 
 const { transactions, loadTransactions, bulkImport } = useTransactions()
 const { currentUser } = useAuth()
 const { isOnline, canInstall, isInstalled, installApp } = usePWA()
+const toast = useToast()
 const importing = ref(false)
 
 const userEmail = computed(() => currentUser.value?.email || '-')
@@ -205,10 +207,10 @@ const importFromSpreadsheet = async () => {
 
   try {
     const imported = await bulkImport(importData)
-    alert(`Berhasil import ${imported} transaksi!`)
+    toast.success(`Berhasil import ${imported} transaksi!`)
     window.location.reload()
   } catch (error) {
-    alert('Gagal import: ' + error.message)
+    toast.error('Gagal import: ' + error.message)
   } finally {
     importing.value = false
   }
@@ -229,9 +231,9 @@ const exportData = () => {
     a.click()
     URL.revokeObjectURL(url)
 
-    alert('Data berhasil di-export!')
+    toast.success('Data berhasil di-export!')
   } catch (error) {
-    alert('Gagal export data: ' + error.message)
+    toast.error('Gagal export data: ' + error.message)
   }
 }
 </script>
