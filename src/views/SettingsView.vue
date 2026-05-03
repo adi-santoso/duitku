@@ -58,7 +58,7 @@
           </svg>
         </router-link>
 
-        <button @click="exportData" class="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+        <button @click="showExportModal = true" class="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center group-hover:scale-105 transition-transform">
               <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -67,7 +67,7 @@
             </div>
             <div class="text-left">
               <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Export Data</p>
-              <p class="text-xs text-slate-400 dark:text-slate-500">Download data transaksi (JSON)</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Download data transaksi (CSV, PDF, JSON)</p>
             </div>
           </div>
           <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -128,6 +128,57 @@
       </div>
     </div>
 
+    <!-- Export Modal -->
+    <div v-if="showExportModal" class="fixed inset-0 z-50 flex items-end md:items-center justify-center animate-fade-in" @click.self="showExportModal = false">
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showExportModal = false" />
+      <div class="relative w-full md:max-w-sm bg-white dark:bg-slate-900 rounded-t-3xl md:rounded-2xl shadow-2xl animate-slide-up border-t md:border border-slate-200 dark:border-slate-800">
+        <div class="px-5 py-4 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white">Export Data</h3>
+          <button @click="showExportModal = false" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-5 space-y-3">
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">Pilih format export ({{ transactions.length }} transaksi)</p>
+
+          <!-- CSV -->
+          <button @click="handleExport('csv')" class="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/5 transition-all group">
+            <div class="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400">CSV</span>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Spreadsheet (CSV)</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Bisa dibuka di Excel, Google Sheets</p>
+            </div>
+          </button>
+
+          <!-- PDF -->
+          <button @click="handleExport('pdf')" class="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50/50 dark:hover:bg-red-500/5 transition-all group">
+            <div class="w-11 h-11 rounded-xl bg-red-100 dark:bg-red-500/15 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <span class="text-sm font-bold text-red-600 dark:text-red-400">PDF</span>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Laporan (PDF)</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Laporan lengkap dengan ringkasan</p>
+            </div>
+          </button>
+
+          <!-- JSON -->
+          <button @click="handleExport('json')" class="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/50 dark:hover:bg-blue-500/5 transition-all group">
+            <div class="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <span class="text-sm font-bold text-blue-600 dark:text-blue-400">JSON</span>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Data Mentah (JSON)</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Untuk backup atau integrasi</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- PWA Status -->
     <div class="card">
       <h2 class="text-base font-bold text-slate-900 dark:text-white mb-1">Aplikasi</h2>
@@ -181,6 +232,7 @@ import { useTransactions } from '@/composables/useTransactions'
 import { useAuth } from '@/composables/useAuth'
 import { usePWA } from '@/composables/usePWA'
 import { useToast } from '@/composables/useToast'
+import { exportToCSV, exportToPDF, exportToJSON } from '@/utils/exportHelpers'
 import { importData } from '@/utils/importData'
 
 const { transactions, loadTransactions, bulkImport } = useTransactions()
@@ -188,6 +240,7 @@ const { currentUser } = useAuth()
 const { isOnline, canInstall, isInstalled, installApp } = usePWA()
 const toast = useToast()
 const importing = ref(false)
+const showExportModal = ref(false)
 
 const userEmail = computed(() => currentUser.value?.email || '-')
 
@@ -216,22 +269,29 @@ const importFromSpreadsheet = async () => {
   }
 }
 
-const exportData = () => {
+const handleExport = (format) => {
   try {
-    const data = {
-      transactions: transactions.value,
-      exportDate: new Date().toISOString()
+    if (!transactions.value || transactions.value.length === 0) {
+      toast.warning('Tidak ada data transaksi untuk di-export')
+      return
     }
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `duitku-export-${new Date().toISOString().split('T')[0]}.json`
-    a.click()
-    URL.revokeObjectURL(url)
+    switch (format) {
+      case 'csv':
+        exportToCSV(transactions.value)
+        toast.success('Data berhasil di-export ke CSV!')
+        break
+      case 'pdf':
+        exportToPDF(transactions.value)
+        toast.success('Laporan PDF berhasil dibuat!')
+        break
+      case 'json':
+        exportToJSON(transactions.value)
+        toast.success('Data berhasil di-export ke JSON!')
+        break
+    }
 
-    toast.success('Data berhasil di-export!')
+    showExportModal.value = false
   } catch (error) {
     toast.error('Gagal export data: ' + error.message)
   }
