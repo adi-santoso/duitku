@@ -20,6 +20,8 @@ export function useTransactions() {
       if (filters.categoryId) params.categoryId = String(filters.categoryId)
       if (filters.startDate) params.startDate = filters.startDate
       if (filters.endDate) params.endDate = filters.endDate
+      // Request all transactions (frontend handles pagination)
+      if (!params.limit) params.limit = '10000'
 
       const result = await api.transactions.list(params)
 
@@ -44,7 +46,7 @@ export function useTransactions() {
       const endDate = new Date(year, month + 1, 0)
       const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
 
-      const result = await api.transactions.list({ startDate, endDate: endDateStr })
+      const result = await api.transactions.list({ startDate, endDate: endDateStr, limit: '10000' })
 
       return (result.transactions || []).map(t => ({
         ...t,
