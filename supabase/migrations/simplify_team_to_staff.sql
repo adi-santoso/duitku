@@ -155,6 +155,7 @@ BEGIN
   new_user_id := gen_random_uuid();
   INSERT INTO auth.users (
     id, instance_id, email, encrypted_password, email_confirmed_at,
+    confirmed_at, is_sso_user,
     raw_app_meta_data, raw_user_meta_data, aud, role, created_at, updated_at
   ) VALUES (
     new_user_id,
@@ -162,6 +163,8 @@ BEGIN
     staff_email,
     extensions.crypt(staff_password, extensions.gen_salt('bf')),
     NOW(),
+    NOW(),
+    false,
     '{"provider":"email","providers":["email"]}'::jsonb,
     json_build_object('display_name', COALESCE(staff_name, split_part(staff_email, '@', 1)))::jsonb,
     'authenticated',
@@ -170,7 +173,7 @@ BEGIN
     NOW()
   );
 
-  -- Insert identity
+  -- Insert identity (with email_verified for GoTrue compatibility)
   INSERT INTO auth.identities (
     id, user_id, provider_id, identity_data, provider,
     last_sign_in_at, created_at, updated_at
@@ -178,7 +181,11 @@ BEGIN
     gen_random_uuid(),
     new_user_id,
     new_user_id::text,
-    json_build_object('sub', new_user_id::text, 'email', staff_email)::jsonb,
+    json_build_object(
+      'sub', new_user_id::text,
+      'email', staff_email,
+      'email_verified', true
+    )::jsonb,
     'email',
     NOW(),
     NOW(),

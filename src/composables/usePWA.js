@@ -39,6 +39,12 @@ async function registerServiceWorker() {
     return
   }
 
+  // Don't register SW in development — it intercepts Supabase API calls
+  if (import.meta.env.DEV) {
+    console.log('[PWA] Skipping SW registration in development')
+    return
+  }
+
   try {
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/'

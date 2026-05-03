@@ -3,9 +3,9 @@
  * Handles caching and offline support
  */
 
-const CACHE_NAME = 'duitku-v1'
-const STATIC_CACHE = 'duitku-static-v1'
-const DYNAMIC_CACHE = 'duitku-dynamic-v1'
+const CACHE_NAME = 'duitku-v2'
+const STATIC_CACHE = 'duitku-static-v2'
+const DYNAMIC_CACHE = 'duitku-dynamic-v2'
 
 // Core app shell files to precache
 const APP_SHELL = [

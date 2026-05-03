@@ -1,38 +1,23 @@
 import { ref, computed } from 'vue'
-import { supabase } from '@/utils/supabase'
-import { useAuth } from './useAuth'
+import { api } from '@/utils/api'
 
 /**
- * Composable for categories management with Supabase
- * Staff and owner share the same categories via getDataOwnerId()
+ * Composable for categories management via backend API
+ * Staff and owner share the same categories (backend handles via ownerId in JWT)
  */
 export function useCategories() {
-  const { getDataOwnerId } = useAuth()
   const categories = ref([])
 
   /**
    * Load all categories (default + owner's custom)
    */
   const loadCategories = async () => {
-    const ownerId = getDataOwnerId()
-    if (!ownerId) {
-      console.warn('loadCategories: user not authenticated yet')
-      return
+    try {
+      const data = await api.categories.list()
+      categories.value = data || []
+    } catch (err) {
+      console.error('Error loading categories:', err)
     }
-
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .or(`is_default.eq.true,user_id.eq.${ownerId}`)
-      .order('type')
-      .order('name')
-
-    if (error) {
-      console.error('Error loading categories:', error)
-      return
-    }
-
-    categories.value = data || []
   }
 
   /**
@@ -62,27 +47,7 @@ export function useCategories() {
    * Add new category
    */
   const addCategory = async (name, type, icon, color) => {
-    const ownerId = getDataOwnerId()
-    if (!ownerId) throw new Error('User not authenticated')
-
-    const { data, error } = await supabase
-      .from('categories')
-      .insert({
-        name,
-        type,
-        icon,
-        color,
-        is_default: false,
-        user_id: ownerId
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error adding category:', error)
-      throw error
-    }
-
+    const data = await api.categories.create({ name, type, icon, color })
     await loadCategories()
     return data.id
   }
@@ -91,17 +56,7 @@ export function useCategories() {
    * Update category
    */
   const updateCategory = async (id, name, icon, color) => {
-    const { error } = await supabase
-      .from('categories')
-      .update({ name, icon, color })
-      .eq('id', id)
-      .eq('is_default', false)
-
-    if (error) {
-      console.error('Error updating category:', error)
-      throw error
-    }
-
+    await api.categories.update(id, { name, icon, color })
     await loadCategories()
   }
 
@@ -109,17 +64,7 @@ export function useCategories() {
    * Delete category
    */
   const deleteCategory = async (id) => {
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', id)
-      .eq('is_default', false)
-
-    if (error) {
-      console.error('Error deleting category:', error)
-      throw error
-    }
-
+    await api.categories.delete(id)
     await loadCategories()
   }
 

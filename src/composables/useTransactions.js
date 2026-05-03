@@ -1,146 +1,82 @@
 import { ref, computed } from 'vue'
-import { supabase } from '@/utils/supabase'
+import { api } from '@/utils/api'
 import { useAuth } from './useAuth'
 
 /**
- * Composable for transactions management with Supabase
- * Staff and owner share the same data via getDataOwnerId()
+ * Composable for transactions management via backend API
+ * Staff and owner share the same data (backend handles via ownerId in JWT)
  */
 export function useTransactions() {
   const { getDataOwnerId } = useAuth()
   const transactions = ref([])
 
   /**
-   * @deprecated No longer needed — data sharing is automatic via getDataOwnerId()
+   * @deprecated No longer needed
    */
   const setActiveTeam = (teamId) => {}
 
   /**
    * Load all transactions with category info
-   * Uses getDataOwnerId() so staff sees owner's data
    */
   const loadTransactions = async (filters = {}) => {
-    const ownerId = getDataOwnerId()
-    if (!ownerId) {
-      console.warn('loadTransactions: user not authenticated yet')
-      return
+    try {
+      const params = {}
+      if (filters.type) params.type = filters.type
+      if (filters.categoryId) params.categoryId = String(filters.categoryId)
+      if (filters.startDate) params.startDate = filters.startDate
+      if (filters.endDate) params.endDate = filters.endDate
+
+      const result = await api.transactions.list(params)
+
+      // Flatten category data to match old format
+      transactions.value = (result.transactions || []).map(t => ({
+        ...t,
+        category_name: t.categories?.name,
+        category_icon: t.categories?.icon,
+        category_color: t.categories?.color
+      }))
+    } catch (err) {
+      console.error('Error loading transactions:', err)
     }
-
-    let query = supabase
-      .from('transactions')
-      .select(`
-        *,
-        categories (
-          name,
-          icon,
-          color
-        )
-      `)
-      .eq('user_id', ownerId)
-
-    if (filters.type) {
-      query = query.eq('type', filters.type)
-    }
-
-    if (filters.categoryId) {
-      query = query.eq('category_id', filters.categoryId)
-    }
-
-    if (filters.startDate) {
-      query = query.gte('transaction_date', filters.startDate)
-    }
-
-    if (filters.endDate) {
-      query = query.lte('transaction_date', filters.endDate)
-    }
-
-    query = query
-      .order('transaction_date', { ascending: false })
-      .order('created_at', { ascending: false })
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Error loading transactions:', error)
-      return
-    }
-
-    // Flatten category data to match old format
-    transactions.value = (data || []).map(t => ({
-      ...t,
-      category_name: t.categories?.name,
-      category_icon: t.categories?.icon,
-      category_color: t.categories?.color
-    }))
   }
 
   /**
    * Get transactions for specific month
    */
   const getTransactionsByMonth = async (year, month) => {
-    const ownerId = getDataOwnerId()
-    if (!ownerId) return []
+    try {
+      const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
+      const endDate = new Date(year, month + 1, 0)
+      const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
 
-    const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
-    const endDate = new Date(year, month + 1, 0)
-    const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
+      const result = await api.transactions.list({ startDate, endDate: endDateStr })
 
-    const { data, error } = await supabase
-      .from('transactions')
-      .select(`
-        *,
-        categories (
-          name,
-          icon,
-          color
-        )
-      `)
-      .eq('user_id', ownerId)
-      .gte('transaction_date', startDate)
-      .lte('transaction_date', endDateStr)
-      .order('transaction_date', { ascending: false })
-
-    if (error) {
-      console.error('Error loading monthly transactions:', error)
+      return (result.transactions || []).map(t => ({
+        ...t,
+        category_name: t.categories?.name,
+        category_icon: t.categories?.icon,
+        category_color: t.categories?.color
+      }))
+    } catch (err) {
+      console.error('Error loading monthly transactions:', err)
       return []
     }
-
-    return (data || []).map(t => ({
-      ...t,
-      category_name: t.categories?.name,
-      category_icon: t.categories?.icon,
-      category_color: t.categories?.color
-    }))
   }
 
   /**
    * Add new transaction
-   * Uses getDataOwnerId() so staff inserts into owner's data
    */
   const addTransaction = async (data) => {
-    const ownerId = getDataOwnerId()
-    if (!ownerId) throw new Error('User not authenticated')
-
-    const { data: result, error } = await supabase
-      .from('transactions')
-      .insert({
-        user_id: ownerId,
-        category_id: data.categoryId,
-        type: data.type,
-        amount: data.amount,
-        description: data.description || null,
-        receipt_image: data.receiptImage || null,
-        transaction_date: data.transactionDate,
-        is_recurring: data.isRecurring || false,
-        recurring_frequency: data.recurringFrequency || null
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error adding transaction:', error)
-      throw error
-    }
+    const result = await api.transactions.create({
+      categoryId: data.categoryId,
+      type: data.type,
+      amount: data.amount,
+      description: data.description || undefined,
+      receiptImage: data.receiptImage || undefined,
+      transactionDate: data.transactionDate,
+      isRecurring: data.isRecurring || false,
+      recurringFrequency: data.recurringFrequency || undefined,
+    })
 
     await loadTransactions()
     return result.id
@@ -150,23 +86,15 @@ export function useTransactions() {
    * Update transaction
    */
   const updateTransaction = async (id, data) => {
-    const { error } = await supabase
-      .from('transactions')
-      .update({
-        category_id: data.categoryId,
-        amount: data.amount,
-        description: data.description || null,
-        receipt_image: data.receiptImage || null,
-        transaction_date: data.transactionDate,
-        is_recurring: data.isRecurring || false,
-        recurring_frequency: data.recurringFrequency || null
-      })
-      .eq('id', id)
-
-    if (error) {
-      console.error('Error updating transaction:', error)
-      throw error
-    }
+    await api.transactions.update(id, {
+      categoryId: data.categoryId,
+      amount: data.amount,
+      description: data.description || undefined,
+      receiptImage: data.receiptImage || undefined,
+      transactionDate: data.transactionDate,
+      isRecurring: data.isRecurring || false,
+      recurringFrequency: data.recurringFrequency || undefined,
+    })
 
     await loadTransactions()
   }
@@ -175,16 +103,7 @@ export function useTransactions() {
    * Delete transaction
    */
   const deleteTransaction = async (id) => {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('Error deleting transaction:', error)
-      throw error
-    }
-
+    await api.transactions.delete(id)
     await loadTransactions()
   }
 
@@ -192,68 +111,25 @@ export function useTransactions() {
    * Get transaction by ID
    */
   const getTransactionById = async (id) => {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select(`
-        *,
-        categories (
-          name,
-          icon,
-          color
-        )
-      `)
-      .eq('id', id)
-      .single()
-
-    if (error) {
-      console.error('Error getting transaction:', error)
-      return null
-    }
-
-    return {
-      ...data,
-      category_name: data.categories?.name,
-      category_icon: data.categories?.icon,
-      category_color: data.categories?.color
-    }
+    // Find from loaded transactions
+    const found = transactions.value.find(t => t.id === id)
+    return found || null
   }
 
   /**
    * Get summary statistics
    */
   const getSummary = async (startDate, endDate) => {
-    const ownerId = getDataOwnerId()
-    if (!ownerId) return { income: 0, expense: 0, balance: 0 }
-
-    const [{ data: incomeData, error: incomeError }, { data: expenseData, error: expenseError }] = await Promise.all([
-      supabase
-        .from('transactions')
-        .select('amount')
-        .eq('user_id', ownerId)
-        .eq('type', 'income')
-        .gte('transaction_date', startDate)
-        .lte('transaction_date', endDate),
-      supabase
-        .from('transactions')
-        .select('amount')
-        .eq('user_id', ownerId)
-        .eq('type', 'expense')
-        .gte('transaction_date', startDate)
-        .lte('transaction_date', endDate)
-    ])
-
-    if (incomeError || expenseError) {
-      console.error('Error getting summary:', incomeError || expenseError)
+    try {
+      const result = await api.transactions.summary({ startDate, endDate })
+      return {
+        income: result.totalIncome || 0,
+        expense: result.totalExpense || 0,
+        balance: result.balance || 0
+      }
+    } catch (err) {
+      console.error('Error getting summary:', err)
       return { income: 0, expense: 0, balance: 0 }
-    }
-
-    const income = (incomeData || []).reduce((sum, t) => sum + Number(t.amount), 0)
-    const expense = (expenseData || []).reduce((sum, t) => sum + Number(t.amount), 0)
-
-    return {
-      income,
-      expense,
-      balance: income - expense
     }
   }
 
@@ -261,50 +137,37 @@ export function useTransactions() {
    * Get expense by category
    */
   const getExpenseByCategory = async (startDate, endDate) => {
-    const ownerId = getDataOwnerId()
-    if (!ownerId) return []
+    try {
+      const result = await api.transactions.list({
+        startDate,
+        endDate,
+        type: 'expense',
+        limit: '1000',
+      })
 
-    const { data, error } = await supabase
-      .from('transactions')
-      .select(`
-        amount,
-        category_id,
-        categories (
-          id,
-          name,
-          icon,
-          color
-        )
-      `)
-      .eq('user_id', ownerId)
-      .eq('type', 'expense')
-      .gte('transaction_date', startDate)
-      .lte('transaction_date', endDate)
+      // Group by category
+      const categoryMap = {}
+      ;(result.transactions || []).forEach(t => {
+        const catId = t.category_id
+        if (!categoryMap[catId]) {
+          categoryMap[catId] = {
+            id: t.categories?.id || catId,
+            name: t.categories?.name || 'Unknown',
+            icon: t.categories?.icon || '',
+            color: t.categories?.color || '#B2BEC3',
+            total: 0,
+            count: 0
+          }
+        }
+        categoryMap[catId].total += Number(t.amount)
+        categoryMap[catId].count++
+      })
 
-    if (error) {
-      console.error('Error getting expense by category:', error)
+      return Object.values(categoryMap).sort((a, b) => b.total - a.total)
+    } catch (err) {
+      console.error('Error getting expense by category:', err)
       return []
     }
-
-    // Group by category
-    const categoryMap = {}
-    ;(data || []).forEach(t => {
-      const catId = t.category_id
-      if (!categoryMap[catId]) {
-        categoryMap[catId] = {
-          id: t.categories?.id || catId,
-          name: t.categories?.name || 'Unknown',
-          icon: t.categories?.icon || '',
-          color: t.categories?.color || '#B2BEC3',
-          total: 0,
-          count: 0
-        }
-      }
-      categoryMap[catId].total += Number(t.amount)
-      categoryMap[catId].count++
-    })
-
-    return Object.values(categoryMap).sort((a, b) => b.total - a.total)
   }
 
   /**
@@ -336,36 +199,27 @@ export function useTransactions() {
    * Bulk import transactions from array
    */
   const bulkImport = async (dataArray) => {
-    const ownerId = getDataOwnerId()
-    if (!ownerId) throw new Error('User not authenticated')
-
     let imported = 0
 
-    // Process in batches of 50
-    const batchSize = 50
+    // Process in batches of 20 (to avoid overwhelming the API)
+    const batchSize = 20
     for (let i = 0; i < dataArray.length; i += batchSize) {
-      const batch = dataArray.slice(i, i + batchSize).map(item => ({
-        user_id: ownerId,
-        category_id: item.category_id,
-        type: item.type,
-        amount: item.amount,
-        description: item.description || null,
-        receipt_image: null,
-        transaction_date: item.date,
-        is_recurring: false,
-        recurring_frequency: null
-      }))
+      const batch = dataArray.slice(i, i + batchSize)
 
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert(batch)
-        .select()
+      const results = await Promise.allSettled(
+        batch.map(item =>
+          api.transactions.create({
+            categoryId: item.category_id,
+            type: item.type,
+            amount: item.amount,
+            description: item.description || undefined,
+            transactionDate: item.date,
+            isRecurring: false,
+          })
+        )
+      )
 
-      if (error) {
-        console.warn('Batch import error:', error)
-      } else {
-        imported += (data || []).length
-      }
+      imported += results.filter(r => r.status === 'fulfilled').length
     }
 
     await loadTransactions()

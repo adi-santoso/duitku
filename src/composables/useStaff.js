@@ -1,9 +1,9 @@
 import { ref } from 'vue'
-import { supabase } from '@/utils/supabase'
+import { api } from '@/utils/api'
 import { useAuth } from './useAuth'
 
 /**
- * Composable for staff management
+ * Composable for staff management via backend API
  * Only owners can manage staff
  */
 export function useStaff() {
@@ -25,10 +25,7 @@ export function useStaff() {
     error.value = null
 
     try {
-      const { data, error: err } = await supabase
-        .rpc('get_my_staff')
-
-      if (err) throw err
+      const data = await api.staff.list()
       staffList.value = data || []
     } catch (err) {
       console.error('Error loading staff:', err)
@@ -46,18 +43,11 @@ export function useStaff() {
     error.value = null
 
     try {
-      const { data, error: err } = await supabase
-        .rpc('create_staff_account', {
-          staff_email: email,
-          staff_password: password,
-          staff_name: name
-        })
-
-      if (err) throw err
-
-      if (!data.success) {
-        throw new Error(data.error)
-      }
+      const data = await api.staff.create({
+        email,
+        password,
+        displayName: name,
+      })
 
       await loadStaff()
       return data
@@ -78,19 +68,8 @@ export function useStaff() {
     error.value = null
 
     try {
-      const { data, error: err } = await supabase
-        .rpc('remove_staff_account', {
-          staff_user_id: staffUserId
-        })
-
-      if (err) throw err
-
-      if (!data.success) {
-        throw new Error(data.error)
-      }
-
+      await api.staff.remove(staffUserId)
       await loadStaff()
-      return data
     } catch (err) {
       console.error('Error removing staff:', err)
       error.value = err.message

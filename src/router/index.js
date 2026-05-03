@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
 
 const routes = [
   {
@@ -57,14 +56,13 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach(async (to, from, next) => {
-  // Wait for auth to finish initializing before making routing decisions
-  const { authReady, isAuthenticated } = useAuth()
-  await authReady
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('duitku_token')
+  const isAuthenticated = !!token
 
-  if (to.meta.requiresAuth && !isAuthenticated.value) {
+  if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
-  } else if (to.meta.requiresGuest && isAuthenticated.value) {
+  } else if (to.meta.requiresGuest && isAuthenticated) {
     next('/')
   } else {
     next()

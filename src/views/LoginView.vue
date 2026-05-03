@@ -159,30 +159,14 @@ const handleSubmit = async () => {
         return
       }
 
-      const data = await register(email.value, password.value)
-
-      // Check if email confirmation is required
-      if (data.user && !data.session) {
-        success.value = 'Akun berhasil dibuat! Cek email untuk verifikasi.'
-        mode.value = 'login'
-      } else {
-        // Auto-login after registration
-        router.push('/')
-      }
+      await register(email.value, password.value)
+      router.push('/')
     } else {
       await login(email.value, password.value)
       router.push('/')
     }
   } catch (err) {
-    if (err.message?.includes('Invalid login credentials')) {
-      error.value = 'Email atau password salah'
-    } else if (err.message?.includes('User already registered')) {
-      error.value = 'Email sudah terdaftar'
-    } else if (err.message?.includes('Password should be at least')) {
-      error.value = 'Password minimal 6 karakter'
-    } else {
-      error.value = err.message || 'Terjadi kesalahan. Silakan coba lagi.'
-    }
+    error.value = err.message || 'Terjadi kesalahan. Silakan coba lagi.'
   } finally {
     loading.value = false
   }
