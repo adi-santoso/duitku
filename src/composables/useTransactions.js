@@ -9,9 +9,22 @@ import { useAuth } from './useAuth'
 export function useTransactions() {
   const { getDataOwnerId } = useAuth()
   const transactions = ref([])
+  const totalTransactions = ref(0)
 
   /**
-   * Load all transactions with category info
+   * Normalize transaction data (flatten category info)
+   */
+  const normalizeTransaction = (t) => ({
+    ...t,
+    category_name: t.categories?.name,
+    category_icon: t.categories?.icon,
+    category_color: t.categories?.color
+  })
+
+  /**
+   * Load transactions with pagination and filters (server-side)
+   * @param {Object} filters - { type, categoryId, startDate, endDate, search, limit, offset }
+   * @returns {{ transactions: Array, total: number }}
    */
   const loadTransactions = async (filters = {}) => {
     try {
@@ -20,25 +33,38 @@ export function useTransactions() {
       if (filters.categoryId) params.categoryId = String(filters.categoryId)
       if (filters.startDate) params.startDate = filters.startDate
       if (filters.endDate) params.endDate = filters.endDate
-      // Request all transactions (frontend handles pagination)
-      if (!params.limit) params.limit = '10000'
+      if (filters.search) params.search = filters.search
+      if (filters.limit) params.limit = String(filters.limit)
+      if (filters.offset != null) params.offset = String(filters.offset)
 
       const result = await api.transactions.list(params)
 
       // Flatten category data to match old format
-      transactions.value = (result.transactions || []).map(t => ({
-        ...t,
-        category_name: t.categories?.name,
-        category_icon: t.categories?.icon,
-        category_color: t.categories?.color
-      }))
+      transactions.value = (result.transactions || []).map(normalizeTransaction)
+
+      // Use total from backend if available, otherwise fallback
+      if (result.total != null) {
+        totalTransactions.value = result.total
+      } else {
+        // Fallback: if returned count equals limit, there might be more
+        const limit = parseInt(params.limit) || 50
+        totalTransactions.value = transactions.value.length < limit
+          ? (parseInt(params.offset || '0') + transactions.value.length)
+          : (parseInt(params.offset || '0') + transactions.value.length + 1)
+      }
+
+      return {
+        transactions: transactions.value,
+        total: totalTransactions.value
+      }
     } catch (err) {
       console.error('Error loading transactions:', err)
+      return { transactions: [], total: 0 }
     }
   }
 
   /**
-   * Get transactions for specific month
+   * Get transactions for specific month (all, no pagination)
    */
   const getTransactionsByMonth = async (year, month) => {
     try {
@@ -48,12 +74,7 @@ export function useTransactions() {
 
       const result = await api.transactions.list({ startDate, endDate: endDateStr, limit: '10000' })
 
-      return (result.transactions || []).map(t => ({
-        ...t,
-        category_name: t.categories?.name,
-        category_icon: t.categories?.icon,
-        category_color: t.categories?.color
-      }))
+      return (result.transactions || []).map(normalizeTransaction)
     } catch (err) {
       console.error('Error loading monthly transactions:', err)
       return []
@@ -75,7 +96,6 @@ export function useTransactions() {
       recurringFrequency: data.recurringFrequency || undefined,
     })
 
-    await loadTransactions()
     return result.id
   }
 
@@ -92,8 +112,6 @@ export function useTransactions() {
       isRecurring: data.isRecurring || false,
       recurringFrequency: data.recurringFrequency || undefined,
     })
-
-    await loadTransactions()
   }
 
   /**
@@ -101,7 +119,6 @@ export function useTransactions() {
    */
   const deleteTransaction = async (id) => {
     await api.transactions.delete(id)
-    await loadTransactions()
   }
 
   /**
@@ -219,12 +236,12 @@ export function useTransactions() {
       imported += results.filter(r => r.status === 'fulfilled').length
     }
 
-    await loadTransactions()
     return imported
   }
 
   return {
     transactions,
+    totalTransactions,
     totalIncome,
     totalExpense,
     balance,

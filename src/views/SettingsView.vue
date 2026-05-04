@@ -227,7 +227,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useTransactions } from '@/composables/useTransactions'
 import { useAuth } from '@/composables/useAuth'
 import { usePWA } from '@/composables/usePWA'
@@ -243,10 +243,6 @@ const importing = ref(false)
 const showExportModal = ref(false)
 
 const userEmail = computed(() => currentUser.value?.email || '-')
-
-onMounted(async () => {
-  await loadTransactions()
-})
 
 const importFromSpreadsheet = async () => {
   if (importing.value) return
@@ -269,8 +265,11 @@ const importFromSpreadsheet = async () => {
   }
 }
 
-const handleExport = (format) => {
+const handleExport = async (format) => {
   try {
+    // Load all transactions for export
+    await loadTransactions({ limit: 10000 })
+
     if (!transactions.value || transactions.value.length === 0) {
       toast.warning('Tidak ada data transaksi untuk di-export')
       return

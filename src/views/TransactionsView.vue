@@ -93,13 +93,25 @@
 
       <!-- Result count -->
       <span class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
-        {{ filteredTransactions.length }} transaksi
+        {{ totalTransactions }} transaksi
       </span>
     </div>
 
     <!-- Transactions Card -->
     <div class="card">
-      <div v-if="filteredTransactions.length === 0" class="text-center py-16 text-slate-400 dark:text-slate-500">
+      <!-- Loading -->
+      <div v-if="isLoading" class="space-y-3 py-4">
+        <div v-for="i in 5" :key="i" class="flex items-center gap-3 p-3 animate-pulse">
+          <div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+          <div class="flex-1 space-y-2">
+            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-32"></div>
+            <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
+          </div>
+          <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div>
+        </div>
+      </div>
+
+      <div v-else-if="paginatedTransactions.length === 0" class="text-center py-16 text-slate-400 dark:text-slate-500">
         <svg class="w-16 h-16 mx-auto mb-4 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
           <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
         </svg>
@@ -108,7 +120,7 @@
       </div>
 
       <!-- DEFAULT VIEW MODE -->
-      <template v-if="paginatedTransactions.length > 0 && viewMode === 'default'">
+      <template v-if="!isLoading && paginatedTransactions.length > 0 && viewMode === 'default'">
         <!-- Desktop Table -->
         <div class="hidden md:block overflow-x-auto">
           <table class="w-full">
@@ -224,7 +236,7 @@
       </template>
 
       <!-- COMPACT VIEW MODE -->
-      <template v-if="paginatedTransactions.length > 0 && viewMode === 'compact'">
+      <template v-if="!isLoading && paginatedTransactions.length > 0 && viewMode === 'compact'">
         <!-- Desktop Table (Compact) -->
         <div class="hidden md:block overflow-x-auto">
           <table class="w-full">
@@ -297,7 +309,7 @@
     <!-- Pagination -->
     <div v-if="totalPages > 1" class="flex items-center justify-between">
       <p class="text-xs text-slate-500 dark:text-slate-400">
-        {{ (currentPage - 1) * perPage + 1 }}-{{ Math.min(currentPage * perPage, filteredTransactions.length) }} dari {{ filteredTransactions.length }}
+        {{ (currentPage - 1) * perPage + 1 }}-{{ Math.min(currentPage * perPage, totalTransactions) }} dari {{ totalTransactions }}
       </p>
 
       <div class="flex items-center gap-1">
@@ -442,7 +454,7 @@ import { useCategories } from '@/composables/useCategories'
 import { formatCurrency } from '@/utils/formatters'
 import { formatDate } from '@/utils/dateHelpers'
 
-const { transactions, loadTransactions } = useTransactions()
+const { transactions, totalTransactions, loadTransactions } = useTransactions()
 const { categories: allCategories, loadCategories } = useCategories()
 
 const filterType = ref(null)
@@ -452,11 +464,15 @@ const searchQuery = ref('')
 const viewMode = ref('default')
 const currentPage = ref(1)
 const perPage = ref(25)
+const isLoading = ref(false)
 const showModal = ref(false)
 const showAddMenu = ref(false)
 const transactionType = ref('expense')
 const selectedTransaction = ref(null)
 const editingTransaction = ref(null)
+
+// Debounce timer for search
+let searchTimer = null
 
 const typeFilters = [
   { value: null, label: 'Semua', activeClass: 'bg-primary-500 text-white shadow-sm shadow-primary-500/25' },
@@ -464,71 +480,54 @@ const typeFilters = [
   { value: 'expense', label: 'Pengeluaran', activeClass: 'bg-red-500 text-white shadow-sm shadow-red-500/25' },
 ]
 
-// Available months from transactions
+// Generate month options (last 12 months)
 const availableMonths = computed(() => {
-  const months = new Set()
-  transactions.value.forEach(t => {
-    const d = t.transaction_date
-    if (d) {
-      const ym = d.substring(0, 7) // "2026-04"
-      months.add(ym)
-    }
-  })
-
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
+  const now = new Date()
+  const months = []
 
-  return Array.from(months)
-    .sort()
-    .reverse()
-    .map(ym => {
-      const [year, month] = ym.split('-')
-      return {
-        value: ym,
-        label: `${monthNames[parseInt(month) - 1]} ${year}`
-      }
-    })
-})
-
-// Filtered transactions
-const filteredTransactions = computed(() => {
-  let result = transactions.value
-
-  // Type filter
-  if (filterType.value) {
-    result = result.filter(t => t.type === filterType.value)
-  }
-
-  // Category filter
-  if (filterCategory.value) {
-    result = result.filter(t => t.category_id === filterCategory.value)
-  }
-
-  // Month filter
-  if (filterMonth.value) {
-    result = result.filter(t => t.transaction_date && t.transaction_date.startsWith(filterMonth.value))
-  }
-
-  // Search
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.toLowerCase().trim()
-    result = result.filter(t => {
-      return (t.description && t.description.toLowerCase().includes(q)) ||
-             (t.category_name && t.category_name.toLowerCase().includes(q)) ||
-             (t.amount && t.amount.toString().includes(q))
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    months.push({
+      value: ym,
+      label: `${monthNames[d.getMonth()]} ${d.getFullYear()}`
     })
   }
 
-  return result
+  return months
 })
 
-// Pagination
-const totalPages = computed(() => Math.ceil(filteredTransactions.value.length / perPage.value))
+// Server-side pagination: fetch from API
+const fetchTransactions = async () => {
+  isLoading.value = true
+  try {
+    const filters = {}
 
-const paginatedTransactions = computed(() => {
-  const start = (currentPage.value - 1) * perPage.value
-  const end = start + perPage.value
-  return filteredTransactions.value.slice(start, end)
-})
+    if (filterType.value) filters.type = filterType.value
+    if (filterCategory.value) filters.categoryId = filterCategory.value
+    if (filterMonth.value) {
+      const [year, month] = filterMonth.value.split('-')
+      const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate()
+      filters.startDate = `${filterMonth.value}-01`
+      filters.endDate = `${filterMonth.value}-${String(lastDay).padStart(2, '0')}`
+    }
+    if (searchQuery.value.trim()) filters.search = searchQuery.value.trim()
+
+    filters.limit = perPage.value
+    filters.offset = (currentPage.value - 1) * perPage.value
+
+    await loadTransactions(filters)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Pagination computed
+const totalPages = computed(() => Math.ceil(totalTransactions.value / perPage.value))
+
+// paginatedTransactions is now just the transactions from API (already paginated)
+const paginatedTransactions = computed(() => transactions.value)
 
 const visiblePages = computed(() => {
   const total = totalPages.value
@@ -552,9 +551,24 @@ const visiblePages = computed(() => {
   return pages
 })
 
-// Reset page when filters change
-watch([filterType, filterCategory, filterMonth, searchQuery, perPage], () => {
+// Watch filters: reset page and re-fetch
+watch([filterType, filterCategory, filterMonth, perPage], () => {
   currentPage.value = 1
+  fetchTransactions()
+})
+
+// Debounced search
+watch(searchQuery, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    currentPage.value = 1
+    fetchTransactions()
+  }, 400)
+})
+
+// Watch page change
+watch(currentPage, () => {
+  fetchTransactions()
 })
 
 const showAddTransaction = (type) => {
@@ -572,12 +586,12 @@ const closeModal = () => {
 const handleSaved = async () => {
   showModal.value = false
   editingTransaction.value = null
-  await loadTransactions()
+  await fetchTransactions()
 }
 
 const handleDeleted = async () => {
   selectedTransaction.value = null
-  await loadTransactions()
+  await fetchTransactions()
 }
 
 const handleEdit = (transaction) => {
@@ -593,7 +607,7 @@ const viewTransaction = (transaction) => {
 
 onMounted(async () => {
   await loadCategories()
-  await loadTransactions()
+  await fetchTransactions()
 })
 </script>
 

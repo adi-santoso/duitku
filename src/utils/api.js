@@ -117,6 +117,7 @@ export const api = {
       if (params.endDate) query.set('endDate', params.endDate)
       if (params.type) query.set('type', params.type)
       if (params.categoryId) query.set('categoryId', params.categoryId)
+      if (params.search) query.set('search', params.search)
       if (params.limit) query.set('limit', params.limit)
       if (params.offset) query.set('offset', params.offset)
       const qs = query.toString()

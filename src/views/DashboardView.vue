@@ -660,11 +660,11 @@ const loadData = async () => {
       prevSummary.value = { income: 0, expense: 0, balance: 0 }
     }
 
-    // Load transactions (filtered or all)
+    // Load recent transactions (limited for dashboard display)
     if (startDate && endDate) {
-      await loadTransactions({ startDate, endDate })
+      await loadTransactions({ startDate, endDate, limit: 7 })
     } else {
-      await loadTransactions()
+      await loadTransactions({ limit: 7 })
     }
     recentTransactions.value = transactions.value.slice(0, 7)
 
