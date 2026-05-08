@@ -89,12 +89,96 @@
         </option>
       </select>
 
+      <!-- Sort -->
+      <select
+        v-model="sortBy"
+        class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer appearance-none pr-7 bg-no-repeat bg-[right_0.5rem_center] bg-[length:1rem]"
+        style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%2394a3b8%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>')"
+      >
+        <option value="date_desc">Terbaru</option>
+        <option value="date_asc">Terlama</option>
+        <option value="amount_desc">Terbesar</option>
+        <option value="amount_asc">Terkecil</option>
+      </select>
+
+      <!-- Amount Range Toggle -->
+      <button
+        @click="showAmountFilter = !showAmountFilter"
+        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+        :class="(filterAmountMin || filterAmountMax)
+          ? 'bg-primary-500 text-white shadow-sm'
+          : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'"
+      >
+        💰 Jumlah
+      </button>
+
       <div class="flex-1" />
 
       <!-- Result count -->
       <span class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
         {{ totalTransactions }} transaksi
       </span>
+    </div>
+
+    <!-- Amount Range Filter (collapsible) -->
+    <div v-if="showAmountFilter" class="flex items-center gap-2 flex-wrap animate-fade-in">
+      <div class="relative">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Min</span>
+        <input
+          v-model="filterAmountMin"
+          type="number"
+          class="input h-8 text-xs pl-10 w-32"
+          placeholder="0"
+          min="0"
+          step="10000"
+        />
+      </div>
+      <span class="text-xs text-slate-400">—</span>
+      <div class="relative">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Max</span>
+        <input
+          v-model="filterAmountMax"
+          type="number"
+          class="input h-8 text-xs pl-11 w-32"
+          placeholder="∞"
+          min="0"
+          step="10000"
+        />
+      </div>
+      <button
+        v-if="filterAmountMin || filterAmountMax"
+        @click="filterAmountMin = ''; filterAmountMax = ''"
+        class="text-xs text-red-500 hover:text-red-600 font-medium"
+      >
+        Reset
+      </button>
+    </div>
+
+    <!-- Active Filters Badges -->
+    <div v-if="hasActiveFilters" class="flex items-center gap-2 flex-wrap">
+      <span class="text-xs text-slate-400 dark:text-slate-500">Filter aktif:</span>
+      <span v-if="filterType" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+        {{ filterType === 'income' ? 'Pemasukan' : 'Pengeluaran' }}
+        <button @click="filterType = null" class="hover:text-red-500">&times;</button>
+      </span>
+      <span v-if="filterCategory" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+        {{ getCategoryName(filterCategory) }}
+        <button @click="filterCategory = null" class="hover:text-red-500">&times;</button>
+      </span>
+      <span v-if="filterMonth" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+        {{ filterMonth }}
+        <button @click="filterMonth = null" class="hover:text-red-500">&times;</button>
+      </span>
+      <span v-if="filterAmountMin || filterAmountMax" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+        Rp {{ filterAmountMin || '0' }} - {{ filterAmountMax || '∞' }}
+        <button @click="filterAmountMin = ''; filterAmountMax = ''" class="hover:text-red-500">&times;</button>
+      </span>
+      <button
+        @click="clearAllFilters"
+        class="text-[10px] font-semibold text-red-500 hover:text-red-600 ml-1"
+      >
+        Hapus semua
+      </button>
     </div>
 
     <!-- Transactions Card -->
@@ -460,6 +544,10 @@ const { categories: allCategories, loadCategories } = useCategories()
 const filterType = ref(null)
 const filterCategory = ref(null)
 const filterMonth = ref(null)
+const filterAmountMin = ref('')
+const filterAmountMax = ref('')
+const sortBy = ref('date_desc')
+const showAmountFilter = ref(false)
 const searchQuery = ref('')
 const viewMode = ref('default')
 const currentPage = ref(1)
@@ -523,11 +611,57 @@ const fetchTransactions = async () => {
   }
 }
 
+// Active filters check
+const hasActiveFilters = computed(() => {
+  return filterType.value || filterCategory.value || filterMonth.value || filterAmountMin.value || filterAmountMax.value
+})
+
+const getCategoryName = (catId) => {
+  const cat = allCategories.value.find(c => c.id === catId)
+  return cat ? `${cat.icon} ${cat.name}` : catId
+}
+
+const clearAllFilters = () => {
+  filterType.value = null
+  filterCategory.value = null
+  filterMonth.value = null
+  filterAmountMin.value = ''
+  filterAmountMax.value = ''
+  sortBy.value = 'date_desc'
+}
+
 // Pagination computed
 const totalPages = computed(() => Math.ceil(totalTransactions.value / perPage.value))
 
-// paginatedTransactions is now just the transactions from API (already paginated)
-const paginatedTransactions = computed(() => transactions.value)
+// paginatedTransactions: apply client-side amount filter and sort
+const paginatedTransactions = computed(() => {
+  let result = [...transactions.value]
+
+  // Client-side amount filter
+  if (filterAmountMin.value) {
+    result = result.filter(t => Number(t.amount) >= Number(filterAmountMin.value))
+  }
+  if (filterAmountMax.value) {
+    result = result.filter(t => Number(t.amount) <= Number(filterAmountMax.value))
+  }
+
+  // Client-side sort
+  switch (sortBy.value) {
+    case 'date_asc':
+      result.sort((a, b) => new Date(a.transaction_date) - new Date(b.transaction_date))
+      break
+    case 'amount_desc':
+      result.sort((a, b) => Number(b.amount) - Number(a.amount))
+      break
+    case 'amount_asc':
+      result.sort((a, b) => Number(a.amount) - Number(b.amount))
+      break
+    default: // date_desc (default from API)
+      break
+  }
+
+  return result
+})
 
 const visiblePages = computed(() => {
   const total = totalPages.value
@@ -552,7 +686,7 @@ const visiblePages = computed(() => {
 })
 
 // Watch filters: reset page and re-fetch
-watch([filterType, filterCategory, filterMonth, perPage], () => {
+watch([filterType, filterCategory, filterMonth, perPage, filterAmountMin, filterAmountMax], () => {
   currentPage.value = 1
   fetchTransactions()
 })
