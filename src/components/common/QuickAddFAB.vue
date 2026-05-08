@@ -60,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import TransactionModal from '@/components/transaction/TransactionModal.vue'
 
 const emit = defineEmits(['saved'])
@@ -79,6 +79,29 @@ const handleSaved = () => {
   showModal.value = false
   emit('saved')
 }
+
+// Listen for keyboard shortcut
+const onShortcutNew = () => {
+  isExpanded.value = !isExpanded.value
+}
+
+const onShortcutEscape = () => {
+  if (showModal.value) {
+    showModal.value = false
+  } else if (isExpanded.value) {
+    isExpanded.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('shortcut-new-transaction', onShortcutNew)
+  window.addEventListener('shortcut-escape', onShortcutEscape)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('shortcut-new-transaction', onShortcutNew)
+  window.removeEventListener('shortcut-escape', onShortcutEscape)
+})
 </script>
 
 <style scoped>

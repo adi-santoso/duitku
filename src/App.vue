@@ -54,6 +54,13 @@
 
   <!-- Global Toast Notifications -->
   <Toast />
+
+  <!-- Keyboard Shortcuts Help -->
+  <KeyboardShortcutsHelp
+    :show="showShortcutsHelp"
+    :shortcuts="shortcuts"
+    @close="showShortcutsHelp = false"
+  />
 </template>
 
 <script setup>
@@ -69,11 +76,14 @@ import InstallPrompt from '@/components/pwa/InstallPrompt.vue'
 import OfflineIndicator from '@/components/pwa/OfflineIndicator.vue'
 import Toast from '@/components/common/Toast.vue'
 import QuickAddFAB from '@/components/common/QuickAddFAB.vue'
+import KeyboardShortcutsHelp from '@/components/common/KeyboardShortcutsHelp.vue'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
 const route = useRoute()
 const { authLoading } = useAuth()
 const { initTheme } = useDarkMode()
 const { isOnline, canInstall, needsUpdate, installApp, applyUpdate } = usePWA()
+const { showHelp: showShortcutsHelp, shortcuts } = useKeyboardShortcuts()
 const sidebarOpen = ref(false)
 
 const isAuthRoute = computed(() => {
