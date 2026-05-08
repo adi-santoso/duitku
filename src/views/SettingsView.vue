@@ -75,7 +75,7 @@
           </svg>
         </button>
 
-        <button @click="importFromSpreadsheet" class="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group" :disabled="importing">
+        <button @click="showImportModal = true" class="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center group-hover:scale-105 transition-transform">
               <svg class="w-5 h-5 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -83,8 +83,8 @@
               </svg>
             </div>
             <div class="text-left">
-              <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ importing ? 'Mengimport...' : 'Import Data Spreadsheet' }}</p>
-              <p class="text-xs text-slate-400 dark:text-slate-500">Import transaksi dari data spreadsheet</p>
+              <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Import CSV</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Import transaksi dari file CSV/bank statement</p>
             </div>
           </div>
           <svg class="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -223,6 +223,9 @@
         </div>
       </div>
     </div>
+
+    <!-- CSV Import Modal -->
+    <CSVImportModal v-if="showImportModal" @close="showImportModal = false" />
   </div>
 </template>
 
@@ -233,37 +236,16 @@ import { useAuth } from '@/composables/useAuth'
 import { usePWA } from '@/composables/usePWA'
 import { useToast } from '@/composables/useToast'
 import { exportToCSV, exportToPDF, exportToJSON } from '@/utils/exportHelpers'
-import { importData } from '@/utils/importData'
+import CSVImportModal from '@/components/common/CSVImportModal.vue'
 
-const { transactions, loadTransactions, bulkImport } = useTransactions()
+const { transactions, loadTransactions } = useTransactions()
 const { currentUser } = useAuth()
 const { isOnline, canInstall, isInstalled, installApp } = usePWA()
 const toast = useToast()
-const importing = ref(false)
 const showExportModal = ref(false)
+const showImportModal = ref(false)
 
 const userEmail = computed(() => currentUser.value?.email || '-')
-
-const importFromSpreadsheet = async () => {
-  if (importing.value) return
-
-  const count = importData.length
-  if (!confirm(`Import ${count} transaksi dari spreadsheet?\n\nData: Agustus 2025 - April 2026`)) {
-    return
-  }
-
-  importing.value = true
-
-  try {
-    const imported = await bulkImport(importData)
-    toast.success(`Berhasil import ${imported} transaksi!`)
-    window.location.reload()
-  } catch (error) {
-    toast.error('Gagal import: ' + error.message)
-  } finally {
-    importing.value = false
-  }
-}
 
 const handleExport = async (format) => {
   try {
