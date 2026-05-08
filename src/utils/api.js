@@ -150,4 +150,15 @@ export const api = {
     update: (id, body) => request(`/budgets/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
     delete: (id) => request(`/budgets/${id}`, { method: 'DELETE' }),
   },
+
+  // Savings Goals
+  savingsGoals: {
+    list: () => request('/savings-goals'),
+    get: (id) => request(`/savings-goals/${id}`),
+    create: (body) => request('/savings-goals', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id, body) => request(`/savings-goals/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    delete: (id) => request(`/savings-goals/${id}`, { method: 'DELETE' }),
+    addContribution: (id, body) => request(`/savings-goals/${id}/contributions`, { method: 'POST', body: JSON.stringify(body) }),
+    getContributions: (id) => request(`/savings-goals/${id}/contributions`),
+  },
 }
