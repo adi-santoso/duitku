@@ -231,6 +231,16 @@
         </div>
       </div>
 
+      <!-- Financial Health Score -->
+      <FinancialHealthCard
+        :score="healthScore"
+        :breakdown="healthBreakdown"
+        :grade="healthGrade"
+        :tips="healthTips"
+        :loading="healthLoading"
+        @refresh="refreshHealthScore"
+      />
+
       <!-- Quick Actions + Recent Transactions -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <!-- Quick Actions -->
@@ -390,9 +400,11 @@ import {
   Legend
 } from 'chart.js'
 import TransactionModal from '@/components/transaction/TransactionModal.vue'
+import FinancialHealthCard from '@/components/common/FinancialHealthCard.vue'
 import { useTransactions } from '@/composables/useTransactions'
 import { useCategories } from '@/composables/useCategories'
 import { useBudgets } from '@/composables/useBudgets'
+import { useFinancialHealth } from '@/composables/useFinancialHealth'
 import { formatCurrency } from '@/utils/formatters'
 import { formatDate, getMonthRange, getMonthName } from '@/utils/dateHelpers'
 
@@ -401,6 +413,14 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Le
 const { transactions, loadTransactions, getSummary, getExpenseByCategory } = useTransactions()
 const { loadCategories } = useCategories()
 const { loadBudgets, budgets, getBudgetAlerts } = useBudgets()
+const {
+  score: healthScore,
+  breakdown: healthBreakdown,
+  grade: healthGrade,
+  tips: healthTips,
+  loading: healthLoading,
+  calculateScore: refreshHealthScore,
+} = useFinancialHealth()
 
 const isLoading = ref(true)
 const showModal = ref(false)
@@ -674,6 +694,9 @@ const loadData = async () => {
     budgetAlerts.value = await getBudgetAlerts(currentYear, currentMonth)
 
     await buildTrendChart()
+
+    // Calculate financial health score (non-blocking)
+    refreshHealthScore()
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   } finally {
