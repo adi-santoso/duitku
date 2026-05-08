@@ -2,6 +2,59 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2026-05-08
+
+### ✨ New Features
+
+- **Monthly Comparison Detail**
+  - Expandable per-category breakdown in Reports comparison table
+  - Shows % change vs previous month per category
+  - Click "Detail" to expand any month's category spending
+
+- **Budget Forecast**
+  - Predicts if budgets will be exceeded based on current daily spending rate
+  - Shows "days until exceeded" and recommended daily limit
+  - Alert cards for at-risk budgets on Budgets page
+  - Status: Aman / Hati-hati / Berisiko / Terlampaui
+
+- **Year-in-Review**
+  - Annual financial summary in Reports page
+  - Total income/expense/savings, savings rate %
+  - Best/worst months, highest expense month
+  - Top 5 expense categories for the year
+  - Year selector (current year - 3 years)
+
+- **CSV Import**
+  - 4-step wizard: Upload → Column Mapping → Import → Results
+  - Auto-detects column names (tanggal, amount, deskripsi, etc.)
+  - Supports multiple date formats (DD/MM/YYYY, YYYY-MM-DD, etc.)
+  - Handles quoted CSV fields, semicolon/tab delimiters
+  - Progress bar during import, per-row error reporting
+  - Replaces old hardcoded import function
+
+- **Pin/Bookmark Transactions**
+  - Star icon on transaction rows (visible on hover)
+  - Click to pin/unpin important transactions
+  - Pinned state persisted in localStorage
+
+- **Transaction Tags**
+  - Custom tags (#trip, #project-x) per transaction
+  - Tags displayed as colored badges in transaction list
+  - API for add/remove/get tags, get all unique tags
+  - getTransactionsByTag for future tag-based filtering
+  - Stored in localStorage
+
+### 📁 New Files
+
+- `src/composables/useBudgetForecast.js`
+- `src/composables/useYearReview.js`
+- `src/composables/useCSVImport.js`
+- `src/composables/useTransactionMeta.js`
+- `src/components/common/CSVImportModal.vue`
+
+---
+
+
 ## [1.0.0] - 2026-04-28
 
 ### 🎉 Initial Release
