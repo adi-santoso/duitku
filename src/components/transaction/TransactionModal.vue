@@ -21,6 +21,26 @@
       </div>
 
       <form @submit.prevent="handleSubmit" class="p-5 space-y-5">
+        <!-- Templates Quick Select -->
+        <div v-if="!isEditing && sortedTemplates.length > 0">
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Template</label>
+          <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+            <button
+              v-for="tpl in sortedTemplates.slice(0, 5)"
+              :key="tpl.id"
+              type="button"
+              @click="applyTemplate(tpl)"
+              class="flex-shrink-0 px-3 py-2 rounded-xl border transition-all text-left"
+              :class="appliedTemplateId === tpl.id
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10'
+                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'"
+            >
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">{{ tpl.name }}</p>
+              <p class="text-[10px] text-slate-400 dark:text-slate-500">Rp {{ Number(tpl.amount).toLocaleString('id-ID') }}</p>
+            </button>
+          </div>
+        </div>
+
         <!-- Category -->
         <div>
           <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2.5">Kategori *</label>
@@ -144,6 +164,26 @@
           </select>
         </div>
 
+        <!-- Save as Template -->
+        <div v-if="!isEditing" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+          <input
+            v-model="saveAsTemplateChecked"
+            type="checkbox"
+            id="save-template"
+            class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-primary-500 focus:ring-primary-500"
+          />
+          <label for="save-template" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer flex-1">Simpan sebagai template</label>
+        </div>
+        <div v-if="saveAsTemplateChecked && !isEditing">
+          <input
+            v-model="templateName"
+            type="text"
+            class="input"
+            placeholder="Nama template (contoh: Kopi pagi)"
+            maxlength="50"
+          />
+        </div>
+
         <!-- Actions -->
         <div class="flex gap-3 pt-2">
           <button type="button" @click="$emit('close')" class="btn btn-secondary flex-1 h-11">
@@ -166,6 +206,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useCategories } from '@/composables/useCategories'
 import { useTransactions } from '@/composables/useTransactions'
+import { useTransactionTemplates } from '@/composables/useTransactionTemplates'
 import { useImageCompression } from '@/composables/useImageCompression'
 import { useToast } from '@/composables/useToast'
 import { formatDateInput } from '@/utils/dateHelpers'
@@ -188,12 +229,18 @@ const isEditing = computed(() => !!props.transaction)
 
 const { loadCategories, categories: allCategories } = useCategories()
 const { addTransaction, updateTransaction } = useTransactions()
+const { getSortedTemplates: getTemplates, useTemplate, saveAsTemplate } = useTransactionTemplates()
 const { compressImage, validateImage } = useImageCompression()
 const toast = useToast()
 
 const loading = ref(false)
 const imageError = ref('')
 const fileInput = ref(null)
+const saveAsTemplateChecked = ref(false)
+const templateName = ref('')
+const appliedTemplateId = ref(null)
+
+const sortedTemplates = computed(() => getTemplates(props.type))
 
 const form = ref({
   categoryId: props.transaction ? props.transaction.category_id : null,
@@ -234,6 +281,14 @@ const removeImage = () => {
   }
 }
 
+const applyTemplate = (tpl) => {
+  appliedTemplateId.value = tpl.id
+  form.value.categoryId = tpl.categoryId
+  form.value.amount = tpl.amount
+  form.value.description = tpl.description || ''
+  useTemplate(tpl.id)
+}
+
 const handleSubmit = async () => {
   if (!form.value.categoryId) {
     toast.warning('Pilih kategori terlebih dahulu')
@@ -258,6 +313,12 @@ const handleSubmit = async () => {
       await updateTransaction(props.transaction.id, data)
     } else {
       await addTransaction(data)
+
+      // Save as template if checked
+      if (saveAsTemplateChecked.value && templateName.value.trim()) {
+        saveAsTemplate(data, templateName.value.trim())
+        toast.success('Template disimpan!')
+      }
     }
 
     emit('saved')
