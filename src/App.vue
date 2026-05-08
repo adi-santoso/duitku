@@ -40,6 +40,9 @@
 
       <!-- Bottom Nav (mobile) -->
       <BottomNav />
+
+      <!-- Quick Add FAB -->
+      <QuickAddFAB @saved="handleFABSaved" />
     </div>
   </template>
 
@@ -65,6 +68,7 @@ import BottomNav from '@/components/layout/BottomNav.vue'
 import InstallPrompt from '@/components/pwa/InstallPrompt.vue'
 import OfflineIndicator from '@/components/pwa/OfflineIndicator.vue'
 import Toast from '@/components/common/Toast.vue'
+import QuickAddFAB from '@/components/common/QuickAddFAB.vue'
 
 const route = useRoute()
 const { authLoading } = useAuth()
@@ -75,6 +79,11 @@ const sidebarOpen = ref(false)
 const isAuthRoute = computed(() => {
   return route.path === '/login'
 })
+
+const handleFABSaved = () => {
+  // Trigger a page reload to refresh data after quick add
+  window.dispatchEvent(new CustomEvent('transaction-saved'))
+}
 
 onMounted(() => {
   initTheme()
