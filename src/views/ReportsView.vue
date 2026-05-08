@@ -132,6 +132,81 @@
         </div>
       </div>
 
+      <!-- Spending Patterns -->
+      <div v-if="spendingPatterns" class="card">
+        <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Pola Pengeluaran</h2>
+
+        <!-- Key Insights -->
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Rata-rata/hari</p>
+            <p class="text-sm font-bold text-slate-900 dark:text-white">{{ formatCurrency(spendingPatterns.dailyAverage) }}</p>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Hari terboros</p>
+            <p class="text-sm font-bold text-red-600 dark:text-red-400">{{ spendingPatterns.peakDay?.day }}</p>
+          </div>
+        </div>
+
+        <!-- Day of Week Distribution -->
+        <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Pengeluaran per Hari</p>
+        <div class="space-y-1.5 mb-4">
+          <div v-for="day in spendingPatterns.dayOfWeek" :key="day.dayIndex" class="flex items-center gap-2">
+            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 w-12">{{ day.day.substring(0, 3) }}</span>
+            <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+              <div
+                class="h-2 rounded-full transition-all duration-500"
+                :class="day.dayIndex === spendingPatterns.peakDay?.dayIndex ? 'bg-red-500' : 'bg-blue-400 dark:bg-blue-500'"
+                :style="{ width: `${maxDayTotal > 0 ? (day.total / maxDayTotal) * 100 : 0}%` }"
+              />
+            </div>
+            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 w-16 text-right">{{ formatCompactNumber(day.total) }}</span>
+          </div>
+        </div>
+
+        <!-- Period Analysis -->
+        <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Distribusi per Periode</p>
+        <div class="space-y-2 mb-4">
+          <div v-for="period in spendingPatterns.periodAnalysis" :key="period.label" class="flex items-center gap-2">
+            <span class="text-[11px] text-slate-500 dark:text-slate-400 w-28 flex-shrink-0">{{ period.label }}</span>
+            <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+              <div
+                class="h-2 rounded-full bg-purple-400 dark:bg-purple-500 transition-all duration-500"
+                :style="{ width: `${period.percentage}%` }"
+              />
+            </div>
+            <span class="text-[10px] font-bold text-slate-600 dark:text-slate-400 w-8 text-right">{{ period.percentage }}%</span>
+          </div>
+        </div>
+
+        <!-- Category Trends -->
+        <div v-if="spendingPatterns.categoryTrends.length > 0">
+          <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Tren Kategori (vs bulan lalu)</p>
+          <div class="space-y-1.5">
+            <div
+              v-for="trend in spendingPatterns.categoryTrends.slice(0, 5)"
+              :key="trend.categoryId"
+              class="flex items-center gap-2 py-1"
+            >
+              <span class="text-base">{{ trend.categoryIcon }}</span>
+              <span class="text-xs text-slate-600 dark:text-slate-400 flex-1 truncate">{{ trend.categoryName }}</span>
+              <span
+                class="text-xs font-bold px-1.5 py-0.5 rounded"
+                :class="{
+                  'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10': trend.direction === 'up',
+                  'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10': trend.direction === 'down',
+                  'text-slate-500 bg-slate-100 dark:bg-slate-800': trend.direction === 'stable',
+                  'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10': trend.direction === 'new',
+                }"
+              >
+                {{ trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : trend.direction === 'new' ? 'Baru' : '→' }}
+                {{ trend.direction !== 'new' && trend.direction !== 'stable' ? Math.abs(trend.change) + '%' : '' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Monthly Comparison Table -->
       <div class="card">
         <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Perbandingan Bulanan</h2>
@@ -188,15 +263,23 @@ import {
   Filler
 } from 'chart.js'
 import { useTransactions } from '@/composables/useTransactions'
+import { useSpendingPatterns } from '@/composables/useSpendingPatterns'
 import { formatCurrency, formatCompactNumber } from '@/utils/formatters'
 import { getMonthsList, getMonthRange, getMonthName } from '@/utils/dateHelpers'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler)
 
 const { getSummary, getExpenseByCategory } = useTransactions()
+const { patterns: spendingPatterns, analyzePatterns } = useSpendingPatterns()
 
 const monthsList = getMonthsList()
 const selectedMonth = ref(monthsList[0])
+
+// Computed for max day total (for bar width calculation)
+const maxDayTotal = computed(() => {
+  if (!spendingPatterns.value) return 0
+  return Math.max(...spendingPatterns.value.dayOfWeek.map(d => d.total))
+})
 const summary = ref({ income: 0, expense: 0, balance: 0 })
 const expenseByCategory = ref([])
 const comparisonData = ref([])
@@ -343,6 +426,9 @@ const loadData = async () => {
     }
     comparisonData.value = comparisons
     buildTrendChart(comparisons)
+
+    // Analyze spending patterns (non-blocking)
+    analyzePatterns()
   } catch (error) {
     console.error('Error loading report data:', error)
   } finally {
