@@ -59,6 +59,38 @@
       </p>
     </div>
 
+    <!-- Budget Forecast Alerts -->
+    <div v-if="atRiskBudgets.length > 0" class="card border-l-4 border-l-amber-500">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-lg">📊</span>
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Prediksi Akhir Bulan</h3>
+      </div>
+      <div class="space-y-2.5">
+        <div v-for="f in atRiskBudgets" :key="f.id" class="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+          <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base" :style="{ backgroundColor: f.category_color + '18' }">
+            {{ f.category_icon }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{{ f.category_name }}</p>
+            <p class="text-[10px] text-slate-400 dark:text-slate-500">
+              <span v-if="f.status === 'exceeded'">Sudah melebihi budget!</span>
+              <span v-else-if="f.daysUntilExceeded">Habis dalam ~{{ f.daysUntilExceeded }} hari</span>
+              <span v-else>Proyeksi: {{ formatCurrency(f.projectedTotal) }}</span>
+            </p>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <span
+              class="text-[10px] font-bold px-2 py-0.5 rounded-md"
+              :style="{ backgroundColor: f.statusColor + '18', color: f.statusColor }"
+            >
+              {{ f.statusLabel }}
+            </span>
+            <p class="text-[10px] text-slate-400 mt-0.5">Maks {{ formatCurrency(f.recommendedDaily) }}/hari</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Budget List -->
     <div v-if="budgets.length === 0" class="card text-center py-16">
       <div class="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center mx-auto mb-4">
@@ -244,16 +276,25 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useCategories } from '@/composables/useCategories'
 import { useBudgets } from '@/composables/useBudgets'
+import { useBudgetForecast } from '@/composables/useBudgetForecast'
 import { useToast } from '@/composables/useToast'
 import { formatCurrency } from '@/utils/formatters'
 import { getMonthName } from '@/utils/dateHelpers'
 
 const { categories, expenseCategories, loadCategories } = useCategories()
 const { budgets, loadBudgets, addBudget, updateBudget, deleteBudget } = useBudgets()
+const { atRiskBudgets, calculateForecasts } = useBudgetForecast()
 const toast = useToast()
+
+// Recalculate forecasts when budgets change
+watch(budgets, (newBudgets) => {
+  if (newBudgets.length > 0) {
+    calculateForecasts(newBudgets)
+  }
+}, { immediate: true })
 
 const now = new Date()
 const currentMonth = now.getMonth()

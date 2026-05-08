@@ -207,12 +207,20 @@
         </div>
       </div>
 
-      <!-- Monthly Comparison Table -->
+      <!-- Monthly Comparison Table (with category breakdown) -->
       <div class="card">
         <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Perbandingan Bulanan</h2>
         <div class="space-y-0 divide-y divide-slate-100 dark:divide-slate-800">
-          <div v-for="month in comparisonData" :key="month.label" class="py-3 first:pt-0 last:pb-0">
-            <p class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ month.label }}</p>
+          <div v-for="(month, idx) in comparisonData" :key="month.label" class="py-3 first:pt-0 last:pb-0">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ month.label }}</p>
+              <button
+                @click="toggleMonthDetail(idx)"
+                class="text-[10px] font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 transition-colors"
+              >
+                {{ expandedMonthIdx === idx ? 'Tutup' : 'Detail' }}
+              </button>
+            </div>
             <div class="grid grid-cols-3 gap-3">
               <div>
                 <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Pemasukan</p>
@@ -240,7 +248,110 @@
                 :style="{ width: month.income > 0 || month.expense > 0 ? `${(month.expense / Math.max(month.income + month.expense, 1)) * 100}%` : '50%' }"
               />
             </div>
+
+            <!-- Expanded Category Breakdown -->
+            <div v-if="expandedMonthIdx === idx" class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 animate-fade-in">
+              <div v-if="monthDetailLoading" class="text-center py-3">
+                <span class="text-xs text-slate-400">Memuat detail...</span>
+              </div>
+              <div v-else-if="monthDetailData.length > 0" class="space-y-2">
+                <div v-for="cat in monthDetailData" :key="cat.id" class="flex items-center gap-2">
+                  <span class="text-sm">{{ cat.icon }}</span>
+                  <span class="text-xs text-slate-600 dark:text-slate-400 flex-1 truncate">{{ cat.name }}</span>
+                  <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ formatCurrency(cat.total) }}</span>
+                  <span
+                    v-if="cat.change !== null"
+                    class="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                    :class="{
+                      'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-500/10': cat.change > 10,
+                      'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10': cat.change < -10,
+                      'text-slate-500 bg-slate-100 dark:bg-slate-800': cat.change >= -10 && cat.change <= 10,
+                    }"
+                  >
+                    {{ cat.change > 0 ? '+' : '' }}{{ cat.change }}%
+                  </span>
+                </div>
+              </div>
+              <div v-else class="text-center py-2">
+                <span class="text-xs text-slate-400">Tidak ada data pengeluaran</span>
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
+      <!-- Year-in-Review -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-bold text-slate-900 dark:text-white">Ringkasan Tahunan</h2>
+          <select
+            v-model="reviewYear"
+            @change="loadYearReview"
+            class="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-600 dark:text-slate-400"
+          >
+            <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
+          </select>
+        </div>
+
+        <div v-if="yearReviewLoading" class="text-center py-8">
+          <div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+
+        <div v-else-if="yearReview">
+          <!-- Key Stats -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-0.5">Total Pemasukan</p>
+              <p class="text-sm font-bold text-emerald-700 dark:text-emerald-300">{{ formatCurrency(yearReview.totalIncome) }}</p>
+            </div>
+            <div class="p-3 rounded-xl bg-red-50 dark:bg-red-500/10">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400 mb-0.5">Total Pengeluaran</p>
+              <p class="text-sm font-bold text-red-700 dark:text-red-300">{{ formatCurrency(yearReview.totalExpense) }}</p>
+            </div>
+            <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-500/10">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-0.5">Total Ditabung</p>
+              <p class="text-sm font-bold text-blue-700 dark:text-blue-300">{{ formatCurrency(yearReview.totalSaved) }}</p>
+            </div>
+            <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/10">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-0.5">Rasio Tabungan</p>
+              <p class="text-sm font-bold text-purple-700 dark:text-purple-300">{{ yearReview.savingsRate }}%</p>
+            </div>
+          </div>
+
+          <!-- Highlights -->
+          <div class="space-y-2 mb-4">
+            <div v-if="yearReview.bestMonth" class="flex items-center gap-2 text-xs">
+              <span class="text-emerald-500">🏆</span>
+              <span class="text-slate-600 dark:text-slate-400">Bulan terbaik:</span>
+              <span class="font-bold text-slate-700 dark:text-slate-300">{{ yearReview.bestMonth.label }}</span>
+            </div>
+            <div v-if="yearReview.highestExpenseMonth" class="flex items-center gap-2 text-xs">
+              <span class="text-red-500">💸</span>
+              <span class="text-slate-600 dark:text-slate-400">Pengeluaran tertinggi:</span>
+              <span class="font-bold text-slate-700 dark:text-slate-300">{{ yearReview.highestExpenseMonth.label }} ({{ formatCurrency(yearReview.highestExpenseMonth.expense) }})</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span>📝</span>
+              <span class="text-slate-600 dark:text-slate-400">Total transaksi:</span>
+              <span class="font-bold text-slate-700 dark:text-slate-300">{{ yearReview.totalTransactions }}</span>
+            </div>
+          </div>
+
+          <!-- Top Categories -->
+          <div v-if="yearReview.topCategories.length > 0">
+            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Top Kategori Pengeluaran</p>
+            <div class="space-y-1.5">
+              <div v-for="(cat, i) in yearReview.topCategories" :key="cat.id" class="flex items-center gap-2">
+                <span class="text-[10px] font-bold text-slate-400 w-4">{{ i + 1 }}</span>
+                <span class="text-sm">{{ cat.icon }}</span>
+                <span class="text-xs text-slate-600 dark:text-slate-400 flex-1">{{ cat.name }}</span>
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ formatCurrency(cat.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="text-center py-6 text-slate-400 dark:text-slate-500">
+          <p class="text-sm">Belum ada data untuk tahun ini</p>
         </div>
       </div>
     </template>
@@ -264,6 +375,7 @@ import {
 } from 'chart.js'
 import { useTransactions } from '@/composables/useTransactions'
 import { useSpendingPatterns } from '@/composables/useSpendingPatterns'
+import { useYearReview } from '@/composables/useYearReview'
 import { formatCurrency, formatCompactNumber } from '@/utils/formatters'
 import { getMonthsList, getMonthRange, getMonthName } from '@/utils/dateHelpers'
 
@@ -271,6 +383,19 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcEleme
 
 const { getSummary, getExpenseByCategory } = useTransactions()
 const { patterns: spendingPatterns, analyzePatterns } = useSpendingPatterns()
+const { review: yearReview, loading: yearReviewLoading, generateReview } = useYearReview()
+
+const currentYear = new Date().getFullYear()
+const reviewYear = ref(currentYear)
+const availableYears = computed(() => {
+  const years = []
+  for (let y = currentYear; y >= currentYear - 3; y--) years.push(y)
+  return years
+})
+
+const loadYearReview = () => {
+  generateReview(reviewYear.value)
+}
 
 const monthsList = getMonthsList()
 const selectedMonth = ref(monthsList[0])
@@ -285,6 +410,60 @@ const expenseByCategory = ref([])
 const comparisonData = ref([])
 const trendChartData = ref(null)
 const isLoading = ref(true)
+const expandedMonthIdx = ref(null)
+const monthDetailData = ref([])
+const monthDetailLoading = ref(false)
+
+/**
+ * Toggle month detail: load per-category breakdown for that month
+ * and compare with the previous month
+ */
+const toggleMonthDetail = async (idx) => {
+  if (expandedMonthIdx.value === idx) {
+    expandedMonthIdx.value = null
+    return
+  }
+
+  expandedMonthIdx.value = idx
+  monthDetailLoading.value = true
+  monthDetailData.value = []
+
+  try {
+    const month = monthsList[idx]
+    const { start, end } = getMonthRange(month.year, month.month)
+    const startDate = start.toISOString().split('T')[0]
+    const endDate = end.toISOString().split('T')[0]
+
+    // Get expense by category for this month
+    const thisMonthCats = await getExpenseByCategory(startDate, endDate)
+
+    // Get previous month for comparison
+    let prevCats = []
+    if (idx + 1 < monthsList.length) {
+      const prevMonth = monthsList[idx + 1]
+      const prevRange = getMonthRange(prevMonth.year, prevMonth.month)
+      prevCats = await getExpenseByCategory(
+        prevRange.start.toISOString().split('T')[0],
+        prevRange.end.toISOString().split('T')[0]
+      )
+    }
+
+    // Build comparison map
+    const prevMap = {}
+    prevCats.forEach(c => { prevMap[c.id] = c.total })
+
+    monthDetailData.value = thisMonthCats.map(c => ({
+      ...c,
+      change: prevMap[c.id] && prevMap[c.id] > 0
+        ? Math.round(((c.total - prevMap[c.id]) / prevMap[c.id]) * 100)
+        : null,
+    }))
+  } catch (err) {
+    console.error('Error loading month detail:', err)
+  } finally {
+    monthDetailLoading.value = false
+  }
+}
 
 // Donut chart
 const donutChartData = computed(() => {
@@ -429,6 +608,9 @@ const loadData = async () => {
 
     // Analyze spending patterns (non-blocking)
     analyzePatterns()
+
+    // Load year review (non-blocking)
+    loadYearReview()
   } catch (error) {
     console.error('Error loading report data:', error)
   } finally {
