@@ -241,6 +241,14 @@
         @refresh="refreshHealthScore"
       />
 
+      <!-- Recurring Transaction Suggestions -->
+      <RecurringSuggestions
+        :suggestions="recurringSuggestions"
+        :get-frequency-label="getFrequencyLabel"
+        @dismiss="dismissRecurring"
+        @mark-recurring="handleMarkRecurring"
+      />
+
       <!-- Quick Actions + Recent Transactions -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <!-- Quick Actions -->
@@ -401,10 +409,13 @@ import {
 } from 'chart.js'
 import TransactionModal from '@/components/transaction/TransactionModal.vue'
 import FinancialHealthCard from '@/components/common/FinancialHealthCard.vue'
+import RecurringSuggestions from '@/components/common/RecurringSuggestions.vue'
 import { useTransactions } from '@/composables/useTransactions'
 import { useCategories } from '@/composables/useCategories'
 import { useBudgets } from '@/composables/useBudgets'
 import { useFinancialHealth } from '@/composables/useFinancialHealth'
+import { useRecurringDetection } from '@/composables/useRecurringDetection'
+import { api } from '@/utils/api'
 import { formatCurrency } from '@/utils/formatters'
 import { formatDate, getMonthRange, getMonthName } from '@/utils/dateHelpers'
 
@@ -421,6 +432,12 @@ const {
   loading: healthLoading,
   calculateScore: refreshHealthScore,
 } = useFinancialHealth()
+const {
+  suggestions: recurringSuggestions,
+  detectRecurring,
+  dismissSuggestion: dismissRecurring,
+  getFrequencyLabel,
+} = useRecurringDetection()
 
 const isLoading = ref(true)
 const showModal = ref(false)
@@ -577,6 +594,27 @@ const handleTransactionSaved = () => {
   loadData()
 }
 
+const handleMarkRecurring = async (item) => {
+  // Mark the most recent transaction as recurring
+  try {
+    const result = await api.transactions.list({
+      type: 'expense',
+      search: item.description,
+      limit: '1',
+    })
+    const txs = result.transactions || result || []
+    if (txs.length > 0) {
+      await api.transactions.update(txs[0].id, {
+        isRecurring: true,
+        recurringFrequency: item.frequency,
+      })
+    }
+    dismissRecurring(item.id)
+  } catch (err) {
+    console.error('Error marking recurring:', err)
+  }
+}
+
 const setFilter = (month) => {
   selectedMonth.value = month
   loadData()
@@ -697,6 +735,9 @@ const loadData = async () => {
 
     // Calculate financial health score (non-blocking)
     refreshHealthScore()
+
+    // Detect recurring patterns (non-blocking)
+    detectRecurring()
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   } finally {
