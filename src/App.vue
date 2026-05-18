@@ -41,8 +41,8 @@
       <!-- Bottom Nav (mobile) -->
       <BottomNav />
 
-      <!-- Quick Add FAB -->
-      <QuickAddFAB @saved="handleFABSaved" />
+      <!-- Quick Add FAB (hidden on transactions page which has its own) -->
+      <QuickAddFAB v-if="route.path !== '/transactions'" @saved="handleFABSaved" />
     </div>
   </template>
 
