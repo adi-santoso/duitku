@@ -10,17 +10,24 @@ Aplikasi pencatatan keuangan personal yang modern dan mudah digunakan, dibangun 
 - ✅ Laporan dan perbandingan bulanan
 - ✅ Upload foto struk (compressed)
 - ✅ Transaksi berulang
-- ✅ Export data ke JSON
+- ✅ Anggaran per kategori + budget forecast
+- ✅ Target tabungan (savings goals) dengan kontribusi berkala
+- ✅ Multi-user (owner + staff)
+- ✅ CSV import & export JSON
 - ✅ Dark mode
 - ✅ Mobile-first responsive design
+- ✅ PWA (installable, offline indicator)
 
 ## 🚀 Tech Stack
 
-- **Frontend**: Vue 3 (Composition API)
+- **Framework**: Vue 3 (Composition API)
 - **Styling**: Tailwind CSS
-- **Database**: SQL.js (SQLite in browser)
+- **Routing**: Vue Router 4
+- **Charts**: Chart.js + vue-chartjs
 - **Image Compression**: browser-image-compression
 - **Build Tool**: Vite
+- **Backend**: [DuitKu API](../duiku-api) (Express + Drizzle + Neon Postgres)
+- **Auth**: Custom JWT (Bearer token)
 - **Deployment**: Vercel
 
 ## 📦 Installation
@@ -28,6 +35,10 @@ Aplikasi pencatatan keuangan personal yang modern dan mudah digunakan, dibangun 
 ```bash
 # Install dependencies
 npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env: set VITE_API_URL to your backend URL
 
 # Run development server
 npm run dev
@@ -39,36 +50,17 @@ npm run build
 npm run preview
 ```
 
-## 🔐 Login
+## 🔧 Environment Variables
 
-Demo account:
-- **Username**: `santoso`
-- **Password**: `santoso123`
+| Variable | Description |
+|---|---|
+| `VITE_API_URL` | Base URL of the DuitKu API (e.g. `http://localhost:3000/api` or `https://duitku-api.vercel.app/api`) |
 
-## 📱 Screenshots
+## 🔐 Authentication
 
-### Mobile View
-- Dashboard dengan summary cards
-- Form transaksi dengan kategori visual
-- List transaksi dengan filter
-- Laporan bulanan
+User membuat akun owner via halaman Register, lalu owner bisa membuat akun staff dari halaman Team. Staff & owner berbagi data yang sama (data milik owner).
 
-### Desktop View
-- Responsive layout untuk layar besar
-- Bottom navigation berubah jadi sidebar
-
-## 🎨 Design System
-
-### Colors
-- Primary: Emerald (#10B981)
-- Success: Green
-- Danger: Red
-- Warning: Amber
-- Info: Blue
-
-### Typography
-- Font: Inter (Google Fonts)
-- Mobile-first approach
+JWT disimpan di `localStorage` dan dikirim sebagai `Authorization: Bearer <token>` header oleh `src/utils/api.js`.
 
 ## 📂 Project Structure
 
@@ -76,55 +68,51 @@ Demo account:
 src/
 ├── assets/styles/      # Global CSS
 ├── components/
-│   ├── common/         # Reusable components
-│   ├── layout/         # Layout components
-│   ├── transaction/    # Transaction components
-│   ├── category/       # Category components
-│   ├── chart/          # Chart components
-│   └── budget/         # Budget components
-├── composables/        # Vue composables
-├── utils/              # Utility functions
-├── views/              # Page components
+│   ├── budget/
+│   ├── category/
+│   ├── chart/
+│   ├── common/
+│   ├── layout/
+│   ├── pwa/
+│   └── transaction/
+├── composables/        # Vue composables (auth, transactions, budgets, dll)
+├── utils/
+│   ├── api.js          # HTTP client untuk backend
+│   ├── dateHelpers.js
+│   ├── formatters.js
+│   ├── exportHelpers.js
+│   └── importData.js
+├── views/              # Halaman per route
 ├── router/             # Vue Router config
 ├── App.vue
 └── main.js
 ```
 
-## 🗄️ Database Schema
+## 🗄️ Data
 
-Data disimpan di browser menggunakan SQL.js (SQLite). Schema lengkap ada di `CLAUDE.md`.
-
-### Tables
-- `users` - User accounts
-- `categories` - Transaction categories
-- `transactions` - Income & expense records
-- `budgets` - Budget limits per category
+Tidak ada database di sisi frontend. Semua data diakses melalui REST API backend (`VITE_API_URL`). Backend menggunakan PostgreSQL (Neon) sebagai datastore tunggal.
 
 ## 🚢 Deployment ke Vercel
 
 ### Via GitHub
 
-1. Push code ke GitHub repository
-2. Import project di Vercel
-3. Vercel akan auto-detect Vite config
-4. Deploy!
+1. Push code ke GitHub
+2. Import project di [Vercel](https://vercel.com)
+3. Vercel auto-detect Vite config
+4. Set environment variable `VITE_API_URL`
+5. Deploy
 
 ### Via Vercel CLI
 
 ```bash
-# Install Vercel CLI
 npm i -g vercel
-
-# Deploy
 vercel
-
-# Deploy to production
 vercel --prod
 ```
 
 ## 📝 Development Guidelines
 
-Lihat `CLAUDE.md` untuk:
+Lihat `assistant.md` (assistant.md) untuk:
 - Code style guidelines
 - Naming conventions
 - Component structure
@@ -134,20 +122,13 @@ Lihat `CLAUDE.md` untuk:
 ## 🔮 Future Enhancements
 
 - [ ] Budget alerts & notifications
-- [ ] Multi-user support
-- [ ] Cloud sync
-- [ ] PWA support
 - [ ] Receipt OCR
 - [ ] AI-powered categorization
-- [ ] Financial insights
+- [ ] Financial insights (advanced)
 
 ## 📄 License
 
 MIT License - feel free to use for personal projects
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read `CLAUDE.md` for development guidelines.
 
 ---
 

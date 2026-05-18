@@ -1,4 +1,4 @@
-# Deployment Guide - DuitKu
+# Deployment Guide - DuitKu (Frontend)
 
 ## Deploy ke Vercel
 
@@ -6,12 +6,7 @@
 
 1. **Push ke GitHub**
    ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: DuitKu app"
-   git branch -M main
-   git remote add origin <your-repo-url>
-   git push -u origin main
+   git push origin main
    ```
 
 2. **Import di Vercel**
@@ -19,36 +14,25 @@
    - Klik "New Project"
    - Import repository GitHub
    - Vercel akan auto-detect Vite config
+   - Tambahkan environment variable (lihat di bawah)
    - Klik "Deploy"
-
-3. **Done!**
-   - Aplikasi akan live di `https://your-project.vercel.app`
-   - Auto-deploy setiap kali push ke main branch
 
 ### Method 2: Via Vercel CLI
 
-1. **Install Vercel CLI**
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Login**
-   ```bash
-   vercel login
-   ```
-
-3. **Deploy**
-   ```bash
-   # Deploy preview
-   vercel
-
-   # Deploy production
-   vercel --prod
-   ```
+```bash
+npm i -g vercel
+vercel login
+vercel          # deploy preview
+vercel --prod   # deploy production
+```
 
 ## Environment Variables
 
-Tidak ada environment variables yang diperlukan karena aplikasi ini fully client-side.
+| Variable | Required | Description |
+|---|---|---|
+| `VITE_API_URL` | Yes | Base URL of the DuitKu API, e.g. `https://duitku-api.vercel.app/api` |
+
+Set di Vercel: Project Settings → Environment Variables.
 
 ## Build Settings (Auto-detected)
 
@@ -59,47 +43,38 @@ Tidak ada environment variables yang diperlukan karena aplikasi ini fully client
 
 ## Custom Domain (Optional)
 
-1. Di Vercel dashboard, pilih project
-2. Settings → Domains
-3. Add custom domain
-4. Follow DNS configuration instructions
+1. Vercel dashboard → project → Settings → Domains
+2. Add custom domain
+3. Ikuti instruksi DNS
 
 ## Performance Tips
 
-- Aplikasi sudah menggunakan code splitting
-- Images di-compress otomatis
-- SQL.js loaded via CDN
+- Code splitting per route (sudah aktif)
+- Image compression otomatis sebelum upload (max 200KB)
 - Tailwind CSS purged untuk production
+- Service worker (PWA) men-cache aset statis, **tidak** men-cache request `/api/*`
 
 ## Troubleshooting
 
 ### Build Failed
-- Pastikan `package.json` dependencies lengkap
-- Check Node.js version (recommended: 18+)
+- Pastikan dependency lengkap (`npm install` ulang)
+- Node.js 20+ direkomendasikan
 
-### Database Not Working
-- SQL.js loaded dari CDN, pastikan internet connection
-- Check browser console untuk errors
+### "Network error" di runtime
+- Cek `VITE_API_URL` benar dan backend hidup
+- Cek CORS di backend (`CORS_ORIGIN` harus include domain frontend)
 
-### Dark Mode Not Working
-- Clear localStorage
-- Check browser compatibility
+### Login berhasil tapi langsung kembali ke halaman login
+- Token tersimpan tapi auto-logout — cek `Authorization` header dikirim, dan backend `JWT_SECRET` belum berubah
 
 ## Post-Deployment Checklist
 
-- [ ] Test login dengan demo account
-- [ ] Test tambah transaksi
-- [ ] Test dark mode toggle
-- [ ] Test responsive di mobile
+- [ ] Smoke test login dengan akun existing
+- [ ] Tambah 1 transaksi test
+- [ ] Cek dashboard summary muncul
 - [ ] Test export data
-- [ ] Check performance di Lighthouse
-
-## Support
-
-Jika ada masalah, check:
-1. Browser console untuk errors
-2. Network tab untuk failed requests
-3. Vercel deployment logs
+- [ ] Cek PWA installable (Chrome → install icon)
+- [ ] Lighthouse audit (target: PWA + performance > 90)
 
 ---
 

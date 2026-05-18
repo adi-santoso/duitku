@@ -108,17 +108,19 @@ duitku/
 
 ## 🗄️ Database Schema
 
-### Tables
-1. **users** - User accounts (1 hardcoded user)
-2. **categories** - 15 default categories (10 expense, 5 income)
-3. **transactions** - All income/expense records
-4. **budgets** - Budget limits (not implemented yet)
+Frontend tidak menyimpan data lokal. Semua data dikelola backend (DuitKu API) di Neon PostgreSQL.
+
+### Tables (di backend)
+1. **app_users** — owner & staff accounts
+2. **categories** — 15 default + custom per owner
+3. **transactions** — semua income/expense
+4. **budgets** — limit per kategori
+5. **savings_goals** + **savings_contributions** — target tabungan
 
 ### Data Flow
-1. SQL.js creates in-memory SQLite database
-2. Data persisted to localStorage as binary array
-3. Loaded on app init
-4. Auto-saved after every mutation
+1. Frontend memanggil REST API (`VITE_API_URL`) dengan header `Authorization: Bearer <jwt>`
+2. Backend memvalidasi JWT, query Neon Postgres via Drizzle
+3. Response dikirim balik dalam format `{ success, data, message? }`
 
 ## 🚀 Performance
 
@@ -132,8 +134,8 @@ duitku/
 - Code splitting per route
 - Lazy loading components
 - Tailwind CSS purging
-- Image compression
-- SQL.js loaded from CDN
+- Image compression sebelum upload
+- PWA cache untuk static assets (API requests selalu network-first)
 
 ## 📱 Browser Support
 
@@ -144,29 +146,19 @@ duitku/
 
 ## 🔐 Security Notes
 
-- No real authentication (demo only)
-- Data stored in browser (not encrypted)
-- No backend/API calls
-- Suitable for personal use only
+- Authentication via custom JWT (issued by backend, stored in `localStorage`).
+- Backend hash password dengan bcrypt (12 rounds).
+- Auto-logout pada respons 401 (token expired/invalid).
+- Foto struk disimpan sebagai base64 (max 200KB setelah compression).
 
 ## 🎯 Next Steps
 
 ### Phase 2 (Future)
 - [ ] Budget alerts & notifications
-- [ ] Custom category creation
-- [ ] Edit transaction
-- [ ] Recurring transaction automation
-- [ ] Charts with Chart.js
-- [ ] PDF export
-- [ ] PWA support
-
-### Phase 3 (Advanced)
-- [ ] Real authentication
-- [ ] Backend API
-- [ ] Cloud sync
-- [ ] Multi-user support
-- [ ] Receipt OCR
+- [ ] Receipt OCR scanning
 - [ ] AI categorization
+- [ ] Multi-currency support
+- [ ] Recurring transactions auto-generation
 
 ## 📝 Development Notes
 
@@ -190,8 +182,8 @@ duitku/
 Jika ingin extend aplikasi ini:
 1. Vue 3 Docs: https://vuejs.org
 2. Tailwind CSS: https://tailwindcss.com
-3. SQL.js: https://sql.js.org
-4. Vite: https://vitejs.dev
+3. Vite: https://vitejs.dev
+4. Backend: lihat repo `duiku-api` (Express + Drizzle + Neon)
 
 ## 📞 Support
 
