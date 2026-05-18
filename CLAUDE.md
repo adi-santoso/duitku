@@ -308,13 +308,13 @@ duitku/
 - [ ] Financial insights & recommendations
 
 ## Notes
-- Data stored in Supabase cloud (PostgreSQL)
-- Authentication via Supabase Auth (email/password)
-- Row Level Security (RLS) enabled on all tables
-- Images compressed to max 200KB (stored as base64 in DB)
-- Export limited to 1000 transactions per file
-- Budget notifications shown on dashboard only
-- Environment variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+- Data stored in Neon PostgreSQL (accessed via the DuitKu API backend, never directly).
+- Authentication via custom JWT issued by the backend (`/api/auth/login`, `/api/auth/register`).
+- Token is stored in `localStorage` (`duitku_token`) and sent as `Authorization: Bearer ...`.
+- Images compressed to max 200KB (stored as base64 in DB).
+- Export limited to 1000 transactions per file.
+- Budget notifications shown on dashboard only.
+- Environment variables: `VITE_API_URL` (backend base URL).
 
 ---
 Last updated: 2026-04-30

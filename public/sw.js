@@ -79,8 +79,8 @@ self.addEventListener('fetch', (event) => {
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) return
 
-  // Skip Supabase API calls — never cache auth/database requests
-  if (url.hostname.includes('supabase.co') || url.hostname.includes('supabase.in')) return
+  // Skip API calls — never cache auth/database requests
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('duitku-api')) return
 
   // Skip Vite dev server HMR/websocket requests
   if (url.pathname.startsWith('/@') || url.pathname.startsWith('/__') || url.pathname.startsWith('/node_modules/')) return
