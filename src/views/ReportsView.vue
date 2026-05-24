@@ -3,11 +3,11 @@
     <!-- Month Selector -->
     <div class="flex items-center gap-3">
       <div class="flex-1">
-        <select v-model="selectedMonth" @change="loadData" class="input">
+        <BaseSelect v-model="selectedMonth" @update:modelValue="loadData">
           <option v-for="month in monthsList" :key="month.label" :value="month">
             {{ month.label }}
           </option>
-        </select>
+        </BaseSelect>
       </div>
     </div>
 
@@ -283,13 +283,13 @@
       <div class="card">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-base font-bold text-slate-900 dark:text-white">Ringkasan Tahunan</h2>
-          <select
+          <BaseSelect
             v-model="reviewYear"
-            @change="loadYearReview"
-            class="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-600 dark:text-slate-400"
+            @update:modelValue="loadYearReview"
+            size="sm"
           >
             <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
-          </select>
+          </BaseSelect>
         </div>
 
         <div v-if="yearReviewLoading" class="text-center py-8">
@@ -362,6 +362,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { Line } from 'vue-chartjs'
 import { Doughnut } from 'vue-chartjs'
+import BaseSelect from '@/components/common/BaseSelect.vue'
 import {
   Chart as ChartJS,
   CategoryScale,
