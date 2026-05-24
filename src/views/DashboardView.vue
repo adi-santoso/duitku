@@ -54,27 +54,20 @@
     <template v-else>
       <!-- Month Filter (Select Dropdown) -->
       <div class="flex items-center gap-3">
-        <div class="relative">
-          <select
-            :value="selectedMonthValue"
-            @change="handleFilterChange($event)"
-            class="appearance-none pl-4 pr-10 py-2.5 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all cursor-pointer"
+        <BaseSelect
+          :model-value="selectedMonthValue"
+          @update:modelValue="handleFilterChange"
+          custom-class="pl-4 pr-10 py-2.5 rounded-xl text-sm font-semibold"
+        >
+          <option value="all">Semua Waktu</option>
+          <option
+            v-for="m in monthOptions"
+            :key="`${m.year}-${m.month}`"
+            :value="`${m.year}-${m.month}`"
           >
-            <option value="all">Semua Waktu</option>
-            <option
-              v-for="m in monthOptions"
-              :key="`${m.year}-${m.month}`"
-              :value="`${m.year}-${m.month}`"
-            >
-              {{ m.label }}
-            </option>
-          </select>
-          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
-          </div>
-        </div>
+            {{ m.label }}
+          </option>
+        </BaseSelect>
         <span v-if="selectedMonth" class="text-xs text-slate-400 dark:text-slate-500">
           vs {{ prevMonthLabel }}
         </span>
@@ -407,6 +400,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js'
+import BaseSelect from '@/components/common/BaseSelect.vue'
 import TransactionModal from '@/components/transaction/TransactionModal.vue'
 import FinancialHealthCard from '@/components/common/FinancialHealthCard.vue'
 import RecurringSuggestions from '@/components/common/RecurringSuggestions.vue'
@@ -620,8 +614,7 @@ const setFilter = (month) => {
   loadData()
 }
 
-const handleFilterChange = (event) => {
-  const val = event.target.value
+const handleFilterChange = (val) => {
   if (val === 'all') {
     setFilter(null)
   } else {

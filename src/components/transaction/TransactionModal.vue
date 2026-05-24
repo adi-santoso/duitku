@@ -156,12 +156,12 @@
 
         <div v-if="form.isRecurring">
           <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Frekuensi</label>
-          <select v-model="form.recurringFrequency" class="input">
+          <BaseSelect v-model="form.recurringFrequency">
             <option value="daily">Harian</option>
             <option value="weekly">Mingguan</option>
             <option value="monthly">Bulanan</option>
             <option value="yearly">Tahunan</option>
-          </select>
+          </BaseSelect>
         </div>
 
         <!-- Save as Template -->
@@ -204,6 +204,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import BaseSelect from '@/components/common/BaseSelect.vue'
 import { useCategories } from '@/composables/useCategories'
 import { useTransactions } from '@/composables/useTransactions'
 import { useTransactionTemplates } from '@/composables/useTransactionTemplates'

@@ -66,40 +66,28 @@
       <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block" />
 
       <!-- Category Filter -->
-      <select
-        v-model="filterCategory"
-        class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer appearance-none pr-7 bg-no-repeat bg-[right_0.5rem_center] bg-[length:1rem]"
-        style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%2394a3b8%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>')"
-      >
+      <BaseSelect v-model="filterCategory" size="sm">
         <option :value="null">Semua Kategori</option>
         <option v-for="cat in allCategories" :key="cat.id" :value="cat.id">
           {{ cat.icon }} {{ cat.name }}
         </option>
-      </select>
+      </BaseSelect>
 
       <!-- Date Range Filter -->
-      <select
-        v-model="filterMonth"
-        class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer appearance-none pr-7 bg-no-repeat bg-[right_0.5rem_center] bg-[length:1rem]"
-        style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%2394a3b8%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>')"
-      >
+      <BaseSelect v-model="filterMonth" size="sm">
         <option :value="null">Semua Bulan</option>
         <option v-for="m in availableMonths" :key="m.value" :value="m.value">
           {{ m.label }}
         </option>
-      </select>
+      </BaseSelect>
 
       <!-- Sort -->
-      <select
-        v-model="sortBy"
-        class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer appearance-none pr-7 bg-no-repeat bg-[right_0.5rem_center] bg-[length:1rem]"
-        style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%2394a3b8%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>')"
-      >
+      <BaseSelect v-model="sortBy" size="sm">
         <option value="date_desc">Terbaru</option>
         <option value="date_asc">Terlama</option>
         <option value="amount_desc">Terbesar</option>
         <option value="amount_asc">Terkecil</option>
-      </select>
+      </BaseSelect>
 
       <!-- Amount Range Toggle -->
       <button
@@ -464,15 +452,12 @@
       </div>
 
       <!-- Per page selector -->
-      <select
-        v-model="perPage"
-        class="text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-400 cursor-pointer"
-      >
+      <BaseSelect v-model="perPage" size="sm">
         <option :value="15">15/hal</option>
         <option :value="25">25/hal</option>
         <option :value="50">50/hal</option>
         <option :value="100">100/hal</option>
-      </select>
+      </BaseSelect>
     </div>
 
     <!-- FAB -->
@@ -542,6 +527,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import BaseSelect from '@/components/common/BaseSelect.vue'
 import TransactionModal from '@/components/transaction/TransactionModal.vue'
 import TransactionDetailModal from '@/components/transaction/TransactionDetailModal.vue'
 import { useTransactions } from '@/composables/useTransactions'

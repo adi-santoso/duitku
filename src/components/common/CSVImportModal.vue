@@ -43,50 +43,50 @@
           <div class="space-y-3">
             <div>
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kolom Tanggal *</label>
-              <select v-model="config.dateCol" class="input text-sm">
+              <BaseSelect v-model="config.dateCol" size="sm">
                 <option :value="null" disabled>Pilih kolom...</option>
                 <option v-for="(h, i) in headers" :key="'d'+i" :value="i">{{ h }} ({{ getPreview(i) }})</option>
-              </select>
+              </BaseSelect>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kolom Jumlah *</label>
-              <select v-model="config.amountCol" class="input text-sm">
+              <BaseSelect v-model="config.amountCol" size="sm">
                 <option :value="null" disabled>Pilih kolom...</option>
                 <option v-for="(h, i) in headers" :key="'a'+i" :value="i">{{ h }} ({{ getPreview(i) }})</option>
-              </select>
+              </BaseSelect>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kolom Deskripsi</label>
-              <select v-model="config.descCol" class="input text-sm">
+              <BaseSelect v-model="config.descCol" size="sm">
                 <option :value="null">-- Tidak ada --</option>
                 <option v-for="(h, i) in headers" :key="'desc'+i" :value="i">{{ h }} ({{ getPreview(i) }})</option>
-              </select>
+              </BaseSelect>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kolom Tipe (Income/Expense)</label>
-              <select v-model="config.typeCol" class="input text-sm">
+              <BaseSelect v-model="config.typeCol" size="sm">
                 <option :value="null">-- Tidak ada (gunakan default) --</option>
                 <option v-for="(h, i) in headers" :key="'t'+i" :value="i">{{ h }} ({{ getPreview(i) }})</option>
-              </select>
+              </BaseSelect>
             </div>
 
             <div v-if="config.typeCol === null">
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tipe Default</label>
-              <select v-model="config.defaultType" class="input text-sm">
+              <BaseSelect v-model="config.defaultType" size="sm">
                 <option value="expense">Pengeluaran</option>
                 <option value="income">Pemasukan</option>
-              </select>
+              </BaseSelect>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori Default *</label>
-              <select v-model="config.categoryId" class="input text-sm">
+              <BaseSelect v-model="config.categoryId" size="sm">
                 <option :value="null" disabled>Pilih kategori...</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.icon }} {{ cat.name }}</option>
-              </select>
+              </BaseSelect>
             </div>
           </div>
 
@@ -166,6 +166,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import BaseSelect from '@/components/common/BaseSelect.vue'
 import { useCSVImport } from '@/composables/useCSVImport'
 import { useCategories } from '@/composables/useCategories'
 
