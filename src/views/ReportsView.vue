@@ -31,19 +31,19 @@
         <div class="card text-center">
           <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Pemasukan</p>
           <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-            {{ formatCompactNumber(summary.income) }}
+            {{ formatNumber(summary.income) }}
           </p>
         </div>
         <div class="card text-center">
           <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Pengeluaran</p>
           <p class="text-lg font-bold text-red-600 dark:text-red-400">
-            {{ formatCompactNumber(summary.expense) }}
+            {{ formatNumber(summary.expense) }}
           </p>
         </div>
         <div class="card text-center">
           <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Saldo</p>
           <p class="text-lg font-bold" :class="summary.balance >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'">
-            {{ formatCompactNumber(summary.balance) }}
+            {{ formatNumber(summary.balance) }}
           </p>
         </div>
       </div>
@@ -376,7 +376,7 @@ import {
 import { useTransactions } from '@/composables/useTransactions'
 import { useSpendingPatterns } from '@/composables/useSpendingPatterns'
 import { useYearReview } from '@/composables/useYearReview'
-import { formatCurrency, formatCompactNumber } from '@/utils/formatters'
+import { formatCurrency, formatCompactNumber, formatNumber } from '@/utils/formatters'
 import { getMonthsList, getMonthRange, getMonthName } from '@/utils/dateHelpers'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler)
