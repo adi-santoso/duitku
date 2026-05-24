@@ -56,12 +56,13 @@ export function getRelativeTime(date) {
 }
 
 /**
- * Get start and end of month
+ * Get start and end of month (returns YYYY-MM-DD strings)
  */
 export function getMonthRange(year, month) {
-  const start = new Date(year, month, 1)
-  const end = new Date(year, month + 1, 0, 23, 59, 59)
-  return { start, end }
+  const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const endDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  return { start: startDate, end: endDate }
 }
 
 /**

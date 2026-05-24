@@ -641,9 +641,7 @@ const buildTrendChart = async () => {
     if (m < 0) { m += 12; y-- }
 
     const { start, end } = getMonthRange(y, m)
-    const startDate = start.toISOString().split('T')[0]
-    const endDate = end.toISOString().split('T')[0]
-    const data = await getSummary(startDate, endDate)
+    const data = await getSummary(start, end)
 
     labels.push(getMonthName(m).substring(0, 3))
     incomeData.push(data.income)
@@ -685,8 +683,8 @@ const loadData = async () => {
     if (selectedMonth.value) {
       // Filtered by specific month
       const { start, end } = getMonthRange(selectedMonth.value.year, selectedMonth.value.month)
-      startDate = start.toISOString().split('T')[0]
-      endDate = end.toISOString().split('T')[0]
+      startDate = start
+      endDate = end
     }
 
     // Load summary and expense by category
@@ -703,10 +701,7 @@ const loadData = async () => {
       let prevYear = selectedMonth.value.year
       if (prevMonth < 0) { prevMonth = 11; prevYear-- }
       const prevRange = getMonthRange(prevYear, prevMonth)
-      prevSummary.value = await getSummary(
-        prevRange.start.toISOString().split('T')[0],
-        prevRange.end.toISOString().split('T')[0]
-      )
+      prevSummary.value = await getSummary(prevRange.start, prevRange.end)
     } else {
       // All time: no date filter
       const [summaryData, expenseByCat] = await Promise.all([
