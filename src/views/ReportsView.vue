@@ -431,21 +431,16 @@ const toggleMonthDetail = async (idx) => {
   try {
     const month = monthsList[idx]
     const { start, end } = getMonthRange(month.year, month.month)
-    const startDate = start.toISOString().split('T')[0]
-    const endDate = end.toISOString().split('T')[0]
 
     // Get expense by category for this month
-    const thisMonthCats = await getExpenseByCategory(startDate, endDate)
+    const thisMonthCats = await getExpenseByCategory(start, end)
 
     // Get previous month for comparison
     let prevCats = []
     if (idx + 1 < monthsList.length) {
       const prevMonth = monthsList[idx + 1]
       const prevRange = getMonthRange(prevMonth.year, prevMonth.month)
-      prevCats = await getExpenseByCategory(
-        prevRange.start.toISOString().split('T')[0],
-        prevRange.end.toISOString().split('T')[0]
-      )
+      prevCats = await getExpenseByCategory(prevRange.start, prevRange.end)
     }
 
     // Build comparison map
@@ -577,12 +572,10 @@ const loadData = async () => {
 
   try {
     const { start, end } = getMonthRange(selectedMonth.value.year, selectedMonth.value.month)
-    const startDate = start.toISOString().split('T')[0]
-    const endDate = end.toISOString().split('T')[0]
 
     const [summaryData, expenseByCat] = await Promise.all([
-      getSummary(startDate, endDate),
-      getExpenseByCategory(startDate, endDate)
+      getSummary(start, end),
+      getExpenseByCategory(start, end)
     ])
 
     summary.value = summaryData
@@ -592,9 +585,7 @@ const loadData = async () => {
     const comparisons = []
     for (const month of monthsList.slice(0, 6)) {
       const { start, end } = getMonthRange(month.year, month.month)
-      const s = start.toISOString().split('T')[0]
-      const e = end.toISOString().split('T')[0]
-      const data = await getSummary(s, e)
+      const data = await getSummary(start, end)
 
       comparisons.push({
         label: month.label,
