@@ -42,6 +42,9 @@ export function useKeyboardShortcuts() {
   }
 
   const handleKeydown = (e) => {
+    // Guard against undefined key
+    if (!e.key) return
+
     // Don't trigger shortcuts when typing in inputs
     if (isInputFocused() && e.key !== 'Escape') return
 
