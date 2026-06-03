@@ -4,7 +4,7 @@
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm touch-none overscroll-none" @click="$emit('close')" />
 
     <!-- Modal -->
-    <div class="relative w-full md:max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl md:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-slide-up border-t md:border border-slate-200 dark:border-slate-800 overscroll-contain">
+    <div class="relative w-full md:max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl md:rounded-2xl shadow-2xl max-h-[85vh] overflow-y-auto animate-slide-up border-t md:border border-slate-200 dark:border-slate-800 overscroll-contain mb-16 md:mb-0">
       <!-- Header -->
       <div class="sticky top-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-5 py-4 flex items-center justify-between z-10">
         <div>
@@ -185,7 +185,7 @@
         </div>
 
         <!-- Actions -->
-        <div class="flex gap-3 pt-2">
+        <div class="flex gap-3 pt-2 pb-4">
           <button type="button" @click="$emit('close')" class="btn btn-secondary flex-1 h-11">
             Batal
           </button>
