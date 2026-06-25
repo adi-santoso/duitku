@@ -104,7 +104,7 @@ const {
   fetchCashflowForecast,
 } = useAnalytics()
 
-const { categories, fetchCategories } = useCategories()
+const { categories, loadCategories } = useCategories()
 
 const selectedCategoryId = ref<number | null>(null)
 const showAllBudgets = ref(false)
@@ -174,7 +174,7 @@ async function loadAllAnalytics() {
       fetchSavingsRateHistory(12),
       loadTrendData(),
       fetchCashflowForecast(3),
-      fetchCategories(),
+      loadCategories(),
     ])
   } catch (err) {
     console.error('Error loading analytics:', err)

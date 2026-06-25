@@ -161,4 +161,43 @@ export const api = {
     addContribution: (id, body) => request(`/savings-goals/${id}/contributions`, { method: 'POST', body: JSON.stringify(body) }),
     getContributions: (id) => request(`/savings-goals/${id}/contributions`),
   },
+
+  // Analytics
+  analytics: {
+    budgetAlerts: (params = {}) => {
+      const query = new URLSearchParams()
+      if (params.year) query.set('year', params.year)
+      if (params.month) query.set('month', params.month)
+      const qs = query.toString()
+      return request(`/analytics/budget-alerts${qs ? '?' + qs : ''}`)
+    },
+    spendingVelocity: () => request('/analytics/spending-velocity'),
+    savingsRateHistory: (params = {}) => {
+      const query = new URLSearchParams()
+      if (params.months) query.set('months', params.months)
+      const qs = query.toString()
+      return request(`/analytics/savings-rate-history${qs ? '?' + qs : ''}`)
+    },
+    trend: (params = {}) => {
+      const query = new URLSearchParams()
+      if (params.startDate) query.set('startDate', params.startDate)
+      if (params.endDate) query.set('endDate', params.endDate)
+      if (params.granularity) query.set('granularity', params.granularity)
+      const qs = query.toString()
+      return request(`/analytics/trend${qs ? '?' + qs : ''}`)
+    },
+    categoryInsights: (params = {}) => {
+      const query = new URLSearchParams()
+      if (params.categoryId) query.set('categoryId', params.categoryId)
+      if (params.months) query.set('months', params.months)
+      const qs = query.toString()
+      return request(`/analytics/category-insights${qs ? '?' + qs : ''}`)
+    },
+    forecast: (params = {}) => {
+      const query = new URLSearchParams()
+      if (params.monthsAhead) query.set('monthsAhead', params.monthsAhead)
+      const qs = query.toString()
+      return request(`/analytics/forecast${qs ? '?' + qs : ''}`)
+    },
+  },
 }

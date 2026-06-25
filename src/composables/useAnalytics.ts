@@ -169,11 +169,11 @@ export function useAnalytics() {
       if (year) params.year = year.toString()
       if (month) params.month = month.toString()
 
-      const response = await api.get('/analytics/budget-alerts', { params })
-      budgetAlerts.value = response.data
-      return response.data
+      const data = await api.analytics.budgetAlerts(params)
+      budgetAlerts.value = data
+      return data
     } catch (err: any) {
-      error.value = err.response?.data?.error || 'Gagal memuat budget alerts'
+      error.value = err.message || 'Gagal memuat budget alerts'
       throw err
     } finally {
       loading.value = false
@@ -188,11 +188,11 @@ export function useAnalytics() {
     error.value = null
 
     try {
-      const response = await api.get('/analytics/spending-velocity')
-      spendingVelocity.value = response.data
-      return response.data
+      const data = await api.analytics.spendingVelocity()
+      spendingVelocity.value = data
+      return data
     } catch (err: any) {
-      error.value = err.response?.data?.error || 'Gagal memuat spending velocity'
+      error.value = err.message || 'Gagal memuat spending velocity'
       throw err
     } finally {
       loading.value = false
@@ -207,13 +207,11 @@ export function useAnalytics() {
     error.value = null
 
     try {
-      const response = await api.get('/analytics/savings-rate-history', {
-        params: { months: months.toString() },
-      })
-      savingsRateHistory.value = response.data
-      return response.data
+      const data = await api.analytics.savingsRateHistory({ months: months.toString() })
+      savingsRateHistory.value = data
+      return data
     } catch (err: any) {
-      error.value = err.response?.data?.error || 'Gagal memuat savings rate history'
+      error.value = err.message || 'Gagal memuat savings rate history'
       throw err
     } finally {
       loading.value = false
@@ -232,13 +230,11 @@ export function useAnalytics() {
     error.value = null
 
     try {
-      const response = await api.get('/analytics/trend', {
-        params: { startDate, endDate, granularity },
-      })
-      trendData.value = response.data
-      return response.data
+      const data = await api.analytics.trend({ startDate, endDate, granularity })
+      trendData.value = data
+      return data
     } catch (err: any) {
-      error.value = err.response?.data?.error || 'Gagal memuat trend data'
+      error.value = err.message || 'Gagal memuat trend data'
       throw err
     } finally {
       loading.value = false
@@ -253,13 +249,14 @@ export function useAnalytics() {
     error.value = null
 
     try {
-      const response = await api.get('/analytics/category-insights', {
-        params: { categoryId: categoryId.toString(), months: months.toString() },
+      const data = await api.analytics.categoryInsights({
+        categoryId: categoryId.toString(),
+        months: months.toString(),
       })
-      categoryInsights.value = response.data
-      return response.data
+      categoryInsights.value = data
+      return data
     } catch (err: any) {
-      error.value = err.response?.data?.error || 'Gagal memuat category insights'
+      error.value = err.message || 'Gagal memuat category insights'
       throw err
     } finally {
       loading.value = false
@@ -274,13 +271,11 @@ export function useAnalytics() {
     error.value = null
 
     try {
-      const response = await api.get('/analytics/forecast', {
-        params: { monthsAhead: monthsAhead.toString() },
-      })
-      cashflowForecast.value = response.data
-      return response.data
+      const data = await api.analytics.forecast({ monthsAhead: monthsAhead.toString() })
+      cashflowForecast.value = data
+      return data
     } catch (err: any) {
-      error.value = err.response?.data?.error || 'Gagal memuat forecast'
+      error.value = err.message || 'Gagal memuat forecast'
       throw err
     } finally {
       loading.value = false
