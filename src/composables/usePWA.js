@@ -1,4 +1,5 @@
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRegisterSW } from 'virtual:pwa-register/vue'
 
 /**
  * PWA composable — handles service worker, install prompt, and online/offline status
@@ -7,8 +8,6 @@ import { ref, onMounted, onUnmounted } from 'vue'
 const isOnline = ref(navigator.onLine)
 const canInstall = ref(false)
 const isInstalled = ref(false)
-const needsUpdate = ref(false)
-const swRegistration = ref(null)
 
 /** @type {BeforeInstallPromptEvent|null} */
 let deferredPrompt = null
@@ -31,61 +30,6 @@ function checkIfInstalled() {
 }
 
 /**
- * Register the service worker
- */
-async function registerServiceWorker() {
-  if (!('serviceWorker' in navigator)) {
-    console.log('[PWA] Service workers not supported')
-    return
-  }
-
-  // Don't register SW in development — it intercepts Supabase API calls
-  if (import.meta.env.DEV) {
-    console.log('[PWA] Skipping SW registration in development')
-    return
-  }
-
-  try {
-    const registration = await navigator.serviceWorker.register('/sw.js', {
-      scope: '/'
-    })
-    swRegistration.value = registration
-    console.log('[PWA] Service worker registered:', registration.scope)
-
-    // Check for updates
-    registration.addEventListener('updatefound', () => {
-      const newWorker = registration.installing
-      if (!newWorker) return
-
-      newWorker.addEventListener('statechange', () => {
-        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          // New version available
-          needsUpdate.value = true
-          console.log('[PWA] New version available')
-        }
-      })
-    })
-
-    // Check for updates periodically (every 60 minutes)
-    setInterval(() => {
-      registration.update()
-    }, 60 * 60 * 1000)
-  } catch (error) {
-    console.error('[PWA] Service worker registration failed:', error)
-  }
-}
-
-/**
- * Apply pending update — reload with new service worker
- */
-function applyUpdate() {
-  if (swRegistration.value && swRegistration.value.waiting) {
-    swRegistration.value.waiting.postMessage({ type: 'SKIP_WAITING' })
-  }
-  window.location.reload()
-}
-
-/**
  * Trigger the install prompt
  */
 async function installApp() {
@@ -105,6 +49,25 @@ async function installApp() {
 }
 
 export function usePWA() {
+  // Use vite-plugin-pwa's built-in registration
+  const {
+    needRefresh: needsUpdate,
+    updateServiceWorker: applyUpdate
+  } = useRegisterSW({
+    onRegistered(r) {
+      console.log('[PWA] Service worker registered:', r?.scope)
+      // Check for updates every 60 minutes
+      if (r) {
+        setInterval(() => {
+          r.update()
+        }, 60 * 60 * 1000)
+      }
+    },
+    onRegisterError(error) {
+      console.error('[PWA] Service worker registration failed:', error)
+    }
+  })
+
   let onlineHandler = null
   let offlineHandler = null
   let beforeInstallHandler = null
@@ -136,9 +99,6 @@ export function usePWA() {
       console.log('[PWA] App was installed')
     }
     window.addEventListener('appinstalled', appInstalledHandler)
-
-    // Register service worker
-    registerServiceWorker()
   })
 
   onUnmounted(() => {
@@ -157,3 +117,4 @@ export function usePWA() {
     applyUpdate
   }
 }
+
