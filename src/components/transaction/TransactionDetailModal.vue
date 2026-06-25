@@ -15,7 +15,7 @@
         </button>
       </div>
 
-      <div class="p-5 space-y-5">
+      <div class="p-5 space-y-5 pb-24 lg:pb-5">
         <!-- Category & Amount Hero -->
         <div class="text-center py-2">
           <div
