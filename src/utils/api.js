@@ -199,5 +199,11 @@ export const api = {
       const qs = query.toString()
       return request(`/analytics/forecast${qs ? '?' + qs : ''}`)
     },
+    recurringPatterns: (params = {}) => {
+      const query = new URLSearchParams()
+      if (params.minOccurrences) query.set('minOccurrences', params.minOccurrences)
+      const qs = query.toString()
+      return request(`/analytics/recurring-patterns${qs ? '?' + qs : ''}`)
+    },
   },
 }

@@ -146,6 +146,41 @@ export interface CashflowForecast {
   }>
 }
 
+export interface RecurringPattern {
+  categoryId: number
+  categoryName: string
+  categoryIcon: string
+  type: 'income' | 'expense'
+  description: string | null
+  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  avgAmount: number
+  occurrences: number
+  avgInterval: number
+  confidence: number
+  lastDate: string
+  nextPredictedDate: string
+  transactions: Array<{
+    id: number
+    amount: number
+    date: string
+    description: string | null
+  }>
+}
+
+export interface RecurringPatternsResult {
+  patterns: RecurringPattern[]
+  summary: {
+    totalPatterns: number
+    byFrequency: {
+      daily: number
+      weekly: number
+      monthly: number
+      yearly: number
+    }
+    potentialSavings: number
+  }
+}
+
 export function useAnalytics() {
   const budgetAlerts = ref<BudgetAlert[]>([])
   const spendingVelocity = ref<SpendingVelocity | null>(null)
@@ -153,6 +188,7 @@ export function useAnalytics() {
   const trendData = ref<TrendData | null>(null)
   const categoryInsights = ref<CategoryInsight | null>(null)
   const cashflowForecast = ref<CashflowForecast | null>(null)
+  const recurringPatterns = ref<RecurringPatternsResult | null>(null)
 
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -282,6 +318,27 @@ export function useAnalytics() {
     }
   }
 
+  /**
+   * Fetch recurring patterns detection
+   */
+  async function fetchRecurringPatterns(minOccurrences: number = 3) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const data = await api.analytics.recurringPatterns({
+        minOccurrences: minOccurrences.toString(),
+      })
+      recurringPatterns.value = data
+      return data
+    } catch (err: any) {
+      error.value = err.message || 'Gagal memuat recurring patterns'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // State
     budgetAlerts,
@@ -290,6 +347,7 @@ export function useAnalytics() {
     trendData,
     categoryInsights,
     cashflowForecast,
+    recurringPatterns,
     loading,
     error,
 
@@ -300,5 +358,6 @@ export function useAnalytics() {
     fetchTrend,
     fetchCategoryInsights,
     fetchCashflowForecast,
+    fetchRecurringPatterns,
   }
 }

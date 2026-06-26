@@ -72,6 +72,14 @@
       <section v-if="cashflowForecast" class="analytics-section">
         <ForecastChart :data="cashflowForecast" />
       </section>
+
+      <!-- Recurring Patterns Detection -->
+      <section v-if="recurringPatterns" class="analytics-section">
+        <RecurringPatternsCard
+          :data="recurringPatterns"
+          @create-recurring="handleCreateRecurring"
+        />
+      </section>
     </div>
   </div>
 </template>
@@ -80,12 +88,14 @@
 import { onMounted, ref, computed, watch } from 'vue'
 import { useAnalytics } from '@/composables/useAnalytics'
 import { useCategories } from '@/composables/useCategories'
+import type { RecurringPattern } from '@/composables/useAnalytics'
 import BudgetAlertCard from '@/components/analytics/BudgetAlertCard.vue'
 import SpendingVelocityWidget from '@/components/analytics/SpendingVelocityWidget.vue'
 import SavingsRateChart from '@/components/analytics/SavingsRateChart.vue'
 import TrendChart from '@/components/analytics/TrendChart.vue'
 import CategoryInsightCard from '@/components/analytics/CategoryInsightCard.vue'
 import ForecastChart from '@/components/analytics/ForecastChart.vue'
+import RecurringPatternsCard from '@/components/analytics/RecurringPatternsCard.vue'
 
 const {
   budgetAlerts,
@@ -94,6 +104,7 @@ const {
   trendData,
   categoryInsights,
   cashflowForecast,
+  recurringPatterns,
   loading,
   error,
   fetchBudgetAlerts,
@@ -102,6 +113,7 @@ const {
   fetchTrend,
   fetchCategoryInsights,
   fetchCashflowForecast,
+  fetchRecurringPatterns,
 } = useAnalytics()
 
 const { categories, loadCategories } = useCategories()
@@ -174,6 +186,7 @@ async function loadAllAnalytics() {
       fetchSavingsRateHistory(12),
       loadTrendData(),
       fetchCashflowForecast(3),
+      fetchRecurringPatterns(3),
       loadCategories(),
     ])
   } catch (err) {
@@ -181,6 +194,13 @@ async function loadAllAnalytics() {
   } finally {
     loading.value = false
   }
+}
+
+// Handle create recurring from pattern
+function handleCreateRecurring(pattern: RecurringPattern) {
+  // TODO: Navigate to transaction form with pre-filled data
+  console.log('Creating recurring transaction from pattern:', pattern)
+  alert(`Fitur ini akan mengarahkan ke form transaksi dengan data:\n\nKategori: ${pattern.categoryName}\nAmount: Rp ${pattern.avgAmount.toLocaleString('id-ID')}\nFrequency: ${pattern.frequency}\n\n(Coming soon...)`)
 }
 
 onMounted(() => {
