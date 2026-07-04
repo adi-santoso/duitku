@@ -45,6 +45,16 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
         </button>
+        <button
+          @click="viewMode = 'spreadsheet'"
+          class="p-2 rounded-lg transition-all"
+          :class="viewMode === 'spreadsheet' ? 'bg-primary-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'"
+          title="Tampilan Spreadsheet"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m17.25-3.75h-7.5c-.621 0-1.125.504-1.125 1.125m8.625-1.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M12 10.875v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125M13.125 12h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125M20.625 12c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5M12 14.625v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 14.625c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m0 1.5v-1.5m0 0c0-.621.504-1.125 1.125-1.125m0 0h7.5" />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -140,6 +150,49 @@
       >
         Reset
       </button>
+    </div>
+
+    <!-- Spreadsheet Zoom Control -->
+    <div v-if="viewMode === 'spreadsheet'" class="card animate-fade-in">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m17.25-3.75h-7.5c-.621 0-1.125.504-1.125 1.125m8.625-1.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M12 10.875v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125M13.125 12h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125M20.625 12c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5M12 14.625v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 14.625c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m0 1.5v-1.5m0 0c0-.621.504-1.125 1.125-1.125m0 0h7.5" />
+          </svg>
+          <span class="font-medium hidden sm:inline">Mode Spreadsheet</span>
+          <span class="sm:hidden">🤏 Cubit untuk zoom</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            @click="adjustZoom(-10)"
+            class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center"
+            title="Zoom Out"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />
+            </svg>
+          </button>
+
+          <button
+            @click="resetZoom"
+            class="px-3 py-1 rounded-lg text-xs font-bold tabular-nums bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors min-w-[48px]"
+            title="Reset Zoom (Double Tap)"
+          >
+            {{ zoomLevel }}%
+          </button>
+
+          <button
+            @click="adjustZoom(10)"
+            class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center"
+            title="Zoom In"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Active Filters Badges -->
@@ -387,6 +440,62 @@
           </div>
         </div>
       </template>
+
+      <!-- SPREADSHEET VIEW MODE -->
+      <template v-if="!isLoading && paginatedTransactions.length > 0 && viewMode === 'spreadsheet'">
+        <div
+          ref="spreadsheetContainer"
+          class="spreadsheet-view overflow-x-auto"
+          :style="spreadsheetStyles"
+          @touchstart="handleTouchStart"
+          @touchmove="handleTouchMove"
+          @touchend="handleTouchEnd"
+        >
+          <table class="spreadsheet-table">
+            <thead class="spreadsheet-header">
+              <tr>
+                <th class="text-left">Tanggal</th>
+                <th class="text-left">Kategori</th>
+                <th class="text-left">Deskripsi</th>
+                <th class="text-left">Tipe</th>
+                <th class="text-right">Jumlah</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(transaction, index) in paginatedTransactions"
+                :key="'s-' + transaction.id"
+                :class="index % 2 === 0 ? 'row-even' : 'row-odd'"
+                @click="viewTransaction(transaction)"
+              >
+                <td class="tabular-nums">{{ formatDate(transaction.transaction_date, 'short') }}</td>
+                <td>
+                  <span class="category-cell">
+                    <span class="category-icon">{{ transaction.category_icon }}</span>
+                    <span>{{ transaction.category_name }}</span>
+                  </span>
+                </td>
+                <td class="description-cell">{{ transaction.description || '-' }}</td>
+                <td>
+                  <span class="type-badge" :class="transaction.type === 'income' ? 'type-income' : 'type-expense'">
+                    {{ transaction.type === 'income' ? 'Masuk' : 'Keluar' }}
+                  </span>
+                </td>
+                <td class="text-right tabular-nums amount-cell" :class="transaction.type === 'income' ? 'amount-income' : 'amount-expense'">
+                  {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Zoom Toast -->
+        <transition name="toast">
+          <div v-if="showZoomToast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-slate-900 dark:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-2xl">
+            🔍 Zoom {{ zoomLevel }}%
+          </div>
+        </transition>
+      </template>
     </div>
 
     <!-- Pagination -->
@@ -548,7 +657,7 @@ const filterAmountMax = ref('')
 const sortBy = ref('date_desc')
 const showAmountFilter = ref(false)
 const searchQuery = ref('')
-const viewMode = ref('default')
+const viewMode = ref('compact')
 const currentPage = ref(1)
 const perPage = ref(25)
 const isLoading = ref(false)
@@ -557,6 +666,17 @@ const showAddMenu = ref(false)
 const transactionType = ref('expense')
 const selectedTransaction = ref(null)
 const editingTransaction = ref(null)
+
+// Spreadsheet zoom
+const zoomLevel = ref(100)
+const showZoomToast = ref(false)
+const spreadsheetContainer = ref(null)
+let zoomToastTimer = null
+
+// Pinch gesture tracking
+let initialPinchDistance = 0
+let initialZoomLevel = 100
+let lastTapTime = 0
 
 // Debounce timer for search
 let searchTimer = null
@@ -684,6 +804,95 @@ const visiblePages = computed(() => {
   return pages
 })
 
+// Spreadsheet dynamic styles
+const spreadsheetStyles = computed(() => {
+  const fontSize = 10 + (zoomLevel.value - 80) * 0.15 // 10px @ 80%, 12px @ 100%, 16px @ 120%
+  const rowHeight = 28 + (zoomLevel.value - 80) * 0.3 // 28px @ 80%, 36px @ 100%, 40px @ 120%
+
+  return {
+    '--spreadsheet-font-size': `${fontSize}px`,
+    '--spreadsheet-row-height': `${rowHeight}px`,
+  }
+})
+
+// Zoom functions
+const adjustZoom = (delta) => {
+  const newZoom = Math.min(120, Math.max(80, zoomLevel.value + delta))
+  setZoom(newZoom)
+}
+
+const resetZoom = () => {
+  setZoom(100)
+}
+
+const setZoom = (value) => {
+  zoomLevel.value = value
+  localStorage.setItem('duitku_spreadsheet_zoom', value.toString())
+
+  // Show toast
+  showZoomToast.value = true
+  clearTimeout(zoomToastTimer)
+  zoomToastTimer = setTimeout(() => {
+    showZoomToast.value = false
+  }, 1000)
+
+  // Haptic feedback on mobile (if supported)
+  if (value === 100 && navigator.vibrate) {
+    navigator.vibrate(50)
+  }
+}
+
+// Pinch gesture handlers
+const getDistance = (touch1, touch2) => {
+  const dx = touch2.clientX - touch1.clientX
+  const dy = touch2.clientY - touch1.clientY
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
+const handleTouchStart = (e) => {
+  if (e.touches.length === 2) {
+    e.preventDefault()
+    initialPinchDistance = getDistance(e.touches[0], e.touches[1])
+    initialZoomLevel = zoomLevel.value
+  }
+
+  // Double tap detection for reset
+  const now = Date.now()
+  if (now - lastTapTime < 300) {
+    resetZoom()
+  }
+  lastTapTime = now
+}
+
+const handleTouchMove = (e) => {
+  if (e.touches.length === 2 && initialPinchDistance > 0) {
+    e.preventDefault()
+    const currentDistance = getDistance(e.touches[0], e.touches[1])
+    const scale = currentDistance / initialPinchDistance
+
+    const newZoom = Math.min(120, Math.max(80, initialZoomLevel * scale))
+    zoomLevel.value = Math.round(newZoom)
+
+    // Show toast during pinch
+    showZoomToast.value = true
+    clearTimeout(zoomToastTimer)
+  }
+}
+
+const handleTouchEnd = () => {
+  if (initialPinchDistance > 0) {
+    // Save final zoom level
+    localStorage.setItem('duitku_spreadsheet_zoom', zoomLevel.value.toString())
+
+    // Hide toast after pinch ends
+    zoomToastTimer = setTimeout(() => {
+      showZoomToast.value = false
+    }, 1000)
+  }
+
+  initialPinchDistance = 0
+}
+
 // Watch filters: reset page and re-fetch
 watch([filterType, filterCategory, filterMonth, perPage, filterAmountMin, filterAmountMax], () => {
   currentPage.value = 1
@@ -741,6 +950,12 @@ const viewTransaction = (transaction) => {
 onMounted(async () => {
   await loadCategories()
   await fetchTransactions()
+
+  // Load saved zoom level
+  const savedZoom = localStorage.getItem('duitku_spreadsheet_zoom')
+  if (savedZoom) {
+    zoomLevel.value = parseInt(savedZoom, 10)
+  }
 })
 </script>
 
@@ -753,5 +968,201 @@ onMounted(async () => {
 .fab-menu-leave-to {
   opacity: 0;
   transform: translateY(8px);
+}
+
+/* Spreadsheet Mode Styles */
+.spreadsheet-view {
+  background: white;
+  border-radius: 0;
+  overflow: auto;
+  max-height: 70vh;
+  position: relative;
+  font-size: var(--spreadsheet-font-size, 12px);
+  transition: font-size 0.15s ease;
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
+.dark .spreadsheet-view {
+  background: rgb(15 23 42); /* slate-900 */
+}
+
+.spreadsheet-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid rgb(226 232 240); /* slate-200 */
+}
+
+.dark .spreadsheet-table {
+  border-color: rgb(51 65 85); /* slate-700 */
+}
+
+.spreadsheet-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgb(248 250 252); /* slate-50 */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dark .spreadsheet-header {
+  background: rgb(30 41 59); /* slate-800 */
+}
+
+.spreadsheet-header th {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+  color: rgb(71 85 105); /* slate-600 */
+  padding: calc(var(--spreadsheet-row-height, 36px) * 0.3) 12px;
+  border-right: 1px solid rgb(226 232 240); /* slate-200 */
+  border-bottom: 2px solid rgb(226 232 240);
+  white-space: nowrap;
+  transition: padding 0.15s ease;
+}
+
+.dark .spreadsheet-header th {
+  color: rgb(148 163 184); /* slate-400 */
+  border-right-color: rgb(51 65 85); /* slate-700 */
+  border-bottom-color: rgb(51 65 85);
+}
+
+.spreadsheet-header th:last-child {
+  border-right: none;
+}
+
+.spreadsheet-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.spreadsheet-table tbody tr:hover {
+  background: rgb(241 245 249) !important; /* slate-100 */
+}
+
+.dark .spreadsheet-table tbody tr:hover {
+  background: rgb(30 41 59) !important; /* slate-800 */
+}
+
+.spreadsheet-table tbody tr.row-even {
+  background: white;
+}
+
+.spreadsheet-table tbody tr.row-odd {
+  background: rgb(248 250 252); /* slate-50 */
+}
+
+.dark .spreadsheet-table tbody tr.row-even {
+  background: rgb(15 23 42); /* slate-900 */
+}
+
+.dark .spreadsheet-table tbody tr.row-odd {
+  background: rgb(15 23 42 / 0.5);
+}
+
+.spreadsheet-table tbody td {
+  padding: calc(var(--spreadsheet-row-height, 36px) * 0.15) 12px;
+  border-right: 1px solid rgb(226 232 240); /* slate-200 */
+  border-bottom: 1px solid rgb(226 232 240);
+  color: rgb(51 65 85); /* slate-700 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: padding 0.15s ease;
+}
+
+.dark .spreadsheet-table tbody td {
+  color: rgb(203 213 225); /* slate-300 */
+  border-right-color: rgb(51 65 85); /* slate-700 */
+  border-bottom-color: rgb(51 65 85);
+}
+
+.spreadsheet-table tbody td:last-child {
+  border-right: none;
+}
+
+.category-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-icon {
+  font-size: 1.1em;
+}
+
+.description-cell {
+  max-width: 250px;
+  color: rgb(100 116 139); /* slate-500 */
+}
+
+.dark .description-cell {
+  color: rgb(148 163 184); /* slate-400 */
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.type-income {
+  background: rgb(209 250 229); /* emerald-100 */
+  color: rgb(5 150 105); /* emerald-600 */
+}
+
+.type-expense {
+  background: rgb(254 226 226); /* red-100 */
+  color: rgb(220 38 38); /* red-600 */
+}
+
+.dark .type-income {
+  background: rgb(5 150 105 / 0.15);
+  color: rgb(52 211 153); /* emerald-400 */
+}
+
+.dark .type-expense {
+  background: rgb(220 38 38 / 0.15);
+  color: rgb(248 113 113); /* red-400 */
+}
+
+.amount-cell {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.amount-income {
+  color: rgb(5 150 105) !important; /* emerald-600 */
+}
+
+.amount-expense {
+  color: rgb(220 38 38) !important; /* red-600 */
+}
+
+.dark .amount-income {
+  color: rgb(52 211 153) !important; /* emerald-400 */
+}
+
+.dark .amount-expense {
+  color: rgb(248 113 113) !important; /* red-400 */
+}
+
+/* Zoom Toast Animation */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.2s ease;
+}
+
+.toast-enter-from {
+  opacity: 0;
+  transform: translate(-50%, -10px);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -10px);
 }
 </style>
