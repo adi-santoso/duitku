@@ -44,6 +44,31 @@
         <!-- Category -->
         <div>
           <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2.5">Kategori *</label>
+
+          <!-- Smart Suggestions -->
+          <div v-if="suggestedCategories.length > 0 && !form.categoryId" class="mb-3 p-2.5 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+            <div class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <div class="flex-1">
+                <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1.5">Saran kategori</p>
+                <div class="flex flex-wrap gap-1.5">
+                  <button
+                    v-for="cat in suggestedCategories"
+                    :key="cat.id"
+                    type="button"
+                    @click="form.categoryId = cat.id"
+                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-500/30 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-primary-400 dark:hover:border-primary-500 transition-colors"
+                  >
+                    <span>{{ cat.icon }}</span>
+                    <span>{{ cat.name }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="grid grid-cols-3 gap-2">
             <button
               v-for="category in categories"
@@ -75,6 +100,40 @@
               min="0"
               step="1000"
             />
+          </div>
+
+          <!-- Quick Amount Chips -->
+          <div class="mt-3 space-y-2">
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <button
+                v-for="amount in quickAmounts"
+                :key="amount"
+                type="button"
+                @click="form.amount = amount"
+                class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                :class="Number(form.amount) === amount
+                  ? 'bg-primary-500 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'"
+              >
+                {{ formatQuickAmount(amount) }}
+              </button>
+            </div>
+
+            <!-- Recently Used Amounts -->
+            <div v-if="recentAmounts.length > 0" class="flex items-center gap-2 text-xs">
+              <span class="text-slate-400 dark:text-slate-500 flex-shrink-0">Terakhir:</span>
+              <div class="flex gap-2 overflow-x-auto scrollbar-hide">
+                <button
+                  v-for="(amount, idx) in recentAmounts"
+                  :key="idx"
+                  type="button"
+                  @click="form.amount = amount"
+                  class="flex-shrink-0 px-2.5 py-1 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-primary-400 dark:hover:border-primary-500 transition-colors"
+                >
+                  {{ formatQuickAmount(amount) }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -259,6 +318,99 @@ const categories = computed(() => {
   return allCategories.value.filter(cat => cat.type === props.type)
 })
 
+// Smart category suggestions based on description
+const suggestedCategories = computed(() => {
+  if (!form.value.description || form.value.description.length < 3) {
+    return []
+  }
+
+  const desc = form.value.description.toLowerCase()
+  const keywords = {
+    'Makanan & Minuman': ['makan', 'minum', 'kopi', 'nasi', 'sarapan', 'lunch', 'dinner', 'snack', 'jajan', 'restoran', 'cafe', 'warteg', 'bakso', 'soto', 'ayam', 'nasi goreng', 'mie'],
+    'Transport': ['ojek', 'grab', 'gojek', 'taxi', 'bensin', 'parkir', 'tol', 'kereta', 'busway', 'transjakarta', 'motor', 'mobil', 'uber'],
+    'Belanja': ['beli', 'belanja', 'shopping', 'toko', 'marketplace', 'tokopedia', 'shopee', 'lazada', 'blibli', 'olshop'],
+    'Tagihan': ['listrik', 'air', 'wifi', 'internet', 'pulsa', 'token', 'pdam', 'pln', 'telkom', 'indihome', 'billing', 'subscription', 'netflix', 'spotify'],
+    'Hiburan': ['nonton', 'cinema', 'game', 'streaming', 'netflix', 'spotify', 'youtube', 'main', 'rekreasi', 'wisata', 'liburan'],
+    'Kesehatan': ['dokter', 'obat', 'apotek', 'rumah sakit', 'klinik', 'medical', 'vitamin', 'check up', 'konsultasi'],
+    'Pendidikan': ['kursus', 'buku', 'sekolah', 'kuliah', 'les', 'training', 'workshop', 'seminar', 'course'],
+    'Rumah Tangga': ['laundry', 'cuci', 'bersih', 'sabun', 'deterjen', 'peralatan', 'dapur', 'kamar']
+  }
+
+  const matches = []
+  for (const [catName, catKeywords] of Object.entries(keywords)) {
+    const category = categories.value.find(c => c.name === catName)
+    if (!category) continue
+
+    for (const keyword of catKeywords) {
+      if (desc.includes(keyword)) {
+        matches.push({ category, matchCount: 1 })
+        break
+      }
+    }
+  }
+
+  // Sort by match relevance and return top 3
+  return matches
+    .sort((a, b) => b.matchCount - a.matchCount)
+    .slice(0, 3)
+    .map(m => m.category)
+})
+
+// Quick amount presets
+const quickAmounts = computed(() => {
+  if (props.type === 'expense') {
+    return [5000, 10000, 20000, 50000, 100000, 200000, 500000]
+  } else {
+    return [100000, 500000, 1000000, 2000000, 5000000, 10000000]
+  }
+})
+
+// Get recently used amounts from localStorage
+const recentAmounts = computed(() => {
+  try {
+    const stored = localStorage.getItem(`duitku_recent_amounts_${props.type}`)
+    if (!stored) return []
+    const amounts = JSON.parse(stored)
+    return amounts.slice(0, 3) // Show only 3 most recent
+  } catch {
+    return []
+  }
+})
+
+// Format quick amount for display
+const formatQuickAmount = (amount) => {
+  if (amount >= 1000000) {
+    const juta = amount / 1000000
+    return juta % 1 === 0 ? `${juta}jt` : `${juta.toFixed(1)}jt`
+  } else if (amount >= 1000) {
+    const ribu = amount / 1000
+    return ribu % 1 === 0 ? `${ribu}rb` : `${ribu.toFixed(1)}rb`
+  }
+  return amount.toLocaleString('id-ID')
+}
+
+// Save recently used amount
+const saveRecentAmount = (amount) => {
+  try {
+    const key = `duitku_recent_amounts_${props.type}`
+    const stored = localStorage.getItem(key)
+    let amounts = stored ? JSON.parse(stored) : []
+
+    // Remove if exists
+    amounts = amounts.filter(a => a !== amount)
+
+    // Add to front
+    amounts.unshift(amount)
+
+    // Keep only last 5
+    amounts = amounts.slice(0, 5)
+
+    localStorage.setItem(key, JSON.stringify(amounts))
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
 const handleFileChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
@@ -314,6 +466,9 @@ const handleSubmit = async () => {
       await updateTransaction(props.transaction.id, data)
     } else {
       await addTransaction(data)
+
+      // Save recently used amount
+      saveRecentAmount(data.amount)
 
       // Save as template if checked
       if (saveAsTemplateChecked.value && templateName.value.trim()) {

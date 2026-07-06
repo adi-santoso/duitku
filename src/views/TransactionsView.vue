@@ -152,6 +152,28 @@
       </button>
     </div>
 
+    <!-- Quick Actions -->
+    <div v-if="lastTransaction && !isLoading" class="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-500/10 dark:to-blue-500/10 border border-primary-200 dark:border-primary-500/20 animate-fade-in">
+      <svg class="w-5 h-5 text-primary-500 dark:text-primary-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+      </svg>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Aksi Cepat</p>
+        <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+          Terakhir: {{ lastTransaction.category_name }} - Rp {{ Number(lastTransaction.amount).toLocaleString('id-ID') }}
+        </p>
+      </div>
+      <button
+        @click="duplicateLastTransaction"
+        class="px-3 py-1.5 rounded-lg bg-primary-500 hover:bg-primary-600 text-white text-xs font-semibold transition-all shadow-sm hover:shadow active:scale-95 flex items-center gap-1.5 flex-shrink-0"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+        </svg>
+        <span class="hidden sm:inline">Duplikat</span>
+      </button>
+    </div>
+
     <!-- Spreadsheet Zoom Control -->
     <div v-if="viewMode === 'spreadsheet'" class="card animate-fade-in">
       <div class="flex items-center justify-between gap-4">
@@ -241,125 +263,175 @@
 
       <!-- DEFAULT VIEW MODE -->
       <template v-if="!isLoading && paginatedTransactions.length > 0 && viewMode === 'default'">
-        <!-- Desktop Table -->
-        <div class="hidden md:block overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="border-b border-slate-100 dark:border-slate-800">
-                <th class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-3 pl-1">Kategori</th>
-                <th class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-3">Tanggal</th>
-                <th class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-3">Deskripsi</th>
-                <th class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-3">Tipe</th>
-                <th class="text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-3 pr-1">Jumlah</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr
-                v-for="transaction in paginatedTransactions"
-                :key="transaction.id"
-                class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+        <!-- Desktop Grouped Table -->
+        <div class="hidden md:block space-y-6">
+          <div v-for="group in groupedTransactions" :key="group.label" class="space-y-2">
+            <!-- Sticky Date Header -->
+            <div class="sticky top-0 z-10 bg-slate-100/80 dark:bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-bold text-slate-900 dark:text-white">
+                    {{ group.label }}
+                  </span>
+                  <span class="text-xs text-slate-400 dark:text-slate-500">
+                    {{ group.transactions.length }} transaksi
+                  </span>
+                </div>
+                <span
+                  class="text-sm font-semibold"
+                  :class="group.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
+                >
+                  {{ group.total >= 0 ? '+' : '' }}{{ formatCurrency(Math.abs(group.total)) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr
+                    v-for="transaction in group.transactions"
+                    :key="transaction.id"
+                    class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                    @click="viewTransaction(transaction)"
+                  >
+                    <td class="py-3.5 pl-4">
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
+                          :style="{ backgroundColor: transaction.category_color + '18' }"
+                        >
+                          {{ transaction.category_icon }}
+                        </div>
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ transaction.category_name }}</span>
+                      </div>
+                    </td>
+                    <td class="py-3.5">
+                      <div class="flex items-center gap-2">
+                        <button
+                          @click.stop="togglePin(transaction.id)"
+                          class="flex-shrink-0 p-0.5 rounded transition-colors"
+                          :class="isPinned(transaction.id) ? 'text-amber-500' : 'text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100'"
+                          :title="isPinned(transaction.id) ? 'Unpin' : 'Pin'"
+                        >
+                          <svg class="w-3.5 h-3.5" :fill="isPinned(transaction.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                          </svg>
+                        </button>
+                        <span class="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[200px]">{{ transaction.description || '-' }}</span>
+                        <span v-for="tag in getTags(transaction.id)" :key="tag" class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 font-medium">#{{ tag }}</span>
+                        <span v-if="transaction.receipt_image" class="text-slate-400" title="Ada foto struk">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                          </svg>
+                        </span>
+                        <span v-if="transaction.is_recurring" class="text-slate-400" title="Transaksi berulang">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                          </svg>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="py-3.5">
+                      <span
+                        class="badge"
+                        :class="transaction.type === 'income' ? 'badge-green' : 'badge-red'"
+                      >
+                        {{ transaction.type === 'income' ? 'Masuk' : 'Keluar' }}
+                      </span>
+                    </td>
+                    <td class="py-3.5 text-right pr-4">
+                      <span
+                        class="text-sm font-bold"
+                        :class="transaction.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
+                      >
+                        {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Grouped List -->
+        <div class="md:hidden space-y-6">
+          <div v-for="group in groupedTransactions" :key="group.label" class="space-y-2">
+            <!-- Sticky Date Header (Mobile) -->
+            <div class="sticky top-0 z-10 bg-slate-100/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="text-sm font-bold text-slate-900 dark:text-white block">
+                    {{ group.label }}
+                  </span>
+                  <span class="text-[10px] text-slate-400 dark:text-slate-500">
+                    {{ group.transactions.length }} transaksi
+                  </span>
+                </div>
+                <span
+                  class="text-sm font-bold"
+                  :class="group.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
+                >
+                  {{ group.total >= 0 ? '+' : '' }}{{ formatCurrency(Math.abs(group.total)) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Transactions List (Mobile) -->
+            <div class="space-y-1">
+              <div
+                v-for="transaction in group.transactions"
+                :key="'m-' + transaction.id"
+                class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer active:scale-[0.99]"
                 @click="viewTransaction(transaction)"
               >
-                <td class="py-3.5 pl-1">
-                  <div class="flex items-center gap-3">
-                    <div
-                      class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-                      :style="{ backgroundColor: transaction.category_color + '18' }"
-                    >
-                      {{ transaction.category_icon }}
-                    </div>
-                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ transaction.category_name }}</span>
+                <div
+                  class="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                  :style="{ backgroundColor: transaction.category_color + '18' }"
+                >
+                  {{ transaction.category_icon }}
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{{ transaction.category_name }}</p>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <p class="text-xs text-slate-400 dark:text-slate-500 truncate">
+                      <span v-if="transaction.description">{{ transaction.description }}</span>
+                      <span v-else class="italic">Tidak ada deskripsi</span>
+                    </p>
+                    <span v-for="tag in getTags(transaction.id)" :key="tag" class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 font-medium flex-shrink-0">#{{ tag }}</span>
                   </div>
-                </td>
-                <td class="py-3.5">
-                  <span class="text-sm text-slate-500 dark:text-slate-400">{{ formatDate(transaction.transaction_date, 'medium') }}</span>
-                </td>
-                <td class="py-3.5">
-                  <div class="flex items-center gap-2">
-                    <button
-                      @click.stop="togglePin(transaction.id)"
-                      class="flex-shrink-0 p-0.5 rounded transition-colors"
-                      :class="isPinned(transaction.id) ? 'text-amber-500' : 'text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100'"
-                      :title="isPinned(transaction.id) ? 'Unpin' : 'Pin'"
-                    >
-                      <svg class="w-3.5 h-3.5" :fill="isPinned(transaction.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                      </svg>
-                    </button>
-                    <span class="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[200px]">{{ transaction.description || '-' }}</span>
-                    <span v-for="tag in getTags(transaction.id)" :key="tag" class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 font-medium">#{{ tag }}</span>
-                    <span v-if="transaction.receipt_image" class="text-slate-400" title="Ada foto struk">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-                      </svg>
-                    </span>
-                    <span v-if="transaction.is_recurring" class="text-slate-400" title="Transaksi berulang">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-                      </svg>
-                    </span>
-                  </div>
-                </td>
-                <td class="py-3.5">
-                  <span
-                    class="badge"
-                    :class="transaction.type === 'income' ? 'badge-green' : 'badge-red'"
-                  >
-                    {{ transaction.type === 'income' ? 'Masuk' : 'Keluar' }}
-                  </span>
-                </td>
-                <td class="py-3.5 text-right pr-1">
-                  <span
+                </div>
+
+                <div class="text-right flex-shrink-0">
+                  <p
                     class="text-sm font-bold"
                     :class="transaction.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
                   >
                     {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Mobile List (Default) -->
-        <div class="md:hidden space-y-1">
-          <div
-            v-for="transaction in paginatedTransactions"
-            :key="'m-' + transaction.id"
-            class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer active:scale-[0.99]"
-            @click="viewTransaction(transaction)"
-          >
-            <div
-              class="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-              :style="{ backgroundColor: transaction.category_color + '18' }"
-            >
-              {{ transaction.category_icon }}
-            </div>
-
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{{ transaction.category_name }}</p>
-              <p class="text-xs text-slate-400 dark:text-slate-500">
-                {{ formatDate(transaction.transaction_date, 'medium') }}
-                <span v-if="transaction.description"> &middot; {{ transaction.description }}</span>
-              </p>
-            </div>
-
-            <div class="text-right flex-shrink-0">
-              <p
-                class="text-sm font-bold"
-                :class="transaction.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
-              >
-                {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
-              </p>
-              <div class="flex items-center gap-1 justify-end mt-0.5 text-slate-400">
-                <svg v-if="transaction.receipt_image" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-                </svg>
-                <svg v-if="transaction.is_recurring" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-                </svg>
+                  </p>
+                  <div class="flex items-center gap-1 justify-end mt-0.5 text-slate-400">
+                    <svg v-if="transaction.receipt_image" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                    </svg>
+                    <svg v-if="transaction.is_recurring" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                    </svg>
+                    <button
+                      @click.stop="togglePin(transaction.id)"
+                      class="p-0.5"
+                      :class="isPinned(transaction.id) ? 'text-amber-500' : ''"
+                    >
+                      <svg class="w-3 h-3" :fill="isPinned(transaction.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -640,7 +712,7 @@ import { useTransactions } from '@/composables/useTransactions'
 import { useCategories } from '@/composables/useCategories'
 import { useTransactionMeta } from '@/composables/useTransactionMeta'
 import { formatCurrency } from '@/utils/formatters'
-import { formatDate } from '@/utils/dateHelpers'
+import { formatDate, getDateGroupLabel, isSameDay } from '@/utils/dateHelpers'
 
 const { transactions, totalTransactions, loadTransactions } = useTransactions()
 const { categories: allCategories, loadCategories } = useCategories()
@@ -777,6 +849,41 @@ const paginatedTransactions = computed(() => {
   }
 
   return result
+})
+
+// Group transactions by date
+const groupedTransactions = computed(() => {
+  const groups = []
+  let currentGroup = null
+
+  for (const transaction of paginatedTransactions.value) {
+    const groupLabel = getDateGroupLabel(transaction.transaction_date)
+
+    // Create new group if needed
+    if (!currentGroup || currentGroup.label !== groupLabel) {
+      currentGroup = {
+        label: groupLabel,
+        date: transaction.transaction_date,
+        transactions: [],
+        total: 0
+      }
+      groups.push(currentGroup)
+    }
+
+    // Add transaction to current group
+    currentGroup.transactions.push(transaction)
+    currentGroup.total += transaction.type === 'income'
+      ? Number(transaction.amount)
+      : -Number(transaction.amount)
+  }
+
+  return groups
+})
+
+// Last transaction for quick duplicate
+const lastTransaction = computed(() => {
+  if (transactions.value.length === 0) return null
+  return transactions.value[0] // Already sorted by date desc from API
 })
 
 const visiblePages = computed(() => {
@@ -942,6 +1049,19 @@ const handleEdit = (transaction) => {
 
 const viewTransaction = (transaction) => {
   selectedTransaction.value = transaction
+}
+
+const duplicateLastTransaction = () => {
+  if (!lastTransaction.value) return
+
+  // Pre-fill modal with last transaction data
+  modalMode.value = 'create'
+  editingTransaction.value = {
+    ...lastTransaction.value,
+    transaction_date: formatDateInput(new Date()), // Use today's date
+    id: null // Remove ID so it creates new transaction
+  }
+  showModal.value = true
 }
 
 onMounted(async () => {

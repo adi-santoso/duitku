@@ -56,6 +56,39 @@ export function getRelativeTime(date) {
 }
 
 /**
+ * Get date group label for transaction grouping
+ * Returns: "Hari Ini", "Kemarin", "2 hari lalu", or full date
+ */
+export function getDateGroupLabel(date) {
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+
+  const diffMs = now - d
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) return 'Hari Ini'
+  if (diffDays === 1) return 'Kemarin'
+  if (diffDays < 7) return `${diffDays} hari lalu`
+
+  // Return formatted date for older transactions
+  return formatDate(date, 'medium')
+}
+
+/**
+ * Check if two dates are the same day
+ */
+export function isSameDay(date1, date2) {
+  const d1 = new Date(date1)
+  const d2 = new Date(date2)
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate()
+}
+
+/**
  * Get start and end of month (returns YYYY-MM-DD strings)
  */
 export function getMonthRange(year, month) {
