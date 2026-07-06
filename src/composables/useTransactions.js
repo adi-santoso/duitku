@@ -10,6 +10,8 @@ export function useTransactions() {
   const { getDataOwnerId } = useAuth()
   const transactions = ref([])
   const totalTransactions = ref(0)
+  const isLoading = ref(false)
+  const isSaving = ref(false)
 
   /**
    * Normalize transaction data (flatten category info)
@@ -28,6 +30,7 @@ export function useTransactions() {
    */
   const loadTransactions = async (filters = {}) => {
     try {
+      isLoading.value = true
       const params = {}
       if (filters.type) params.type = filters.type
       if (filters.categoryId) params.categoryId = String(filters.categoryId)
@@ -60,6 +63,8 @@ export function useTransactions() {
     } catch (err) {
       console.error('Error loading transactions:', err)
       return { transactions: [], total: 0 }
+    } finally {
+      isLoading.value = false
     }
   }
 
@@ -82,43 +87,179 @@ export function useTransactions() {
   }
 
   /**
-   * Add new transaction
+   * Add new transaction with optimistic update
    */
   const addTransaction = async (data) => {
-    const result = await api.transactions.create({
-      categoryId: data.categoryId,
-      type: data.type,
-      amount: data.amount,
-      description: data.description || undefined,
-      receiptImage: data.receiptImage || undefined,
-      transactionDate: data.transactionDate,
-      isRecurring: data.isRecurring || false,
-      recurringFrequency: data.recurringFrequency || undefined,
+    // Generate temporary ID for optimistic update
+    const tempId = `temp-${Date.now()}`
+
+    // Create optimistic transaction
+    const optimisticTransaction = normalizeTransaction({
+      id: tempId,
+      ...data,
+      created_at: new Date().toISOString(),
+      categories: {
+        name: data.category_name || 'Loading...',
+        icon: data.category_icon || '📝',
+        color: data.category_color || '#6B7280'
+      },
+      _optimistic: true
     })
 
-    return result.id
+    // Add to local state immediately
+    transactions.value.unshift(optimisticTransaction)
+    totalTransactions.value++
+
+    try {
+      isSaving.value = true
+      const result = await api.transactions.create({
+        categoryId: data.categoryId,
+        type: data.type,
+        amount: data.amount,
+        description: data.description || undefined,
+        receiptImage: data.receiptImage || undefined,
+        transactionDate: data.transactionDate,
+        isRecurring: data.isRecurring || false,
+        recurringFrequency: data.recurringFrequency || undefined,
+      })
+
+      // Replace optimistic with real data
+      const index = transactions.value.findIndex(t => t.id === tempId)
+      if (index > -1) {
+        transactions.value[index] = normalizeTransaction({
+          ...result,
+          id: result.id,
+          categories: {
+            name: data.category_name,
+            icon: data.category_icon,
+            color: data.category_color
+          }
+        })
+      }
+
+      return result.id
+    } catch (err) {
+      // Rollback optimistic update on error
+      const index = transactions.value.findIndex(t => t.id === tempId)
+      if (index > -1) {
+        transactions.value.splice(index, 1)
+        totalTransactions.value--
+      }
+      throw err
+    } finally {
+      isSaving.value = false
+    }
   }
 
   /**
-   * Update transaction
+   * Update transaction with optimistic update
    */
   const updateTransaction = async (id, data) => {
-    await api.transactions.update(id, {
-      categoryId: data.categoryId,
-      amount: data.amount,
-      description: data.description || undefined,
-      receiptImage: data.receiptImage || undefined,
-      transactionDate: data.transactionDate,
-      isRecurring: data.isRecurring || false,
-      recurringFrequency: data.recurringFrequency || undefined,
+    // Store original transaction for rollback
+    const index = transactions.value.findIndex(t => t.id === id)
+    if (index === -1) return
+
+    const originalTransaction = { ...transactions.value[index] }
+
+    // Optimistic update with merged data
+    transactions.value[index] = normalizeTransaction({
+      ...originalTransaction,
+      ...data,
+      category_id: data.categoryId,
+      category_name: data.category_name || originalTransaction.category_name,
+      category_icon: data.category_icon || originalTransaction.category_icon,
+      category_color: data.category_color || originalTransaction.category_color,
+      transaction_date: data.transactionDate,
+      receipt_image: data.receiptImage,
+      is_recurring: data.isRecurring,
+      recurring_frequency: data.recurringFrequency,
+      _optimistic: true
     })
+
+    try {
+      isSaving.value = true
+      await api.transactions.update(id, {
+        categoryId: data.categoryId,
+        amount: data.amount,
+        description: data.description || undefined,
+        receiptImage: data.receiptImage || undefined,
+        transactionDate: data.transactionDate,
+        isRecurring: data.isRecurring || false,
+        recurringFrequency: data.recurringFrequency || undefined,
+      })
+
+      // Remove optimistic flag
+      if (transactions.value[index]) {
+        delete transactions.value[index]._optimistic
+      }
+    } catch (err) {
+      // Rollback on error
+      transactions.value[index] = originalTransaction
+      throw err
+    } finally {
+      isSaving.value = false
+    }
   }
 
   /**
-   * Delete transaction
+   * Delete transaction with optimistic update
    */
   const deleteTransaction = async (id) => {
-    await api.transactions.delete(id)
+    // Store for rollback
+    const index = transactions.value.findIndex(t => t.id === id)
+    if (index === -1) return
+
+    const deletedTransaction = transactions.value[index]
+
+    // Optimistic delete
+    transactions.value.splice(index, 1)
+    totalTransactions.value--
+
+    try {
+      await api.transactions.delete(id)
+      return deletedTransaction // Return for undo functionality
+    } catch (err) {
+      // Rollback on error
+      transactions.value.splice(index, 0, deletedTransaction)
+      totalTransactions.value++
+      throw err
+    }
+  }
+
+  /**
+   * Restore deleted transaction (for undo)
+   */
+  const restoreTransaction = async (transaction) => {
+    try {
+      // Re-create the transaction
+      const result = await api.transactions.create({
+        categoryId: transaction.category_id,
+        type: transaction.type,
+        amount: transaction.amount,
+        description: transaction.description,
+        receiptImage: transaction.receipt_image,
+        transactionDate: transaction.transaction_date,
+        isRecurring: transaction.is_recurring,
+        recurringFrequency: transaction.recurring_frequency,
+      })
+
+      // Add back to list
+      const restored = normalizeTransaction({
+        ...result,
+        categories: {
+          name: transaction.category_name,
+          icon: transaction.category_icon,
+          color: transaction.category_color
+        }
+      })
+
+      transactions.value.unshift(restored)
+      totalTransactions.value++
+
+      return restored
+    } catch (err) {
+      throw err
+    }
   }
 
   /**
@@ -245,11 +386,14 @@ export function useTransactions() {
     totalIncome,
     totalExpense,
     balance,
+    isLoading,
+    isSaving,
     loadTransactions,
     getTransactionsByMonth,
     addTransaction,
     updateTransaction,
     deleteTransaction,
+    restoreTransaction,
     getTransactionById,
     getSummary,
     getExpenseByCategory,

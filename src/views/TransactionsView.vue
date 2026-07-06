@@ -390,7 +390,10 @@
                 @delete="confirmDelete(transaction)"
                 @click="viewTransaction(transaction)"
               >
-                <div class="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-slate-900 hover:shadow-sm transition-shadow">
+                <div
+                  class="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-slate-900 hover:shadow-sm transition-shadow"
+                  :class="{ 'opacity-60 animate-pulse': transaction._optimistic }"
+                >
                   <div
                     class="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-transform hover:scale-110"
                     :style="{ backgroundColor: transaction.category_color + '18' }"
@@ -460,6 +463,7 @@
                 v-for="transaction in paginatedTransactions"
                 :key="'c-' + transaction.id"
                 class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                :class="{ 'opacity-60 animate-pulse': transaction._optimistic }"
                 @click="viewTransaction(transaction)"
               >
                 <td class="py-2 pl-1">
@@ -493,6 +497,7 @@
             v-for="transaction in paginatedTransactions"
             :key="'mc-' + transaction.id"
             class="flex items-center gap-2 py-2 px-1 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors"
+            :class="{ 'opacity-60 animate-pulse': transaction._optimistic }"
             @click="viewTransaction(transaction)"
           >
             <span class="text-base flex-shrink-0">{{ transaction.category_icon }}</span>
@@ -536,7 +541,10 @@
               <tr
                 v-for="(transaction, index) in paginatedTransactions"
                 :key="'s-' + transaction.id"
-                :class="index % 2 === 0 ? 'row-even' : 'row-odd'"
+                :class="[
+                  index % 2 === 0 ? 'row-even' : 'row-odd',
+                  { 'opacity-60 animate-pulse': transaction._optimistic }
+                ]"
                 @click="viewTransaction(transaction)"
               >
                 <td class="tabular-nums">{{ formatDate(transaction.transaction_date, 'short') }}</td>
@@ -720,7 +728,7 @@ import { useToast } from '@/composables/useToast'
 import { formatCurrency } from '@/utils/formatters'
 import { formatDate, getDateGroupLabel, isSameDay } from '@/utils/dateHelpers'
 
-const { transactions, totalTransactions, loadTransactions, deleteTransaction } = useTransactions()
+const { transactions, totalTransactions, isLoading: transactionsLoading, isSaving, loadTransactions, deleteTransaction, restoreTransaction } = useTransactions()
 const { categories: allCategories, loadCategories } = useCategories()
 const { togglePin, isPinned, getTags } = useTransactionMeta()
 const { success, error } = useToast()
@@ -1071,37 +1079,26 @@ const duplicateLastTransaction = () => {
   showModal.value = true
 }
 
-const confirmDelete = (transaction) => {
-  // Store for potential undo
-  const deletedTransaction = { ...transaction }
-  let undoTimeout
+const confirmDelete = async (transaction) => {
+  try {
+    // Optimistic delete with returned transaction for undo
+    const deletedTransaction = await deleteTransaction(transaction.id)
 
-  // Delete immediately with undo option
-  handleDelete(transaction.id)
-
-  // Show undo toast
-  success('Transaksi dihapus', {
-    duration: 5000,
-    action: {
-      label: 'Urungkan',
-      handler: async () => {
-        clearTimeout(undoTimeout)
-        try {
-          // Re-add the transaction (would need addTransaction method)
-          await fetchTransactions()
-          success('Transaksi dikembalikan')
-        } catch (err) {
-          error('Gagal mengembalikan transaksi')
+    // Show undo toast
+    success('Transaksi dihapus', {
+      duration: 5000,
+      action: {
+        label: 'Urungkan',
+        handler: async () => {
+          try {
+            await restoreTransaction(deletedTransaction)
+            success('Transaksi dikembalikan')
+          } catch (err) {
+            error('Gagal mengembalikan transaksi')
+          }
         }
       }
-    }
-  })
-}
-
-const handleDelete = async (transactionId) => {
-  try {
-    await deleteTransaction(transactionId)
-    await fetchTransactions()
+    })
   } catch (err) {
     console.error('Failed to delete transaction:', err)
     error('Gagal menghapus transaksi')

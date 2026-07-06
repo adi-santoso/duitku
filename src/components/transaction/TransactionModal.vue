@@ -248,12 +248,12 @@
           <button type="button" @click="$emit('close')" class="btn btn-secondary flex-1 h-11">
             Batal
           </button>
-          <button type="submit" class="btn btn-primary flex-1 h-11" :disabled="loading">
-            <svg v-if="loading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <button type="submit" class="btn btn-primary flex-1 h-11" :disabled="isSaving">
+            <svg v-if="isSaving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            {{ loading ? 'Menyimpan...' : (isEditing ? 'Update' : 'Simpan') }}
+            {{ isSaving ? 'Menyimpan...' : (isEditing ? 'Update' : 'Simpan') }}
           </button>
         </div>
       </form>
@@ -288,12 +288,11 @@ const emit = defineEmits(['close', 'saved'])
 const isEditing = computed(() => !!props.transaction)
 
 const { loadCategories, categories: allCategories } = useCategories()
-const { addTransaction, updateTransaction } = useTransactions()
+const { addTransaction, updateTransaction, isSaving } = useTransactions()
 const { getSortedTemplates: getTemplates, useTemplate, saveAsTemplate } = useTransactionTemplates()
 const { compressImage, validateImage } = useImageCompression()
-const toast = useToast()
+const { success, error: showError } = useToast()
 
-const loading = ref(false)
 const imageError = ref('')
 const fileInput = ref(null)
 const saveAsTemplateChecked = ref(false)
@@ -444,13 +443,13 @@ const applyTemplate = (tpl) => {
 
 const handleSubmit = async () => {
   if (!form.value.categoryId) {
-    toast.warning('Pilih kategori terlebih dahulu')
+    showError('Pilih kategori terlebih dahulu')
     return
   }
 
-  loading.value = true
-
   try {
+    const selectedCategory = categories.value.find(c => c.id === form.value.categoryId)
+
     const data = {
       type: props.type,
       categoryId: form.value.categoryId,
@@ -459,13 +458,20 @@ const handleSubmit = async () => {
       description: form.value.description,
       receiptImage: form.value.receiptImage,
       isRecurring: form.value.isRecurring,
-      recurringFrequency: form.value.isRecurring ? form.value.recurringFrequency : null
+      recurringFrequency: form.value.isRecurring ? form.value.recurringFrequency : null,
+      // Add category info for optimistic update
+      category_name: selectedCategory?.name,
+      category_icon: selectedCategory?.icon,
+      category_color: selectedCategory?.color,
+      category_id: form.value.categoryId
     }
 
     if (isEditing.value) {
       await updateTransaction(props.transaction.id, data)
+      success('Transaksi berhasil diperbarui')
     } else {
       await addTransaction(data)
+      success('Transaksi berhasil ditambahkan')
 
       // Save recently used amount
       saveRecentAmount(data.amount)
@@ -473,15 +479,14 @@ const handleSubmit = async () => {
       // Save as template if checked
       if (saveAsTemplateChecked.value && templateName.value.trim()) {
         saveAsTemplate(data, templateName.value.trim())
-        toast.success('Template disimpan!')
+        success('Template disimpan!')
       }
     }
 
     emit('saved')
-  } catch (error) {
-    toast.error('Gagal menyimpan transaksi: ' + error.message)
-  } finally {
-    loading.value = false
+  } catch (err) {
+    console.error('Failed to save transaction:', err)
+    showError('Gagal menyimpan transaksi')
   }
 }
 
