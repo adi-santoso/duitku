@@ -9,8 +9,9 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Cari transaksi..."
+          placeholder="Cari transaksi... (coba: '50k', 'januari', nama kategori)"
           class="input pl-10 h-10 text-sm"
+          @keyup.enter="fetchTransactions"
         />
         <button
           v-if="searchQuery"
@@ -21,6 +22,10 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+        <!-- Search hint badge -->
+        <div v-if="searchQuery && paginatedTransactions.length > 0" class="absolute -bottom-6 left-0 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium animate-fade-in">
+          ✓ {{ paginatedTransactions.length }} hasil ditemukan
+        </div>
       </div>
 
       <!-- View Mode Toggle -->
@@ -57,6 +62,16 @@
         </button>
       </div>
     </div>
+
+    <!-- Filter Presets -->
+    <FilterPresets
+      :presets="presets"
+      :active-preset-id="activePresetId"
+      :current-filters="currentFilters"
+      @apply="applyPreset"
+      @create="handleCreatePreset"
+      @delete="handleDeletePreset"
+    />
 
     <!-- Filters Row -->
     <div class="flex items-center gap-2 flex-wrap">
@@ -721,16 +736,20 @@ import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import TransactionModal from '@/components/transaction/TransactionModal.vue'
 import TransactionDetailModal from '@/components/transaction/TransactionDetailModal.vue'
 import SwipeableTransactionItem from '@/components/transaction/SwipeableTransactionItem.vue'
+import FilterPresets from '@/components/transaction/FilterPresets.vue'
 import { useTransactions } from '@/composables/useTransactions'
 import { useCategories } from '@/composables/useCategories'
 import { useTransactionMeta } from '@/composables/useTransactionMeta'
+import { useFilterPresets } from '@/composables/useFilterPresets'
 import { useToast } from '@/composables/useToast'
 import { formatCurrency } from '@/utils/formatters'
 import { formatDate, getDateGroupLabel, isSameDay } from '@/utils/dateHelpers'
+import { smartSearchTransactions } from '@/utils/smartSearch'
 
 const { transactions, totalTransactions, isLoading: transactionsLoading, isSaving, loadTransactions, deleteTransaction, restoreTransaction } = useTransactions()
 const { categories: allCategories, loadCategories } = useCategories()
 const { togglePin, isPinned, getTags } = useTransactionMeta()
+const { presets, createPreset, deletePreset, getDateRangeForPreset } = useFilterPresets()
 const { success, error } = useToast()
 
 const filterType = ref(null)
@@ -750,6 +769,9 @@ const showAddMenu = ref(false)
 const transactionType = ref('expense')
 const selectedTransaction = ref(null)
 const editingTransaction = ref(null)
+
+// Filter presets
+const activePresetId = ref(null)
 
 // Spreadsheet zoom
 const zoomLevel = ref(100)
@@ -836,9 +858,14 @@ const clearAllFilters = () => {
 // Pagination computed
 const totalPages = computed(() => Math.ceil(totalTransactions.value / perPage.value))
 
-// paginatedTransactions: apply client-side amount filter and sort
+// paginatedTransactions: apply client-side amount filter, smart search, and sort
 const paginatedTransactions = computed(() => {
   let result = [...transactions.value]
+
+  // Client-side smart search (in addition to server-side search)
+  if (searchQuery.value.trim()) {
+    result = smartSearchTransactions(result, searchQuery.value)
+  }
 
   // Client-side amount filter
   if (filterAmountMin.value) {
@@ -1103,6 +1130,69 @@ const confirmDelete = async (transaction) => {
     console.error('Failed to delete transaction:', err)
     error('Gagal menghapus transaksi')
   }
+}
+
+// Filter preset handlers
+const currentFilters = computed(() => ({
+  type: filterType.value,
+  categoryId: filterCategory.value,
+  month: filterMonth.value,
+  amountMin: filterAmountMin.value,
+  amountMax: filterAmountMax.value,
+  sortBy: sortBy.value
+}))
+
+const applyPreset = (preset) => {
+  activePresetId.value = preset.id
+  const filters = preset.filters
+
+  // Apply date range preset
+  if (filters.dateRange) {
+    const dateRange = getDateRangeForPreset(filters.dateRange)
+    if (dateRange) {
+      // Extract year-month from startDate
+      const [year, month] = dateRange.startDate.split('-')
+      filterMonth.value = `${year}-${month}`
+    }
+  }
+
+  // Apply other filters
+  if (filters.type) filterType.value = filters.type
+  if (filters.categoryId) filterCategory.value = filters.categoryId
+  if (filters.amountMin) {
+    filterAmountMin.value = filters.amountMin.toString()
+    showAmountFilter.value = true
+  }
+  if (filters.amountMax) {
+    filterAmountMax.value = filters.amountMax.toString()
+    showAmountFilter.value = true
+  }
+  if (filters.hasReceipt) {
+    // Filter transactions with receipt (client-side)
+    searchQuery.value = 'struk'
+  }
+  if (filters.isRecurring) {
+    // Filter recurring transactions (client-side)
+    searchQuery.value = 'berulang'
+  }
+
+  success(`Preset "${preset.name}" diterapkan`)
+}
+
+const handleCreatePreset = ({ name, icon, filters }) => {
+  createPreset(name, icon, filters)
+  success(`Preset "${name}" berhasil disimpan`)
+}
+
+const handleDeletePreset = (presetId) => {
+  const preset = presets.value.find(p => p.id === presetId)
+  if (!preset) return
+
+  deletePreset(presetId)
+  if (activePresetId.value === presetId) {
+    activePresetId.value = null
+  }
+  success(`Preset "${preset.name}" dihapus`)
 }
 
 onMounted(async () => {
