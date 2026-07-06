@@ -2,14 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe area insets for notched devices */
+:root {
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+}
+
 @layer base {
   body {
     @apply bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    /* Prevent bounce scrolling on iOS */
+    overscroll-behavior: none;
+    /* Improve tap responsiveness on iOS */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: pan-x pan-y;
   }
 
   * {
     @apply scrollbar-thin;
+    /* Better font rendering on mobile */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Prevent text selection on mobile UI elements */
+  button, a, .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow text selection in content areas */
+  input, textarea, p, span, .selectable {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
   }
 }
 

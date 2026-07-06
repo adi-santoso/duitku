@@ -1,0 +1,206 @@
+<template>
+  <teleport to="body">
+    <transition name="bottom-sheet">
+      <div
+        v-if="modelValue"
+        class="fixed inset-0 z-50 flex items-end lg:items-center lg:justify-center"
+        @click.self="handleClose"
+      >
+        <!-- Backdrop -->
+        <div
+          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          @click="handleClose"
+        />
+
+        <!-- Bottom Sheet Container -->
+        <div
+          ref="sheetRef"
+          class="relative w-full bg-white dark:bg-slate-900 lg:max-w-2xl lg:rounded-2xl overflow-hidden"
+          :class="[
+            fullHeight ? 'h-full lg:h-auto' : 'max-h-[90vh]',
+            'rounded-t-3xl lg:rounded-b-2xl',
+            snapToTop ? 'h-[95vh]' : ''
+          ]"
+          :style="{ transform: `translateY(${dragOffset}px)` }"
+          @touchstart="handleTouchStart"
+          @touchmove="handleTouchMove"
+          @touchend="handleTouchEnd"
+        >
+          <!-- Drag Handle (Mobile Only) -->
+          <div class="lg:hidden sticky top-0 z-10 bg-white dark:bg-slate-900 pt-2 pb-3 px-4">
+            <div class="w-12 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto" />
+          </div>
+
+          <!-- Header -->
+          <div
+            v-if="title || $slots.header"
+            class="sticky top-10 lg:top-0 z-10 bg-white dark:bg-slate-900 px-5 pb-4 border-b border-slate-200 dark:border-slate-800"
+          >
+            <slot name="header">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  {{ title }}
+                </h3>
+                <button
+                  v-if="showClose"
+                  @click="handleClose"
+                  class="p-2 -mr-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </slot>
+          </div>
+
+          <!-- Content -->
+          <div
+            class="overflow-y-auto"
+            :class="[
+              contentClass,
+              fullHeight ? 'h-[calc(100%-theme(spacing.16))]' : 'max-h-[75vh]'
+            ]"
+          >
+            <slot />
+          </div>
+
+          <!-- Footer -->
+          <div
+            v-if="$slots.footer"
+            class="sticky bottom-0 z-10 bg-white dark:bg-slate-900 px-5 py-4 border-t border-slate-200 dark:border-slate-800"
+          >
+            <slot name="footer" />
+          </div>
+        </div>
+      </div>
+    </transition>
+  </teleport>
+</template>
+
+<script setup>
+import { ref, watch, nextTick } from 'vue'
+
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    required: true
+  },
+  title: {
+    type: String,
+    default: ''
+  },
+  showClose: {
+    type: Boolean,
+    default: true
+  },
+  fullHeight: {
+    type: Boolean,
+    default: false
+  },
+  snapToTop: {
+    type: Boolean,
+    default: false
+  },
+  contentClass: {
+    type: String,
+    default: 'p-5'
+  },
+  closeOnBackdrop: {
+    type: Boolean,
+    default: true
+  },
+  swipeToClose: {
+    type: Boolean,
+    default: true
+  }
+})
+
+const emit = defineEmits(['update:modelValue', 'close'])
+
+const sheetRef = ref(null)
+const dragOffset = ref(0)
+const startY = ref(0)
+const isDragging = ref(false)
+
+const handleClose = () => {
+  if (!props.closeOnBackdrop) return
+  emit('update:modelValue', false)
+  emit('close')
+}
+
+const handleTouchStart = (e) => {
+  if (!props.swipeToClose) return
+  startY.value = e.touches[0].clientY
+  isDragging.value = true
+}
+
+const handleTouchMove = (e) => {
+  if (!isDragging.value || !props.swipeToClose) return
+
+  const currentY = e.touches[0].clientY
+  const diff = currentY - startY.value
+
+  // Only allow dragging down
+  if (diff > 0) {
+    dragOffset.value = diff
+  }
+}
+
+const handleTouchEnd = () => {
+  if (!isDragging.value || !props.swipeToClose) return
+
+  isDragging.value = false
+
+  // Close if dragged more than 150px
+  if (dragOffset.value > 150) {
+    handleClose()
+  }
+
+  // Reset position
+  dragOffset.value = 0
+}
+
+// Lock body scroll when bottom sheet is open
+watch(() => props.modelValue, async (isOpen) => {
+  await nextTick()
+  if (isOpen) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+    dragOffset.value = 0
+  }
+})
+</script>
+
+<style scoped>
+.bottom-sheet-enter-active,
+.bottom-sheet-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.bottom-sheet-enter-active > div:last-child,
+.bottom-sheet-leave-active > div:last-child {
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.bottom-sheet-enter-from,
+.bottom-sheet-leave-to {
+  opacity: 0;
+}
+
+.bottom-sheet-enter-from > div:last-child {
+  transform: translateY(100%);
+}
+
+.bottom-sheet-leave-to > div:last-child {
+  transform: translateY(100%);
+}
+
+@media (min-width: 1024px) {
+  .bottom-sheet-enter-from > div:last-child,
+  .bottom-sheet-leave-to > div:last-child {
+    transform: translateY(0) scale(0.95);
+  }
+}
+</style>
