@@ -1,55 +1,26 @@
 <template>
   <div class="space-y-6 pb-20 lg:pb-0 animate-fade-in">
     <!-- Skeleton Loading State -->
-    <div v-if="isLoading" class="space-y-6">
-      <!-- Filter Skeleton -->
+    <template v-if="isLoading">
       <div class="flex items-center gap-3">
         <div class="h-10 w-48 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
       </div>
 
-      <!-- Summary Cards Skeleton -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div v-for="i in 3" :key="i" class="card">
-          <div class="flex items-center justify-between">
-            <div class="space-y-2">
-              <div class="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-              <div class="h-7 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
-          </div>
-          <div class="mt-3 h-5 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-        </div>
+        <SkeletonCard v-for="i in 3" :key="i" variant="stat" />
       </div>
 
-      <!-- Charts Skeleton -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        <div class="card">
-          <div class="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-4"></div>
-          <div class="h-56 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
-        </div>
-        <div class="card">
-          <div class="h-5 w-40 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-4"></div>
-          <div class="h-56 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
-        </div>
+        <SkeletonCard v-for="i in 2" :key="i" variant="chart" />
       </div>
 
-      <!-- Bottom Section Skeleton -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        <div class="card lg:col-span-1">
-          <div class="h-5 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-4"></div>
-          <div class="space-y-3">
-            <div class="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
-            <div class="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
-          </div>
-        </div>
-        <div class="card lg:col-span-2">
-          <div class="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-4"></div>
-          <div class="space-y-3">
-            <div v-for="i in 5" :key="i" class="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
-          </div>
+        <SkeletonCard variant="chart" />
+        <div class="lg:col-span-2">
+          <SkeletonCard variant="list" :items="5" />
         </div>
       </div>
-    </div>
+    </template>
 
     <template v-else>
       <!-- Month Filter (Select Dropdown) -->
@@ -401,6 +372,7 @@ import {
   Legend
 } from 'chart.js'
 import BaseSelect from '@/components/common/BaseSelect.vue'
+import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import TransactionModal from '@/components/transaction/TransactionModal.vue'
 import FinancialHealthCard from '@/components/common/FinancialHealthCard.vue'
 import RecurringSuggestions from '@/components/common/RecurringSuggestions.vue'

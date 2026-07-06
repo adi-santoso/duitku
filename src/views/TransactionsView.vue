@@ -225,24 +225,19 @@
     <!-- Transactions Card -->
     <div class="card">
       <!-- Loading -->
-      <div v-if="isLoading" class="space-y-3 py-4">
-        <div v-for="i in 5" :key="i" class="flex items-center gap-3 p-3 animate-pulse">
-          <div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700"></div>
-          <div class="flex-1 space-y-2">
-            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-32"></div>
-            <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
-          </div>
-          <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div>
-        </div>
-      </div>
+      <SkeletonCard v-if="isLoading" variant="list" :items="5" />
 
-      <div v-else-if="paginatedTransactions.length === 0" class="text-center py-16 text-slate-400 dark:text-slate-500">
-        <svg class="w-16 h-16 mx-auto mb-4 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-        </svg>
-        <p class="text-base font-medium">{{ searchQuery ? 'Tidak ditemukan' : 'Belum ada transaksi' }}</p>
-        <p class="text-sm mt-1">{{ searchQuery ? 'Coba ubah kata kunci pencarian' : 'Klik tombol + untuk menambah transaksi baru' }}</p>
-      </div>
+      <EmptyState
+        v-else-if="paginatedTransactions.length === 0"
+        :icon="searchQuery ? 'search' : 'transaction'"
+        :title="searchQuery ? 'Tidak ditemukan' : 'Belum ada transaksi'"
+        :description="searchQuery ? 'Coba ubah kata kunci pencarian atau hapus filter yang aktif' : 'Mulai catat keuanganmu dengan menambahkan transaksi pertama'"
+        :action-label="searchQuery ? '' : 'Tambah Transaksi'"
+        :action-icon="searchQuery ? '' : 'plus'"
+        :secondary-label="searchQuery ? 'Hapus Filter' : ''"
+        @action="showModal = true; modalMode = 'create'; editingTransaction = null"
+        @secondary-action="clearAllFilters"
+      />
 
       <!-- DEFAULT VIEW MODE -->
       <template v-if="!isLoading && paginatedTransactions.length > 0 && viewMode === 'default'">
@@ -637,6 +632,8 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import TransactionModal from '@/components/transaction/TransactionModal.vue'
 import TransactionDetailModal from '@/components/transaction/TransactionDetailModal.vue'
 import { useTransactions } from '@/composables/useTransactions'

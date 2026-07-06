@@ -12,18 +12,14 @@
     </div>
 
     <!-- Loading Skeleton -->
-    <div v-if="isLoading" class="space-y-4">
+    <template v-if="isLoading">
       <div class="grid grid-cols-3 gap-3">
-        <div v-for="i in 3" :key="i" class="card animate-pulse">
-          <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-16 mx-auto mb-2"></div>
-          <div class="h-6 bg-slate-200 dark:bg-slate-700 rounded w-20 mx-auto"></div>
-        </div>
+        <SkeletonCard v-for="i in 3" :key="i" variant="stat" />
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div class="card animate-pulse"><div class="h-48 bg-slate-200 dark:bg-slate-700 rounded-xl"></div></div>
-        <div class="card animate-pulse"><div class="h-48 bg-slate-200 dark:bg-slate-700 rounded-xl"></div></div>
+        <SkeletonCard v-for="i in 2" :key="i" variant="chart" />
       </div>
-    </div>
+    </template>
 
     <template v-else>
       <!-- Summary Cards -->
@@ -54,13 +50,13 @@
         <div class="card">
           <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Komposisi Pengeluaran</h2>
 
-          <div v-if="expenseByCategory.length === 0" class="text-center py-8 text-slate-400 dark:text-slate-500">
-            <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
-            </svg>
-            <p class="text-sm">Tidak ada data pengeluaran</p>
-          </div>
+          <EmptyState
+            v-if="expenseByCategory.length === 0"
+            icon="chart"
+            title="Tidak ada data pengeluaran"
+            description="Tambahkan transaksi pengeluaran untuk melihat komposisi kategori"
+            variant="secondary"
+          />
 
           <div v-else>
             <div class="relative h-56 flex items-center justify-center">
@@ -81,12 +77,13 @@
         <div class="card">
           <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Tren 6 Bulan Terakhir</h2>
 
-          <div v-if="!trendChartData" class="text-center py-8 text-slate-400 dark:text-slate-500">
-            <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-            </svg>
-            <p class="text-sm">Tidak ada data</p>
-          </div>
+          <EmptyState
+            v-if="!trendChartData"
+            icon="chart"
+            title="Tidak ada data trend"
+            description="Tambahkan lebih banyak transaksi untuk melihat tren keuangan"
+            variant="secondary"
+          />
 
           <div v-else class="h-56">
             <Line :data="trendChartData" :options="lineChartOptions" />
@@ -363,6 +360,8 @@ import { ref, computed, onMounted } from 'vue'
 import { Line } from 'vue-chartjs'
 import { Doughnut } from 'vue-chartjs'
 import BaseSelect from '@/components/common/BaseSelect.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import {
   Chart as ChartJS,
   CategoryScale,
