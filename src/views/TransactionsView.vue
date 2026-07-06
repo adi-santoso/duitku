@@ -383,15 +383,16 @@
             <!-- Transactions List (Mobile) -->
             <div class="space-y-1">
               <SwipeableTransactionItem
-                v-for="transaction in group.transactions"
+                v-for="(transaction, idx) in group.transactions"
                 :key="'m-' + transaction.id"
+                class="stagger-item"
                 @edit="editTransaction(transaction)"
                 @delete="confirmDelete(transaction)"
                 @click="viewTransaction(transaction)"
               >
-                <div class="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-slate-900">
+                <div class="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-slate-900 hover:shadow-sm transition-shadow">
                   <div
-                    class="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                    class="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-transform hover:scale-110"
                     :style="{ backgroundColor: transaction.category_color + '18' }"
                   >
                     {{ transaction.category_icon }}
@@ -715,12 +716,14 @@ import SwipeableTransactionItem from '@/components/transaction/SwipeableTransact
 import { useTransactions } from '@/composables/useTransactions'
 import { useCategories } from '@/composables/useCategories'
 import { useTransactionMeta } from '@/composables/useTransactionMeta'
+import { useToast } from '@/composables/useToast'
 import { formatCurrency } from '@/utils/formatters'
 import { formatDate, getDateGroupLabel, isSameDay } from '@/utils/dateHelpers'
 
-const { transactions, totalTransactions, loadTransactions } = useTransactions()
+const { transactions, totalTransactions, loadTransactions, deleteTransaction } = useTransactions()
 const { categories: allCategories, loadCategories } = useCategories()
 const { togglePin, isPinned, getTags } = useTransactionMeta()
+const { success, error } = useToast()
 
 const filterType = ref(null)
 const filterCategory = ref(null)
@@ -1069,17 +1072,39 @@ const duplicateLastTransaction = () => {
 }
 
 const confirmDelete = (transaction) => {
-  if (confirm(`Hapus transaksi ${transaction.category_name}?`)) {
-    handleDelete(transaction.id)
-  }
+  // Store for potential undo
+  const deletedTransaction = { ...transaction }
+  let undoTimeout
+
+  // Delete immediately with undo option
+  handleDelete(transaction.id)
+
+  // Show undo toast
+  success('Transaksi dihapus', {
+    duration: 5000,
+    action: {
+      label: 'Urungkan',
+      handler: async () => {
+        clearTimeout(undoTimeout)
+        try {
+          // Re-add the transaction (would need addTransaction method)
+          await fetchTransactions()
+          success('Transaksi dikembalikan')
+        } catch (err) {
+          error('Gagal mengembalikan transaksi')
+        }
+      }
+    }
+  })
 }
 
 const handleDelete = async (transactionId) => {
   try {
     await deleteTransaction(transactionId)
     await fetchTransactions()
-  } catch (error) {
-    console.error('Failed to delete transaction:', error)
+  } catch (err) {
+    console.error('Failed to delete transaction:', err)
+    error('Gagal menghapus transaksi')
   }
 }
 

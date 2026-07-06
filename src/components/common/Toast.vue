@@ -1,13 +1,13 @@
 <template>
   <Teleport to="body">
-    <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+    <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm w-full pointer-events-none sm:max-w-md">
       <TransitionGroup name="toast">
         <div
           v-for="toast in toasts"
           :key="toast.id"
-          class="pointer-events-auto flex items-start gap-3 p-4 rounded-xl shadow-lg border backdrop-blur-sm cursor-pointer transition-all duration-300"
+          v-show="toast.visible"
+          class="pointer-events-auto flex items-start gap-3 p-4 rounded-xl shadow-lg border backdrop-blur-sm transition-all duration-300"
           :class="toastClasses(toast.type)"
-          @click="dismissToast(toast.id)"
         >
           <!-- Icon -->
           <div class="flex-shrink-0 mt-0.5">
@@ -32,8 +32,18 @@
           <!-- Message -->
           <p class="text-sm font-medium flex-1 leading-snug">{{ toast.message }}</p>
 
+          <!-- Action Button -->
+          <button
+            v-if="toast.action"
+            @click.stop="handleAction(toast)"
+            class="flex-shrink-0 px-2.5 py-1 rounded-lg font-semibold text-xs transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+          >
+            {{ toast.action.label }}
+          </button>
+
           <!-- Close button -->
           <button
+            v-if="toast.dismissible"
             class="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
             @click.stop="dismissToast(toast.id)"
           >
@@ -61,24 +71,31 @@ const toastClasses = (type) => {
   }
   return classes[type] || classes.info
 }
+
+const handleAction = (toast) => {
+  if (toast.action && toast.action.handler) {
+    toast.action.handler()
+    dismissToast(toast.id)
+  }
+}
 </script>
 
 <style scoped>
 .toast-enter-active {
-  transition: all 0.3s ease-out;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .toast-leave-active {
   transition: all 0.3s ease-in;
 }
 .toast-enter-from {
   opacity: 0;
-  transform: translateX(100%);
+  transform: translateX(100%) scale(0.8);
 }
 .toast-leave-to {
   opacity: 0;
-  transform: translateX(100%);
+  transform: translateX(100%) scale(0.9);
 }
 .toast-move {
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 </style>

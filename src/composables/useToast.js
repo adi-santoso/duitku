@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 
 /**
- * Global toast notifications
+ * Global toast notifications with undo action support
  * Types: success, error, warning, info
  */
 const toasts = ref([])
@@ -11,19 +11,31 @@ export function useToast() {
   /**
    * Show a toast notification
    * @param {string} message - Toast message
-   * @param {'success'|'error'|'warning'|'info'} type - Toast type
-   * @param {number} duration - Duration in ms (default 3000)
+   * @param {Object} options - Toast options
+   * @param {string} options.type - Toast type (success, error, warning, info)
+   * @param {number} options.duration - Duration in ms (default 3000, 0 = no auto dismiss)
+   * @param {Object} options.action - Action button { label: string, handler: function }
+   * @param {boolean} options.dismissible - Can be manually dismissed (default true)
    */
-  const showToast = (message, type = 'info', duration = 3000) => {
+  const showToast = (message, options = {}) => {
     const id = ++toastId
-    const toast = { id, message, type, visible: true }
+    const toast = {
+      id,
+      message,
+      type: options.type || 'info',
+      duration: options.duration !== undefined ? options.duration : 3000,
+      action: options.action || null,
+      dismissible: options.dismissible !== false,
+      visible: true
+    }
+
     toasts.value.push(toast)
 
     // Auto dismiss
-    if (duration > 0) {
+    if (toast.duration > 0) {
       setTimeout(() => {
         dismissToast(id)
-      }, duration)
+      }, toast.duration)
     }
 
     return id
@@ -41,10 +53,10 @@ export function useToast() {
   }
 
   // Shorthand methods
-  const success = (message, duration) => showToast(message, 'success', duration)
-  const error = (message, duration = 4000) => showToast(message, 'error', duration)
-  const warning = (message, duration) => showToast(message, 'warning', duration)
-  const info = (message, duration) => showToast(message, 'info', duration)
+  const success = (message, options = {}) => showToast(message, { ...options, type: 'success' })
+  const error = (message, options = {}) => showToast(message, { ...options, type: 'error', duration: options.duration || 4000 })
+  const warning = (message, options = {}) => showToast(message, { ...options, type: 'warning' })
+  const info = (message, options = {}) => showToast(message, { ...options, type: 'info' })
 
   return {
     toasts,
