@@ -155,46 +155,56 @@ export function useTransactions() {
    * Update transaction with optimistic update
    */
   const updateTransaction = async (id, data) => {
-    // Store original transaction for rollback
+    // Find transaction index in local state
     const index = transactions.value.findIndex(t => t.id === id)
-    if (index === -1) return
+    let originalTransaction = null
 
-    const originalTransaction = { ...transactions.value[index] }
+    // If found in local state, do optimistic update
+    if (index !== -1) {
+      originalTransaction = { ...transactions.value[index] }
 
-    // Optimistic update with merged data
-    transactions.value[index] = normalizeTransaction({
-      ...originalTransaction,
-      ...data,
-      category_id: data.categoryId,
-      category_name: data.category_name || originalTransaction.category_name,
-      category_icon: data.category_icon || originalTransaction.category_icon,
-      category_color: data.category_color || originalTransaction.category_color,
-      transaction_date: data.transactionDate,
-      receipt_image: data.receiptImage,
-      is_recurring: data.isRecurring,
-      recurring_frequency: data.recurringFrequency,
-      _optimistic: true
-    })
+      // Optimistic update with merged data
+      transactions.value[index] = normalizeTransaction({
+        ...originalTransaction,
+        ...data,
+        category_id: data.categoryId,
+        category_name: data.category_name || originalTransaction.category_name,
+        category_icon: data.category_icon || originalTransaction.category_icon,
+        category_color: data.category_color || originalTransaction.category_color,
+        transaction_date: data.transactionDate,
+        receipt_image: data.receiptImage,
+        is_recurring: data.isRecurring,
+        recurring_frequency: data.recurringFrequency,
+        _optimistic: true
+      })
+    }
+
+    const apiPayload = {
+      categoryId: data.categoryId,
+      amount: data.amount,
+      description: data.description || undefined,
+      // Send empty string to delete image, or undefined to leave unchanged, or string value to update
+      receiptImage: data.receiptImage === null ? '' : data.receiptImage || undefined,
+      transactionDate: data.transactionDate,
+      isRecurring: data.isRecurring || false,
+      recurringFrequency: data.recurringFrequency || undefined,
+    }
 
     try {
       isSaving.value = true
-      await api.transactions.update(id, {
-        categoryId: data.categoryId,
-        amount: data.amount,
-        description: data.description || undefined,
-        receiptImage: data.receiptImage || undefined,
-        transactionDate: data.transactionDate,
-        isRecurring: data.isRecurring || false,
-        recurringFrequency: data.recurringFrequency || undefined,
-      })
+      const response = await api.transactions.update(id, apiPayload)
 
-      // Remove optimistic flag
-      if (transactions.value[index]) {
+      // Remove optimistic flag if found in local state
+      if (index !== -1 && transactions.value[index]) {
         delete transactions.value[index]._optimistic
       }
+
+      return response
     } catch (err) {
-      // Rollback on error
-      transactions.value[index] = originalTransaction
+      // Rollback on error if found in local state
+      if (index !== -1 && originalTransaction) {
+        transactions.value[index] = originalTransaction
+      }
       throw err
     } finally {
       isSaving.value = false
@@ -205,23 +215,28 @@ export function useTransactions() {
    * Delete transaction with optimistic update
    */
   const deleteTransaction = async (id) => {
-    // Store for rollback
+    // Find transaction index in local state
     const index = transactions.value.findIndex(t => t.id === id)
-    if (index === -1) return
+    let deletedTransaction = null
 
-    const deletedTransaction = transactions.value[index]
+    // If found in local state, do optimistic delete
+    if (index !== -1) {
+      deletedTransaction = transactions.value[index]
 
-    // Optimistic delete
-    transactions.value.splice(index, 1)
-    totalTransactions.value--
+      // Optimistic delete
+      transactions.value.splice(index, 1)
+      totalTransactions.value--
+    }
 
     try {
       await api.transactions.delete(id)
       return deletedTransaction // Return for undo functionality
     } catch (err) {
-      // Rollback on error
-      transactions.value.splice(index, 0, deletedTransaction)
-      totalTransactions.value++
+      // Rollback on error if found in local state
+      if (index !== -1 && deletedTransaction) {
+        transactions.value.splice(index, 0, deletedTransaction)
+        totalTransactions.value++
+      }
       throw err
     }
   }

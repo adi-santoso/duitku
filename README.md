@@ -26,7 +26,7 @@ Aplikasi pencatatan keuangan personal yang modern dan mudah digunakan, dibangun 
 - **Charts**: Chart.js + vue-chartjs
 - **Image Compression**: browser-image-compression
 - **Build Tool**: Vite
-- **Backend**: [DuitKu API](../duiku-api) (Express + Drizzle + Neon Postgres)
+- **Backend**: [DuitKu API](../duitku-api) (Express + Drizzle + Neon Postgres)
 - **Auth**: Custom JWT (Bearer token)
 - **Deployment**: Vercel
 
