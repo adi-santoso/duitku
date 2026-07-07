@@ -63,18 +63,8 @@
       </div>
     </div>
 
-    <!-- Filter Presets -->
-    <FilterPresets
-      :presets="presets"
-      :active-preset-id="activePresetId"
-      :current-filters="currentFilters"
-      @apply="applyPreset"
-      @create="handleCreatePreset"
-      @delete="handleDeletePreset"
-    />
-
     <!-- Filters Row -->
-    <div class="flex items-center gap-2 flex-wrap">
+    <div class="flex items-center gap-2">
       <!-- Type Filter -->
       <button
         v-for="filter in typeFilters"
@@ -88,83 +78,29 @@
         {{ filter.label }}
       </button>
 
-      <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block" />
+      <div class="flex-1" />
 
-      <!-- Category Filter -->
-      <BaseSelect v-model="filterCategory" size="sm">
-        <option :value="null">Semua Kategori</option>
-        <option v-for="cat in allCategories" :key="cat.id" :value="cat.id">
-          {{ cat.icon }} {{ cat.name }}
-        </option>
-      </BaseSelect>
-
-      <!-- Date Range Filter -->
-      <BaseSelect v-model="filterMonth" size="sm">
-        <option :value="null">Semua Bulan</option>
-        <option v-for="m in availableMonths" :key="m.value" :value="m.value">
-          {{ m.label }}
-        </option>
-      </BaseSelect>
-
-      <!-- Sort -->
-      <BaseSelect v-model="sortBy" size="sm">
-        <option value="date_desc">Terbaru</option>
-        <option value="date_asc">Terlama</option>
-        <option value="amount_desc">Terbesar</option>
-        <option value="amount_asc">Terkecil</option>
-      </BaseSelect>
-
-      <!-- Amount Range Toggle -->
+      <!-- Filter Button -->
       <button
-        @click="showAmountFilter = !showAmountFilter"
-        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-        :class="(filterAmountMin || filterAmountMax)
+        @click="showFilterModal = true"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
+        :class="hasActiveFilterOptions
           ? 'bg-primary-500 text-white shadow-sm'
           : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'"
       >
-        💰 Jumlah
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+        </svg>
+        <span>Filter</span>
+        <span v-if="activeFilterCount > 0" class="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] font-bold">
+          {{ activeFilterCount }}
+        </span>
       </button>
-
-      <div class="flex-1" />
 
       <!-- Result count -->
       <span class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
-        {{ totalTransactions }} transaksi
+        {{ totalTransactions }}
       </span>
-    </div>
-
-    <!-- Amount Range Filter (collapsible) -->
-    <div v-if="showAmountFilter" class="flex items-center gap-2 flex-wrap animate-fade-in">
-      <div class="relative">
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Min</span>
-        <input
-          v-model="filterAmountMin"
-          type="number"
-          class="input h-8 text-xs pl-10 w-32"
-          placeholder="0"
-          min="0"
-          step="10000"
-        />
-      </div>
-      <span class="text-xs text-slate-400">—</span>
-      <div class="relative">
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Max</span>
-        <input
-          v-model="filterAmountMax"
-          type="number"
-          class="input h-8 text-xs pl-11 w-32"
-          placeholder="∞"
-          min="0"
-          step="10000"
-        />
-      </div>
-      <button
-        v-if="filterAmountMin || filterAmountMax"
-        @click="filterAmountMin = ''; filterAmountMax = ''"
-        class="text-xs text-red-500 hover:text-red-600 font-medium"
-      >
-        Reset
-      </button>
     </div>
 
     <!-- Quick Actions -->
@@ -725,6 +661,22 @@
       @deleted="handleDeleted"
       @edit="handleEdit"
     />
+
+    <!-- Filter Modal -->
+    <FilterModal
+      v-model="showFilterModal"
+      :filters="{
+        category: filterCategory,
+        month: filterMonth,
+        sortBy: sortBy,
+        amountMin: filterAmountMin,
+        amountMax: filterAmountMax
+      }"
+      :categories="allCategories"
+      :available-months="availableMonths"
+      @apply="applyFilters"
+      @reset="resetFilters"
+    />
   </div>
 </template>
 
@@ -736,11 +688,10 @@ import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import TransactionModal from '@/components/transaction/TransactionModal.vue'
 import TransactionDetailModal from '@/components/transaction/TransactionDetailModal.vue'
 import SwipeableTransactionItem from '@/components/transaction/SwipeableTransactionItem.vue'
-import FilterPresets from '@/components/transaction/FilterPresets.vue'
+import FilterModal from '@/components/transaction/FilterModal.vue'
 import { useTransactions } from '@/composables/useTransactions'
 import { useCategories } from '@/composables/useCategories'
 import { useTransactionMeta } from '@/composables/useTransactionMeta'
-import { useFilterPresets } from '@/composables/useFilterPresets'
 import { useToast } from '@/composables/useToast'
 import { formatCurrency } from '@/utils/formatters'
 import { formatDate, getDateGroupLabel, isSameDay } from '@/utils/dateHelpers'
@@ -749,7 +700,6 @@ import { smartSearchTransactions } from '@/utils/smartSearch'
 const { transactions, totalTransactions, isLoading: transactionsLoading, isSaving, loadTransactions, deleteTransaction, restoreTransaction } = useTransactions()
 const { categories: allCategories, loadCategories } = useCategories()
 const { togglePin, isPinned, getTags } = useTransactionMeta()
-const { presets, createPreset, deletePreset, getDateRangeForPreset } = useFilterPresets()
 const { success, error } = useToast()
 
 const filterType = ref(null)
@@ -758,7 +708,7 @@ const filterMonth = ref(null)
 const filterAmountMin = ref('')
 const filterAmountMax = ref('')
 const sortBy = ref('date_desc')
-const showAmountFilter = ref(false)
+const showFilterModal = ref(false)
 const searchQuery = ref('')
 const viewMode = ref('compact')
 const currentPage = ref(1)
@@ -769,9 +719,6 @@ const showAddMenu = ref(false)
 const transactionType = ref('expense')
 const selectedTransaction = ref(null)
 const editingTransaction = ref(null)
-
-// Filter presets
-const activePresetId = ref(null)
 
 // Spreadsheet zoom
 const zoomLevel = ref(100)
@@ -841,6 +788,21 @@ const hasActiveFilters = computed(() => {
   return filterType.value || filterCategory.value || filterMonth.value || filterAmountMin.value || filterAmountMax.value
 })
 
+// Check if filter options (not type) are active
+const hasActiveFilterOptions = computed(() => {
+  return filterCategory.value || filterMonth.value || filterAmountMin.value || filterAmountMax.value || sortBy.value !== 'date_desc'
+})
+
+// Count active filters for badge
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (filterCategory.value) count++
+  if (filterMonth.value) count++
+  if (filterAmountMin.value || filterAmountMax.value) count++
+  if (sortBy.value !== 'date_desc') count++
+  return count
+})
+
 const getCategoryName = (catId) => {
   const cat = allCategories.value.find(c => c.id === catId)
   return cat ? `${cat.icon} ${cat.name}` : catId
@@ -853,6 +815,22 @@ const clearAllFilters = () => {
   filterAmountMin.value = ''
   filterAmountMax.value = ''
   sortBy.value = 'date_desc'
+}
+
+const applyFilters = (filters) => {
+  filterCategory.value = filters.category
+  filterMonth.value = filters.month
+  sortBy.value = filters.sortBy
+  filterAmountMin.value = filters.amountMin
+  filterAmountMax.value = filters.amountMax
+}
+
+const resetFilters = () => {
+  filterCategory.value = null
+  filterMonth.value = null
+  sortBy.value = 'date_desc'
+  filterAmountMin.value = ''
+  filterAmountMax.value = ''
 }
 
 // Pagination computed
@@ -1130,69 +1108,6 @@ const confirmDelete = async (transaction) => {
     console.error('Failed to delete transaction:', err)
     error('Gagal menghapus transaksi')
   }
-}
-
-// Filter preset handlers
-const currentFilters = computed(() => ({
-  type: filterType.value,
-  categoryId: filterCategory.value,
-  month: filterMonth.value,
-  amountMin: filterAmountMin.value,
-  amountMax: filterAmountMax.value,
-  sortBy: sortBy.value
-}))
-
-const applyPreset = (preset) => {
-  activePresetId.value = preset.id
-  const filters = preset.filters
-
-  // Apply date range preset
-  if (filters.dateRange) {
-    const dateRange = getDateRangeForPreset(filters.dateRange)
-    if (dateRange) {
-      // Extract year-month from startDate
-      const [year, month] = dateRange.startDate.split('-')
-      filterMonth.value = `${year}-${month}`
-    }
-  }
-
-  // Apply other filters
-  if (filters.type) filterType.value = filters.type
-  if (filters.categoryId) filterCategory.value = filters.categoryId
-  if (filters.amountMin) {
-    filterAmountMin.value = filters.amountMin.toString()
-    showAmountFilter.value = true
-  }
-  if (filters.amountMax) {
-    filterAmountMax.value = filters.amountMax.toString()
-    showAmountFilter.value = true
-  }
-  if (filters.hasReceipt) {
-    // Filter transactions with receipt (client-side)
-    searchQuery.value = 'struk'
-  }
-  if (filters.isRecurring) {
-    // Filter recurring transactions (client-side)
-    searchQuery.value = 'berulang'
-  }
-
-  success(`Preset "${preset.name}" diterapkan`)
-}
-
-const handleCreatePreset = ({ name, icon, filters }) => {
-  createPreset(name, icon, filters)
-  success(`Preset "${name}" berhasil disimpan`)
-}
-
-const handleDeletePreset = (presetId) => {
-  const preset = presets.value.find(p => p.id === presetId)
-  if (!preset) return
-
-  deletePreset(presetId)
-  if (activePresetId.value === presetId) {
-    activePresetId.value = null
-  }
-  success(`Preset "${preset.name}" dihapus`)
 }
 
 onMounted(async () => {
