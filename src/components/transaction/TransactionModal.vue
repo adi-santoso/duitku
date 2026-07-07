@@ -490,30 +490,33 @@ onMounted(async () => {
   await loadCategories()
 })
 
-// Watch for changes to props.transaction and update form
-watch(() => props.transaction, (newTransaction) => {
-  if (newTransaction) {
-    form.value = {
-      categoryId: newTransaction.category_id,
-      amount: newTransaction.amount,
-      transactionDate: newTransaction.transaction_date,
-      description: newTransaction.description || '',
-      receiptImage: newTransaction.receipt_image,
-      isRecurring: !!newTransaction.is_recurring,
-      recurringFrequency: newTransaction.recurring_frequency || 'monthly'
-    }
-  } else {
-    // Reset form when no transaction (creating new)
-    form.value = {
-      categoryId: null,
-      amount: '',
-      transactionDate: formatDateInput(new Date()),
-      description: '',
-      receiptImage: null,
-      isRecurring: false,
-      recurringFrequency: 'monthly'
+// Watch for changes to props.transaction ID (different transaction, not same transaction updated)
+watch(() => props.transaction?.id, (newId, oldId) => {
+  // Only update form when opening a different transaction or closing/opening modal
+  if (newId !== oldId) {
+    if (props.transaction) {
+      form.value = {
+        categoryId: props.transaction.category_id,
+        amount: props.transaction.amount,
+        transactionDate: props.transaction.transaction_date,
+        description: props.transaction.description || '',
+        receiptImage: props.transaction.receipt_image,
+        isRecurring: !!props.transaction.is_recurring,
+        recurringFrequency: props.transaction.recurring_frequency || 'monthly'
+      }
+    } else {
+      // Reset form when no transaction (creating new)
+      form.value = {
+        categoryId: null,
+        amount: '',
+        transactionDate: formatDateInput(new Date()),
+        description: '',
+        receiptImage: null,
+        isRecurring: false,
+        recurringFrequency: 'monthly'
+      }
     }
   }
-}, { immediate: false, deep: true })
+}, { immediate: false })
 
 </script>

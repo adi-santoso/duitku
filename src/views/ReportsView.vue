@@ -3,7 +3,7 @@
     <!-- Month Selector -->
     <div class="flex items-center gap-3">
       <div class="flex-1">
-        <BaseSelect v-model="selectedMonthIndex" @update:modelValue="loadData">
+        <BaseSelect :model-value="selectedMonthIndex" @update:model-value="handleMonthChange">
           <option v-for="(month, idx) in monthsList" :key="month.label" :value="idx">
             {{ month.label }}
           </option>
@@ -401,6 +401,12 @@ const monthsList = getMonthsList()
 const selectedMonthIndex = ref(0)
 const selectedMonth = computed(() => monthsList[selectedMonthIndex.value])
 
+const handleMonthChange = (value) => {
+  // Ensure value is a number
+  selectedMonthIndex.value = typeof value === 'number' ? value : parseInt(value, 10)
+  loadData()
+}
+
 // Computed for max day total (for bar width calculation)
 const maxDayTotal = computed(() => {
   if (!spendingPatterns.value) return 0
@@ -572,6 +578,13 @@ const loadData = async () => {
   isLoading.value = true
 
   try {
+    // Ensure selectedMonth is valid
+    if (!selectedMonth.value || !selectedMonth.value.year || !selectedMonth.value.month) {
+      console.error('Invalid selectedMonth:', selectedMonth.value, 'selectedMonthIndex:', selectedMonthIndex.value)
+      isLoading.value = false
+      return
+    }
+
     const { start, end } = getMonthRange(selectedMonth.value.year, selectedMonth.value.month)
 
     const [summaryData, expenseByCat] = await Promise.all([
