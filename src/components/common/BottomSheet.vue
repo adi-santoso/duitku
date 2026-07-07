@@ -5,26 +5,29 @@
         v-if="modelValue"
         class="fixed inset-0 z-50 flex items-end lg:items-center lg:justify-center"
         @click.self="handleClose"
+        @touchmove.prevent
       >
         <!-- Backdrop -->
         <div
           class="absolute inset-0 bg-black/50 backdrop-blur-sm"
           @click="handleClose"
+          @touchmove.prevent
         />
 
         <!-- Bottom Sheet Container -->
         <div
           ref="sheetRef"
-          class="relative w-full bg-white dark:bg-slate-900 lg:max-w-2xl lg:rounded-2xl overflow-hidden"
+          class="relative w-full bg-white dark:bg-slate-900 lg:max-w-2xl lg:rounded-2xl overflow-hidden flex flex-col"
           :class="[
             fullHeight ? 'h-full lg:h-auto' : 'max-h-[90vh]',
             'rounded-t-3xl lg:rounded-b-2xl',
             snapToTop ? 'h-[95vh]' : ''
           ]"
           :style="{ transform: `translateY(${dragOffset}px)` }"
-          @touchstart="handleTouchStart"
-          @touchmove="handleTouchMove"
-          @touchend="handleTouchEnd"
+          @touchstart.passive="handleTouchStart"
+          @touchmove.passive="handleTouchMove"
+          @touchend.passive="handleTouchEnd"
+          @wheel.stop
         >
           <!-- Drag Handle (Mobile Only) -->
           <div class="lg:hidden sticky top-0 z-10 bg-white dark:bg-slate-900 pt-2 pb-3 px-4">
@@ -56,11 +59,11 @@
 
           <!-- Content -->
           <div
-            class="overflow-y-auto"
-            :class="[
-              contentClass,
-              fullHeight ? 'h-[calc(100%-theme(spacing.16))]' : 'max-h-[75vh]'
-            ]"
+            ref="contentRef"
+            class="overflow-y-auto flex-1"
+            :class="contentClass"
+            @touchstart.stop
+            @touchmove.stop
           >
             <slot />
           </div>
@@ -68,7 +71,7 @@
           <!-- Footer -->
           <div
             v-if="$slots.footer"
-            class="sticky bottom-0 z-10 bg-white dark:bg-slate-900 px-5 py-4 border-t border-slate-200 dark:border-slate-800"
+            class="sticky bottom-0 z-10 bg-white dark:bg-slate-900 px-5 border-t border-slate-200 dark:border-slate-800 safe-area-bottom"
           >
             <slot name="footer" />
           </div>
@@ -119,9 +122,11 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'close'])
 
 const sheetRef = ref(null)
+const contentRef = ref(null)
 const dragOffset = ref(0)
 const startY = ref(0)
 const isDragging = ref(false)
+const isDraggingFromHandle = ref(false)
 
 const handleClose = () => {
   if (!props.closeOnBackdrop) return
@@ -131,8 +136,21 @@ const handleClose = () => {
 
 const handleTouchStart = (e) => {
   if (!props.swipeToClose) return
-  startY.value = e.touches[0].clientY
+
+  const touch = e.touches[0]
+  startY.value = touch.clientY
   isDragging.value = true
+
+  // Check if dragging from drag handle area (top 60px)
+  const rect = sheetRef.value?.getBoundingClientRect()
+  if (rect && touch.clientY - rect.top < 60) {
+    isDraggingFromHandle.value = true
+  } else {
+    // Check if content is scrolled to top
+    if (contentRef.value) {
+      isDraggingFromHandle.value = contentRef.value.scrollTop === 0
+    }
+  }
 }
 
 const handleTouchMove = (e) => {
@@ -141,9 +159,14 @@ const handleTouchMove = (e) => {
   const currentY = e.touches[0].clientY
   const diff = currentY - startY.value
 
-  // Only allow dragging down
-  if (diff > 0) {
+  // Only allow dragging down from handle or when content is at top
+  if (diff > 0 && isDraggingFromHandle.value) {
     dragOffset.value = diff
+    // Prevent content scroll when dragging
+    e.preventDefault()
+  } else if (diff < 0) {
+    // Allow scrolling up
+    isDraggingFromHandle.value = false
   }
 }
 
@@ -151,6 +174,7 @@ const handleTouchEnd = () => {
   if (!isDragging.value || !props.swipeToClose) return
 
   isDragging.value = false
+  isDraggingFromHandle.value = false
 
   // Close if dragged more than 150px
   if (dragOffset.value > 150) {
@@ -165,9 +189,22 @@ const handleTouchEnd = () => {
 watch(() => props.modelValue, async (isOpen) => {
   await nextTick()
   if (isOpen) {
+    // Store current scroll position
+    const scrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.width = '100%'
     document.body.style.overflow = 'hidden'
   } else {
+    // Restore scroll position
+    const scrollY = document.body.style.top
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
     document.body.style.overflow = ''
+    if (scrollY) {
+      window.scrollTo(0, parseInt(scrollY || '0') * -1)
+    }
     dragOffset.value = 0
   }
 })
@@ -202,5 +239,10 @@ watch(() => props.modelValue, async (isOpen) => {
   .bottom-sheet-leave-to > div:last-child {
     transform: translateY(0) scale(0.95);
   }
+}
+
+.safe-area-bottom {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  padding-top: 1rem;
 }
 </style>

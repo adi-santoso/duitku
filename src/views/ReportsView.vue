@@ -3,8 +3,8 @@
     <!-- Month Selector -->
     <div class="flex items-center gap-3">
       <div class="flex-1">
-        <BaseSelect v-model="selectedMonth" @update:modelValue="loadData">
-          <option v-for="month in monthsList" :key="month.label" :value="month">
+        <BaseSelect v-model="selectedMonthIndex" @update:modelValue="loadData">
+          <option v-for="(month, idx) in monthsList" :key="month.label" :value="idx">
             {{ month.label }}
           </option>
         </BaseSelect>
@@ -398,7 +398,8 @@ const loadYearReview = () => {
 }
 
 const monthsList = getMonthsList()
-const selectedMonth = ref(monthsList[0])
+const selectedMonthIndex = ref(0)
+const selectedMonth = computed(() => monthsList[selectedMonthIndex.value])
 
 // Computed for max day total (for bar width calculation)
 const maxDayTotal = computed(() => {

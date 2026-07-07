@@ -1,7 +1,7 @@
 <template>
   <select
     :value="modelValue"
-    @change="$emit('update:modelValue', $event.target.value)"
+    @change="handleChange"
     :disabled="disabled"
     :class="[
       'transition-all cursor-pointer appearance-none bg-no-repeat',
@@ -38,7 +38,21 @@ const props = defineProps({
   }
 })
 
-defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue'])
+
+const handleChange = (event) => {
+  let value = event.target.value
+
+  // Try to parse as number if the original modelValue was a number
+  if (typeof props.modelValue === 'number') {
+    const parsed = Number(value)
+    if (!isNaN(parsed)) {
+      value = parsed
+    }
+  }
+
+  emit('update:modelValue', value)
+}
 
 const sizeClasses = computed(() => {
   if (props.size === 'sm') {
