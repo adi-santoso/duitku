@@ -677,6 +677,18 @@
       @apply="applyFilters"
       @reset="resetFilters"
     />
+
+    <!-- Confirm Delete Dialog -->
+    <ConfirmDialog
+      v-model="showDeleteConfirm"
+      title="Hapus Transaksi?"
+      message="Yakin ingin menghapus transaksi ini? Transaksi akan langsung dihapus."
+      confirm-text="Hapus"
+      cancel-text="Batal"
+      variant="danger"
+      icon="trash"
+      @confirm="performDelete"
+    />
   </div>
 </template>
 
@@ -689,6 +701,7 @@ import TransactionModal from '@/components/transaction/TransactionModal.vue'
 import TransactionDetailModal from '@/components/transaction/TransactionDetailModal.vue'
 import SwipeableTransactionItem from '@/components/transaction/SwipeableTransactionItem.vue'
 import FilterModal from '@/components/transaction/FilterModal.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import { useTransactions } from '@/composables/useTransactions'
 import { useCategories } from '@/composables/useCategories'
 import { useTransactionMeta } from '@/composables/useTransactionMeta'
@@ -709,6 +722,8 @@ const filterAmountMin = ref('')
 const filterAmountMax = ref('')
 const sortBy = ref('date_desc')
 const showFilterModal = ref(false)
+const showDeleteConfirm = ref(false)
+const transactionToDelete = ref(null)
 const searchQuery = ref('')
 const viewMode = ref('compact')
 const currentPage = ref(1)
@@ -1084,10 +1099,17 @@ const duplicateLastTransaction = () => {
   showModal.value = true
 }
 
-const confirmDelete = async (transaction) => {
+const confirmDelete = (transaction) => {
+  transactionToDelete.value = transaction
+  showDeleteConfirm.value = true
+}
+
+const performDelete = async () => {
+  if (!transactionToDelete.value) return
+
   try {
     // Optimistic delete with returned transaction for undo
-    const deletedTransaction = await deleteTransaction(transaction.id)
+    const deletedTransaction = await deleteTransaction(transactionToDelete.value.id)
 
     // Show undo toast
     success('Transaksi dihapus', {
@@ -1107,6 +1129,8 @@ const confirmDelete = async (transaction) => {
   } catch (err) {
     console.error('Failed to delete transaction:', err)
     error('Gagal menghapus transaksi')
+  } finally {
+    transactionToDelete.value = null
   }
 }
 

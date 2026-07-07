@@ -98,6 +98,18 @@
     >
       <img :src="transaction.receipt_image" class="max-w-full max-h-full rounded-lg" />
     </div>
+
+    <!-- Confirm Delete Dialog -->
+    <ConfirmDialog
+      v-model="showDeleteConfirm"
+      title="Hapus Transaksi?"
+      message="Transaksi yang dihapus tidak dapat dikembalikan. Yakin ingin melanjutkan?"
+      confirm-text="Hapus"
+      cancel-text="Batal"
+      variant="danger"
+      icon="trash"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 
@@ -106,6 +118,7 @@ import { ref } from 'vue'
 import { useTransactions } from '@/composables/useTransactions'
 import { formatCurrency } from '@/utils/formatters'
 import { formatDate } from '@/utils/dateHelpers'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 
 const props = defineProps({
   transaction: {
@@ -118,6 +131,7 @@ const emit = defineEmits(['close', 'deleted', 'edit'])
 
 const { deleteTransaction } = useTransactions()
 const showImageModal = ref(false)
+const showDeleteConfirm = ref(false)
 
 const getRecurringLabel = (frequency) => {
   const labels = {
@@ -129,10 +143,12 @@ const getRecurringLabel = (frequency) => {
   return labels[frequency] || frequency
 }
 
-const handleDelete = async () => {
-  if (confirm('Yakin ingin menghapus transaksi ini?')) {
-    await deleteTransaction(props.transaction.id)
-    emit('deleted')
-  }
+const handleDelete = () => {
+  showDeleteConfirm.value = true
+}
+
+const confirmDelete = async () => {
+  await deleteTransaction(props.transaction.id)
+  emit('deleted')
 }
 </script>
