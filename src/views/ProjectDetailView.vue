@@ -394,7 +394,7 @@ const {
   markItemAsPurchased
 } = useProjects()
 
-const { categories, fetchCategories } = useCategories()
+const { categories, loadCategories } = useCategories()
 
 const showAddItemModal = ref(false)
 const showEditItemModal = ref(false)
@@ -418,7 +418,7 @@ const purchaseForm = ref({
 onMounted(async () => {
   await Promise.all([
     fetchProjectById(route.params.id),
-    fetchCategories()
+    loadCategories()
   ])
 })
 
