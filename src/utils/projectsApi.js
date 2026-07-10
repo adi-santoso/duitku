@@ -1,11 +1,43 @@
-import api from './api'
+import { api as apiClient } from './api'
+
+/**
+ * Helper function to make API requests with proper response handling
+ */
+async function request(method, endpoint, data = null) {
+  const options = {
+    method,
+    headers: { 'Content-Type': 'application/json' }
+  }
+
+  if (data) {
+    options.body = JSON.stringify(data)
+  }
+
+  const token = localStorage.getItem('duitku_token')
+  if (token) {
+    options.headers.Authorization = `Bearer ${token}`
+  }
+
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+  const response = await fetch(`${apiBase}${endpoint}`, options)
+
+  const result = await response.json()
+
+  if (!response.ok || !result.success) {
+    const error = new Error(result.error || 'Request failed')
+    error.response = { data: result }
+    throw error
+  }
+
+  return { data: result }
+}
 
 /**
  * Get all projects
  * @returns {Promise<Array>}
  */
 export async function getProjects() {
-  const response = await api.get('/projects')
+  const response = await request('GET', '/projects')
   return response.data.data
 }
 
@@ -15,7 +47,7 @@ export async function getProjects() {
  * @returns {Promise<Object>}
  */
 export async function getProjectById(id) {
-  const response = await api.get(`/projects/${id}`)
+  const response = await request('GET', `/projects/${id}`)
   return response.data.data
 }
 
@@ -28,7 +60,7 @@ export async function getProjectById(id) {
  * @returns {Promise<Object>}
  */
 export async function createProject(data) {
-  const response = await api.post('/projects', data)
+  const response = await request('POST', '/projects', data)
   return response.data.data
 }
 
@@ -39,7 +71,7 @@ export async function createProject(data) {
  * @returns {Promise<Object>}
  */
 export async function updateProject(id, data) {
-  const response = await api.put(`/projects/${id}`, data)
+  const response = await request('PUT', `/projects/${id}`, data)
   return response.data.data
 }
 
@@ -49,7 +81,7 @@ export async function updateProject(id, data) {
  * @returns {Promise<void>}
  */
 export async function deleteProject(id) {
-  await api.delete(`/projects/${id}`)
+  await request('DELETE', `/projects/${id}`)
 }
 
 /**
@@ -63,7 +95,7 @@ export async function deleteProject(id) {
  * @returns {Promise<Object>}
  */
 export async function addProjectItem(projectId, data) {
-  const response = await api.post(`/projects/${projectId}/items`, data)
+  const response = await request('POST', `/projects/${projectId}/items`, data)
   return response.data.data
 }
 
@@ -74,7 +106,7 @@ export async function addProjectItem(projectId, data) {
  * @returns {Promise<Object>}
  */
 export async function updateProjectItem(itemId, data) {
-  const response = await api.put(`/projects/items/${itemId}`, data)
+  const response = await request('PUT', `/projects/items/${itemId}`, data)
   return response.data.data
 }
 
@@ -84,7 +116,7 @@ export async function updateProjectItem(itemId, data) {
  * @returns {Promise<void>}
  */
 export async function deleteProjectItem(itemId) {
-  await api.delete(`/projects/items/${itemId}`)
+  await request('DELETE', `/projects/items/${itemId}`)
 }
 
 /**
@@ -95,6 +127,7 @@ export async function deleteProjectItem(itemId) {
  * @returns {Promise<Object>}
  */
 export async function markItemAsPurchased(itemId, data) {
-  const response = await api.post(`/projects/items/${itemId}/purchase`, data)
+  const response = await request('POST', `/projects/items/${itemId}/purchase`, data)
   return response.data.data
 }
+
