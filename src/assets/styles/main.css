@@ -31,6 +31,14 @@
       radial-gradient(circle at 16% 88%, rgba(200, 241, 109, 0.08), transparent 27rem);
   }
 
+  .theme-transitioning *,
+  .theme-transitioning *::before,
+  .theme-transitioning *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
+    transition-duration: 300ms !important;
+    transition-timing-function: ease-in-out !important;
+  }
+
   h1, h2, h3, h4 {
     @apply font-display;
   }
@@ -54,6 +62,14 @@
     -webkit-user-select: text;
     -moz-user-select: text;
     user-select: text;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-transitioning *,
+  .theme-transitioning *::before,
+  .theme-transitioning *::after {
+    transition-duration: 0ms !important;
   }
 }
 
