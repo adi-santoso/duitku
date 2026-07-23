@@ -23,16 +23,16 @@
       <router-view />
     </div>
 
-    <div v-else class="min-h-screen bg-slate-100 dark:bg-slate-950" :class="{ 'pt-8': !isOnline || needsUpdate }">
+    <div v-else class="min-h-screen" :class="{ 'pt-8': !isOnline || needsUpdate }">
       <!-- Sidebar (desktop) -->
       <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
 
       <!-- Main Content Area -->
-      <div class="lg:pl-[260px] min-h-screen flex flex-col transition-all duration-300">
+      <div class="lg:pl-[254px] min-h-screen flex flex-col transition-all duration-300">
         <Header @toggle-sidebar="sidebarOpen = !sidebarOpen" />
 
-        <main class="flex-1 p-4 lg:p-6">
-          <div class="max-w-7xl mx-auto">
+        <main class="flex-1 px-4 pb-28 pt-2 lg:px-8 lg:pb-10 lg:pt-3">
+          <div class="max-w-[1480px] mx-auto">
             <router-view />
           </div>
         </main>

@@ -1,11 +1,12 @@
 <template>
-  <div class="card overflow-hidden">
+  <div class="card overflow-hidden !bg-lime !border-ink-900/5 !text-ink-900 shadow-float">
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-bold text-slate-900 dark:text-white">Skor Kesehatan Keuangan</h3>
+      <h3 class="text-sm font-extrabold text-ink-900">Kesehatan finansial</h3>
       <button
         @click="$emit('refresh')"
-        class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400"
+        class="p-1.5 rounded-lg hover:bg-white/30 transition-colors text-ink-700"
+        aria-label="Perbarui skor kesehatan keuangan"
         :class="{ 'animate-spin': loading }"
       >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -29,7 +30,7 @@
               fill="none"
               stroke="currentColor"
               stroke-width="8"
-              class="text-slate-100 dark:text-slate-800"
+              class="text-ink-900/10"
             />
             <circle
               cx="40" cy="40" r="34"
@@ -42,8 +43,8 @@
             />
           </svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-lg font-bold text-slate-900 dark:text-white">{{ score }}</span>
-            <span class="text-[9px] text-slate-400 dark:text-slate-500">/100</span>
+            <span class="text-lg font-bold text-ink-900">{{ score }}</span>
+            <span class="text-[9px] text-ink-900/60">/100</span>
           </div>
         </div>
 
@@ -52,8 +53,8 @@
             <span class="text-lg">{{ grade.emoji }}</span>
             <span class="text-sm font-bold" :style="{ color: grade.color }">{{ grade.label }}</span>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            {{ tips[0] }}
+          <p class="text-xs text-ink-900/70 leading-relaxed">
+            {{ tips[0] || 'Catat transaksi secara rutin untuk melihat rekomendasi.' }}
           </p>
         </div>
       </div>
@@ -62,10 +63,10 @@
       <div class="space-y-2.5">
         <div v-for="(item, key) in breakdown" :key="key">
           <div class="flex items-center justify-between mb-0.5">
-            <span class="text-[11px] font-medium text-slate-600 dark:text-slate-400">{{ item.label }}</span>
-            <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300">{{ item.score }}/{{ item.max }}</span>
+            <span class="text-[11px] font-medium text-ink-900/70">{{ item.label }}</span>
+            <span class="text-[11px] font-bold text-ink-900">{{ item.score }}/{{ item.max }}</span>
           </div>
-          <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
+          <div class="w-full bg-ink-900/10 rounded-full h-1.5">
             <div
               class="h-1.5 rounded-full transition-all duration-700"
               :style="{
@@ -74,15 +75,15 @@
               }"
             />
           </div>
-          <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{{ item.detail }}</p>
+          <p class="text-[10px] text-ink-900/55 mt-0.5">{{ item.detail }}</p>
         </div>
       </div>
 
       <!-- More Tips (expandable) -->
-      <div v-if="tips.length > 1" class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+      <div v-if="tips.length > 1" class="mt-4 pt-3 border-t border-ink-900/10">
         <button
           @click="showTips = !showTips"
-          class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+          class="text-xs font-bold text-ink-900 hover:text-ink-700 transition-colors"
         >
           {{ showTips ? 'Sembunyikan tips' : `Lihat ${tips.length - 1} tips lainnya` }}
         </button>
@@ -90,7 +91,7 @@
           <li
             v-for="(tip, i) in tips.slice(1)"
             :key="i"
-            class="text-xs text-slate-500 dark:text-slate-400 flex items-start gap-1.5"
+            class="text-xs text-ink-900/70 flex items-start gap-1.5"
           >
             <span class="text-amber-500 mt-0.5">💡</span>
             <span>{{ tip }}</span>

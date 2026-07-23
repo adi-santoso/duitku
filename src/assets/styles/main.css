@@ -12,13 +12,27 @@
 
 @layer base {
   body {
-    @apply bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors;
+    @apply bg-canvas dark:bg-ink-950 text-ink-900 dark:text-slate-50 transition-colors;
+    background-image:
+      radial-gradient(circle at 78% -10%, rgba(170, 156, 255, 0.22), transparent 25rem),
+      radial-gradient(circle at 16% 88%, rgba(200, 241, 109, 0.20), transparent 27rem);
+    background-attachment: fixed;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     /* Prevent bounce scrolling on iOS */
     overscroll-behavior: none;
     /* Improve tap responsiveness on iOS */
     -webkit-tap-highlight-color: transparent;
     touch-action: pan-x pan-y;
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(circle at 78% -10%, rgba(170, 156, 255, 0.14), transparent 25rem),
+      radial-gradient(circle at 16% 88%, rgba(200, 241, 109, 0.08), transparent 27rem);
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
   }
 
   * {
@@ -90,7 +104,7 @@
 
   /* Cards */
   .card {
-    @apply bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 transition-all;
+    @apply bg-surface/90 dark:bg-ink-900/90 rounded-3xl border border-ink-900/10 dark:border-white/10 p-5 shadow-soft transition-all;
   }
 
   .card-hover {
@@ -98,7 +112,7 @@
   }
 
   .card-glass {
-    @apply backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 rounded-2xl border border-white/20 dark:border-slate-700/50 p-5;
+    @apply backdrop-blur-xl bg-surface/70 dark:bg-ink-900/70 rounded-3xl border border-white/20 dark:border-white/10 p-5;
   }
 
   /* Sidebar */

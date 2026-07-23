@@ -1,31 +1,27 @@
 <template>
   <aside
-    class="fixed inset-y-0 left-0 z-50 w-[260px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-transform duration-300 lg:translate-x-0"
+    class="fixed inset-y-0 left-0 z-50 w-[254px] bg-ink-900 dark:bg-[#090e1a] text-white flex flex-col transition-transform duration-300 lg:translate-x-0"
     :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
   >
     <!-- Logo -->
-    <div class="flex items-center gap-3 px-5 h-16 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm shadow-primary-500/25">
-        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
+    <div class="flex items-center gap-3 px-6 h-20 flex-shrink-0">
+      <div class="w-10 h-10 rounded-[14px] rounded-bl-md bg-lime text-ink-900 flex items-center justify-center font-display text-xl font-extrabold -rotate-3">D</div>
       <div>
-        <h1 class="text-base font-bold text-slate-900 dark:text-white">DuitKu</h1>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 -mt-0.5">Finance Manager</p>
+        <h1 class="font-display text-base font-extrabold text-white">DuitKu</h1>
+        <p class="text-[11px] text-slate-400 -mt-0.5">uang terasa ringan.</p>
       </div>
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-      <p class="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Menu</p>
+    <nav class="flex-1 overflow-y-auto px-4 py-3 space-y-1">
+      <p class="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Ruang utama</p>
 
       <router-link
         v-for="item in mainNavItems"
         :key="item.name"
         :to="item.path"
-        class="sidebar-link"
-        :class="{ 'sidebar-link-active': isActive(item.path) }"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-[13px] text-sm font-medium text-slate-400 hover:bg-white/[0.07] hover:text-white transition-all duration-200"
+        :class="{ 'nav-active': isActive(item.path) }"
         @click="closeMobile"
       >
         <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
@@ -33,15 +29,15 @@
       </router-link>
 
       <div class="pt-4 pb-2">
-        <p class="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Lainnya</p>
+        <p class="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Workspace</p>
       </div>
 
       <router-link
         v-for="item in secondaryNavItems"
         :key="item.name"
         :to="item.path"
-        class="sidebar-link"
-        :class="{ 'sidebar-link-active': isActive(item.path) }"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-[13px] text-sm font-medium text-slate-400 hover:bg-white/[0.07] hover:text-white transition-all duration-200"
+        :class="{ 'nav-active': isActive(item.path) }"
         @click="closeMobile"
       >
         <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
@@ -50,11 +46,17 @@
     </nav>
 
     <!-- User Section -->
-    <div class="border-t border-slate-200 dark:border-slate-800 p-3 flex-shrink-0">
+    <div class="p-4 flex-shrink-0">
+      <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-4 mb-3">
+        <p class="text-[11px] text-slate-400">Target bulan ini</p>
+        <p class="font-display text-2xl font-extrabold mt-1.5 mb-2.5">78%</p>
+        <div class="h-1.5 rounded-full bg-white/10 overflow-hidden"><div class="h-full w-[78%] bg-lime rounded-full"></div></div>
+        <p class="text-[10px] text-slate-300 mt-2">Sedikit lagi, pertahankan ritme.</p>
+      </div>
       <!-- Dark Mode Toggle -->
       <button
         @click="toggleDark"
-        class="sidebar-link w-full mb-1"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-[13px] w-full mb-1 text-sm text-slate-400 hover:bg-white/[0.07] hover:text-white transition-colors"
       >
         <SunIcon v-if="isDark" class="w-5 h-5 flex-shrink-0" />
         <MoonIcon v-else class="w-5 h-5 flex-shrink-0" />
@@ -64,7 +66,7 @@
       <!-- Logout -->
       <button
         @click="showLogoutModal = true"
-        class="sidebar-link w-full text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-[13px] w-full text-sm text-coral hover:bg-coral/10 transition-colors"
       >
         <ArrowRightOnRectangleIcon class="w-5 h-5 flex-shrink-0" />
         <span>Keluar</span>
@@ -173,6 +175,16 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
+.nav-active {
+  background: #c8f16d;
+  color: #17213f;
+  font-weight: 700;
+  box-shadow: 0 9px 24px rgba(200, 241, 109, 0.16);
+}
+.nav-active:hover {
+  background: #c8f16d;
+  color: #17213f;
+}
 .fade-overlay-enter-active,
 .fade-overlay-leave-active {
   transition: opacity 0.2s ease;

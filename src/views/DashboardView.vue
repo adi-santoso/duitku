@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 pb-20 lg:pb-0 animate-fade-in">
+  <div class="space-y-5 animate-fade-in">
     <!-- Skeleton Loading State -->
     <template v-if="isLoading">
       <div class="flex items-center gap-3">
@@ -23,96 +23,38 @@
     </template>
 
     <template v-else>
-      <!-- Month Filter (Select Dropdown) -->
-      <div class="flex items-center gap-3">
-        <BaseSelect
-          :model-value="selectedMonthValue"
-          @update:modelValue="handleFilterChange"
-          custom-class="pl-4 pr-10 py-2.5 rounded-xl text-sm font-semibold"
-        >
-          <option value="all">Semua Waktu</option>
-          <option
-            v-for="m in monthOptions"
-            :key="`${m.year}-${m.month}`"
-            :value="`${m.year}-${m.month}`"
-          >
-            {{ m.label }}
-          </option>
-        </BaseSelect>
-        <span v-if="selectedMonth" class="text-xs text-slate-400 dark:text-slate-500">
-          vs {{ prevMonthLabel }}
-        </span>
-      </div>
+      <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.65fr)_minmax(290px,.75fr)] gap-5">
+        <div class="space-y-4 min-w-0">
+          <section class="relative overflow-hidden min-h-[270px] md:min-h-[250px] rounded-3xl bg-ink-900 dark:bg-ink-800 text-white p-6 md:p-7 shadow-float">
+            <div class="absolute -right-20 -bottom-32 w-72 h-72 rounded-full border-[44px] border-violet/50"></div>
+            <div class="absolute right-36 -top-16 w-28 h-28 rounded-[32px] bg-lime/10 rotate-12"></div>
+            <div class="relative flex items-center justify-between gap-4">
+              <p class="text-xs text-slate-400">Total saldo bersih</p>
+              <BaseSelect :model-value="selectedMonthValue" @update:modelValue="handleFilterChange" custom-class="!w-auto pl-3 pr-9 py-2 rounded-xl !border-white/15 !bg-white/10 !text-white text-xs font-semibold">
+                <option value="all" class="text-ink-900">Semua Waktu</option>
+                <option v-for="m in monthOptions" :key="`${m.year}-${m.month}`" :value="`${m.year}-${m.month}`" class="text-ink-900">{{ m.label }}</option>
+              </BaseSelect>
+            </div>
+            <div class="relative mt-6">
+              <p class="font-display text-4xl md:text-5xl font-extrabold tracking-[-0.06em]" :class="summary.balance < 0 ? 'text-coral' : 'text-white'">{{ formatCurrency(summary.balance) }}</p>
+              <div v-if="selectedMonth" class="flex items-center gap-2 mt-3 text-[11px] text-slate-300"><span class="px-2 py-1 rounded-full bg-lime text-ink-900 font-extrabold">{{ balanceChangeLabel }}</span> dibanding {{ prevMonthLabel }}</div>
+              <p v-else class="mt-3 text-[11px] text-slate-400">Akumulasi seluruh transaksi tercatat</p>
+            </div>
+            <div class="absolute left-6 right-6 bottom-6 grid grid-cols-2 md:grid-cols-[1fr_1fr_auto] gap-4 items-end">
+              <div class="pt-3 border-t border-white/10"><span class="block text-[10px] text-slate-400">Pemasukan</span><strong class="font-display text-base">{{ formatCompactCurrency(summary.income) }}</strong></div>
+              <div class="pt-3 border-t border-white/10"><span class="block text-[10px] text-slate-400">Pengeluaran</span><strong class="font-display text-base">{{ formatCompactCurrency(summary.expense) }}</strong></div>
+              <button @click="showAddTransaction('expense')" class="hidden md:block h-12 px-5 rounded-2xl bg-coral text-sm font-extrabold shadow-lg shadow-coral/20 hover:-translate-y-0.5 transition-transform">+ Transaksi</button>
+            </div>
+          </section>
 
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="stat-card group">
-          <div class="flex items-center justify-between">
-            <div class="space-y-1">
-              <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Pemasukan</p>
-              <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ formatCurrency(summary.income) }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-              </svg>
-            </div>
-          </div>
-          <div class="mt-3 flex items-center gap-1.5">
-            <span class="badge badge-green">{{ filterLabel }}</span>
-            <span v-if="incomeChange !== null" class="text-xs font-medium" :class="incomeChange >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'">
-              {{ incomeChange >= 0 ? '+' : '' }}{{ incomeChange.toFixed(0) }}%
-            </span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <article class="card !p-4"><div class="flex justify-between"><span class="text-xs text-ink-500 dark:text-slate-400">Sisa anggaran</span><span class="w-8 h-8 rounded-xl bg-lime/60 text-ink-900 grid place-items-center">◎</span></div><strong class="block mt-3 font-display text-xl text-ink-900 dark:text-white">{{ formatCompactCurrency(remainingBudget) }}</strong><small class="text-[10px] text-ink-500 dark:text-slate-400"><b class="text-primary-600 dark:text-lime">{{ budgetRemainingPercentage }}%</b> masih tersedia</small></article>
+            <article class="card !p-4"><div class="flex justify-between"><span class="text-xs text-ink-500 dark:text-slate-400">Rasio tabungan</span><span class="w-8 h-8 rounded-xl bg-sky/25 text-sky-600 grid place-items-center">↗</span></div><strong class="block mt-3 font-display text-xl text-ink-900 dark:text-white">{{ savingsRate }}%</strong><small class="text-[10px] text-ink-500 dark:text-slate-400">Dari pemasukan periode ini</small></article>
+            <article class="card !p-4 sm:col-auto"><div class="flex justify-between"><span class="text-xs text-ink-500 dark:text-slate-400">Transaksi tercatat</span><span class="w-8 h-8 rounded-xl bg-coral/20 text-coral grid place-items-center">#</span></div><strong class="block mt-3 font-display text-xl text-ink-900 dark:text-white">{{ recentTransactions.length }}</strong><small class="text-[10px] text-ink-500 dark:text-slate-400">Aktivitas terbaru ditampilkan</small></article>
           </div>
         </div>
 
-        <div class="stat-card group">
-          <div class="flex items-center justify-between">
-            <div class="space-y-1">
-              <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Pengeluaran</p>
-              <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ formatCurrency(summary.expense) }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.51l-5.511-3.181" />
-              </svg>
-            </div>
-          </div>
-          <div class="mt-3 flex items-center gap-1.5">
-            <span class="badge badge-red">{{ filterLabel }}</span>
-            <span v-if="expenseChange !== null" class="text-xs font-medium" :class="expenseChange <= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'">
-              {{ expenseChange >= 0 ? '+' : '' }}{{ expenseChange.toFixed(0) }}%
-            </span>
-          </div>
-        </div>
-
-        <div class="stat-card group">
-          <div class="flex items-center justify-between">
-            <div class="space-y-1">
-              <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Saldo</p>
-              <p class="text-2xl font-bold" :class="summary.balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600 dark:text-red-400'">
-                {{ formatCurrency(summary.balance) }}
-              </p>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
-              </svg>
-            </div>
-          </div>
-          <div class="mt-3">
-            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
-              <div
-                class="h-1.5 rounded-full transition-all duration-700"
-                :class="summary.balance >= 0 ? 'bg-blue-500' : 'bg-red-500'"
-                :style="{ width: summary.income > 0 ? `${Math.min((summary.expense / summary.income) * 100, 100)}%` : '0%' }"
-              />
-            </div>
-            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-              {{ summary.income > 0 ? ((summary.expense / summary.income) * 100).toFixed(0) : 0 }}% terpakai
-            </p>
-          </div>
-        </div>
+        <FinancialHealthCard :score="healthScore" :breakdown="healthBreakdown" :grade="healthGrade" :tips="healthTips" :loading="healthLoading" @refresh="refreshHealthScore" />
       </div>
 
       <!-- Budget Alerts -->
@@ -194,16 +136,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Financial Health Score -->
-      <FinancialHealthCard
-        :score="healthScore"
-        :breakdown="healthBreakdown"
-        :grade="healthGrade"
-        :tips="healthTips"
-        :loading="healthLoading"
-        @refresh="refreshHealthScore"
-      />
 
       <!-- Recurring Transaction Suggestions -->
       <RecurringSuggestions
@@ -444,12 +376,6 @@ const selectedMonthValue = computed(() => {
   return `${selectedMonth.value.year}-${selectedMonth.value.month}`
 })
 
-// Label for badge
-const filterLabel = computed(() => {
-  if (selectedMonth.value === null) return 'Semua'
-  return `${getMonthName(selectedMonth.value.month).substring(0, 3)} ${selectedMonth.value.year}`
-})
-
 // Previous month label for comparison hint
 const prevMonthLabel = computed(() => {
   if (!selectedMonth.value) return ''
@@ -459,18 +385,29 @@ const prevMonthLabel = computed(() => {
   return `${getMonthName(prevM).substring(0, 3)} ${prevY}`
 })
 
-// Percentage changes (only shown when a month is selected)
-const incomeChange = computed(() => {
-  if (selectedMonth.value === null) return null
-  if (prevSummary.value.income === 0) return null
-  return ((summary.value.income - prevSummary.value.income) / prevSummary.value.income) * 100
+const balanceChangeLabel = computed(() => {
+  if (!selectedMonth.value || prevSummary.value.balance === 0) return 'Periode aktif'
+  const change = ((summary.value.balance - prevSummary.value.balance) / Math.abs(prevSummary.value.balance)) * 100
+  return `${change >= 0 ? '+' : ''}${change.toFixed(0)}%`
 })
 
-const expenseChange = computed(() => {
-  if (selectedMonth.value === null) return null
-  if (prevSummary.value.expense === 0) return null
-  return ((summary.value.expense - prevSummary.value.expense) / prevSummary.value.expense) * 100
-})
+const totalBudgetAmount = computed(() => budgetSummary.value.reduce((sum, budget) => sum + Number(budget.amount || 0), 0))
+const totalBudgetSpent = computed(() => budgetSummary.value.reduce((sum, budget) => sum + Number(budget.spent || 0), 0))
+const remainingBudget = computed(() => Math.max(0, totalBudgetAmount.value - totalBudgetSpent.value))
+const budgetRemainingPercentage = computed(() => totalBudgetAmount.value > 0
+  ? Math.round((remainingBudget.value / totalBudgetAmount.value) * 100)
+  : 0)
+const savingsRate = computed(() => summary.value.income > 0
+  ? Math.max(0, Math.round((summary.value.balance / summary.value.income) * 100))
+  : 0)
+
+const formatCompactCurrency = (value) => {
+  const amount = Number(value) || 0
+  if (Math.abs(amount) >= 1000000000) return `Rp${(amount / 1000000000).toFixed(1).replace('.0', '')} M`
+  if (Math.abs(amount) >= 1000000) return `Rp${(amount / 1000000).toFixed(1).replace('.0', '')} jt`
+  if (Math.abs(amount) >= 1000) return `Rp${(amount / 1000).toFixed(0)} rb`
+  return formatCurrency(amount)
+}
 
 const hasOverBudget = computed(() => budgetAlerts.value.some(a => a.status === 'over'))
 

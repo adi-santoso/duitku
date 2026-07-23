@@ -1,17 +1,17 @@
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 lg:hidden safe-area-bottom">
-    <div class="flex items-center justify-around h-16 max-w-lg mx-auto">
+  <nav class="fixed bottom-2 left-3 right-3 z-50 rounded-[22px] bg-ink-900/95 dark:bg-[#090e1a]/95 backdrop-blur-xl shadow-2xl lg:hidden safe-area-bottom">
+    <div class="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
       <router-link
         v-for="item in navItems"
         :key="item.name"
         :to="item.path"
         class="relative flex flex-col items-center justify-center gap-0.5 w-16 h-full transition-colors"
-        :class="isActive(item.path) ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400 dark:text-slate-500'"
+        :class="isActive(item.path) ? 'text-lime' : 'text-slate-500'"
       >
         <!-- Active indicator -->
         <div
           v-if="isActive(item.path)"
-          class="absolute top-0 w-8 h-0.5 rounded-full bg-primary-500"
+          class="absolute top-0 w-8 h-0.5 rounded-full bg-lime"
         />
 
         <component :is="item.icon" class="w-5 h-5" :class="isActive(item.path) ? 'stroke-[2]' : 'stroke-[1.5]'" />
