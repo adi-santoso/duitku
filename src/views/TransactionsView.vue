@@ -602,37 +602,39 @@
     <!-- FAB -->
     <button
       @click="showAddMenu = !showAddMenu"
-      class="fixed bottom-20 lg:bottom-8 right-6 w-14 h-14 bg-primary-500 text-white rounded-2xl shadow-lg shadow-primary-500/30 hover:bg-primary-600 hover:shadow-xl hover:shadow-primary-500/40 active:scale-95 transition-all z-40 flex items-center justify-center"
+      class="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 w-14 h-14 bg-ink-900 text-white dark:bg-lime dark:text-ink-900 rounded-2xl shadow-float border border-white/10 dark:border-ink-900/20 hover:scale-105 active:scale-95 transition-all z-[55] flex items-center justify-center"
+      aria-label="Tambah Transaksi"
     >
-      <svg class="w-6 h-6 transition-transform" :class="showAddMenu ? 'rotate-45' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <svg class="w-6 h-6 transition-transform duration-300" :class="showAddMenu ? 'rotate-45' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
     </button>
 
     <!-- FAB Menu -->
     <transition name="fab-menu">
-      <div v-if="showAddMenu" class="fixed bottom-36 lg:bottom-24 right-6 space-y-2 z-40">
+      <div v-if="showAddMenu" class="fixed bottom-40 lg:bottom-22 right-4 lg:right-6 space-y-2.5 z-[55]">
         <button
           @click="showAddTransaction('income')"
-          class="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 px-4 py-3 rounded-2xl shadow-xl hover:shadow-2xl transition-all animate-slide-up"
+          class="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-lime text-ink-900 font-extrabold text-xs shadow-lg shadow-lime/20 hover:scale-105 active:scale-95 transition-all whitespace-nowrap animate-slide-up"
         >
-          <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <div class="w-6 h-6 rounded-xl bg-ink-900/10 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
           </div>
-          <span class="font-semibold text-sm">Pemasukan</span>
+          <span>+ Pemasukan</span>
         </button>
+
         <button
           @click="showAddTransaction('expense')"
-          class="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-red-600 dark:text-red-400 px-4 py-3 rounded-2xl shadow-xl hover:shadow-2xl transition-all animate-slide-up"
+          class="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-coral text-white font-extrabold text-xs shadow-lg shadow-coral/20 hover:scale-105 active:scale-95 transition-all whitespace-nowrap animate-slide-up"
         >
-          <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-500/15 flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <div class="w-6 h-6 rounded-xl bg-white/20 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />
             </svg>
           </div>
-          <span class="font-semibold text-sm">Pengeluaran</span>
+          <span>− Pengeluaran</span>
         </button>
       </div>
     </transition>
@@ -640,7 +642,7 @@
     <!-- FAB Overlay -->
     <div
       v-if="showAddMenu"
-      class="fixed inset-0 z-30"
+      class="fixed inset-0 bg-ink-900/30 backdrop-blur-[2px] z-50"
       @click="showAddMenu = false"
     />
 

@@ -120,11 +120,11 @@
 
   /* Cards */
   .card {
-    @apply bg-surface/90 dark:bg-ink-900/90 rounded-3xl border border-ink-900/10 dark:border-white/10 p-5 shadow-soft transition-all;
+    @apply bg-surface/90 dark:bg-ink-900/90 rounded-3xl border border-ink-900/10 dark:border-white/10 p-5 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-float hover:border-ink-900/20 dark:hover:border-white/20;
   }
 
   .card-hover {
-    @apply card hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300;
+    @apply card hover:border-ink-900/30 dark:hover:border-lime/40 hover:shadow-float transition-all duration-300;
   }
 
   .card-glass {

@@ -6,250 +6,270 @@
     content-class="p-0"
   >
     <template #header>
-      <div>
-        <h2 class="text-lg font-bold text-slate-900 dark:text-white">
-          {{ isEditing ? 'Edit Transaksi' : (type === 'income' ? 'Tambah Pemasukan' : 'Tambah Pengeluaran') }}
-        </h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ isEditing ? 'Ubah detail transaksi' : 'Isi detail transaksi' }}</p>
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <span
+              class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+              :class="type === 'income' ? 'bg-lime text-ink-900' : 'bg-coral text-white'"
+            >
+              {{ type === 'income' ? 'Pemasukan' : 'Pengeluaran' }}
+            </span>
+            <h2 class="font-display text-lg font-extrabold text-ink-900 dark:text-white">
+              {{ isEditing ? 'Edit Transaksi' : (type === 'income' ? 'Tambah Pemasukan' : 'Tambah Pengeluaran') }}
+            </h2>
+          </div>
+          <p class="text-xs text-ink-500 dark:text-slate-400 mt-1">{{ isEditing ? 'Ubah detail transaksi kamu' : 'Catat aktivitas keuangan baru' }}</p>
+        </div>
+        <button
+          type="button"
+          @click="$emit('close')"
+          class="p-2 rounded-xl border border-ink-900/10 dark:border-white/10 text-ink-500 hover:bg-canvas dark:hover:bg-ink-800 transition-colors"
+        >
+          ✕
+        </button>
       </div>
     </template>
 
-    <form @submit.prevent="handleSubmit" id="transaction-form" class="p-5 space-y-5">
-        <!-- Templates Quick Select -->
-        <div v-if="!isEditing && sortedTemplates.length > 0">
-          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Template</label>
-          <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
-            <button
-              v-for="tpl in sortedTemplates.slice(0, 5)"
-              :key="tpl.id"
-              type="button"
-              @click="applyTemplate(tpl)"
-              class="flex-shrink-0 px-3 py-2 rounded-xl border transition-all text-left"
-              :class="appliedTemplateId === tpl.id
-                ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10'
-                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'"
-            >
-              <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">{{ tpl.name }}</p>
-              <p class="text-[10px] text-slate-400 dark:text-slate-500">Rp {{ Number(tpl.amount).toLocaleString('id-ID') }}</p>
-            </button>
-          </div>
+    <form @submit.prevent="handleSubmit" id="transaction-form" class="p-5 md:p-6 space-y-5">
+      <!-- Templates Quick Select -->
+      <div v-if="!isEditing && sortedTemplates.length > 0">
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">Template Cepat</label>
+        <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+          <button
+            v-for="tpl in sortedTemplates.slice(0, 5)"
+            :key="tpl.id"
+            type="button"
+            @click="applyTemplate(tpl)"
+            class="flex-shrink-0 px-3 py-2 rounded-2xl border transition-all text-left"
+            :class="appliedTemplateId === tpl.id
+              ? 'border-lime bg-lime/20 text-ink-900 dark:text-white shadow-sm'
+              : 'border-ink-900/10 dark:border-white/10 bg-canvas/50 dark:bg-ink-800/50 text-ink-700 dark:text-slate-300 hover:border-ink-900/20'"
+          >
+            <p class="text-xs font-bold truncate">{{ tpl.name }}</p>
+            <p class="text-[10px] text-ink-500 dark:text-slate-400">Rp {{ Number(tpl.amount).toLocaleString('id-ID') }}</p>
+          </button>
         </div>
+      </div>
 
-        <!-- Category -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2.5">Kategori *</label>
+      <!-- Category -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2.5">Kategori *</label>
 
-          <!-- Smart Suggestions -->
-          <div v-if="suggestedCategories.length > 0 && !form.categoryId" class="mb-3 p-2.5 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
-            <div class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              <div class="flex-1">
-                <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1.5">Saran kategori</p>
-                <div class="flex flex-wrap gap-1.5">
-                  <button
-                    v-for="cat in suggestedCategories"
-                    :key="cat.id"
-                    type="button"
-                    @click="form.categoryId = cat.id"
-                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-500/30 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-primary-400 dark:hover:border-primary-500 transition-colors"
-                  >
-                    <span>{{ cat.icon }}</span>
-                    <span>{{ cat.name }}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2">
-            <button
-              v-for="category in categories"
-              :key="category.id"
-              type="button"
-              @click="form.categoryId = category.id"
-              class="p-3 rounded-xl border-2 transition-all text-center"
-              :class="form.categoryId === category.id
-                ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10 shadow-sm'
-                : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'"
-            >
-              <span class="text-xl block mb-1">{{ category.icon }}</span>
-              <span class="text-[11px] font-medium block truncate text-slate-600 dark:text-slate-400">{{ category.name }}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Amount -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Jumlah *</label>
-          <div class="relative">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400 dark:text-slate-500">Rp</span>
-            <input
-              v-model="form.amount"
-              type="number"
-              class="input pl-12"
-              placeholder="0"
-              required
-              min="0"
-              step="1000"
-            />
-          </div>
-
-          <!-- Quick Amount Chips -->
-          <div class="mt-3 space-y-2">
-            <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              <button
-                v-for="amount in quickAmounts"
-                :key="amount"
-                type="button"
-                @click="form.amount = amount"
-                class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                :class="Number(form.amount) === amount
-                  ? 'bg-primary-500 text-white shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'"
-              >
-                {{ formatQuickAmount(amount) }}
-              </button>
-            </div>
-
-            <!-- Recently Used Amounts -->
-            <div v-if="recentAmounts.length > 0" class="flex items-center gap-2 text-xs">
-              <span class="text-slate-400 dark:text-slate-500 flex-shrink-0">Terakhir:</span>
-              <div class="flex gap-2 overflow-x-auto scrollbar-hide">
+        <!-- Smart Suggestions -->
+        <div v-if="suggestedCategories.length > 0 && !form.categoryId" class="mb-3 p-3 rounded-2xl bg-violet/15 dark:bg-violet/10 border border-violet/20">
+          <div class="flex items-start gap-2.5">
+            <span class="text-base">💡</span>
+            <div class="flex-1">
+              <p class="text-xs font-extrabold text-ink-900 dark:text-white mb-1.5">Saran kategori pintar</p>
+              <div class="flex flex-wrap gap-1.5">
                 <button
-                  v-for="(amount, idx) in recentAmounts"
-                  :key="idx"
+                  v-for="cat in suggestedCategories"
+                  :key="cat.id"
                   type="button"
-                  @click="form.amount = amount"
-                  class="flex-shrink-0 px-2.5 py-1 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-primary-400 dark:hover:border-primary-500 transition-colors"
+                  @click="form.categoryId = cat.id"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-surface dark:bg-ink-800 border border-ink-900/10 dark:border-white/10 text-xs font-bold text-ink-900 dark:text-white hover:border-lime transition-colors"
                 >
-                  {{ formatQuickAmount(amount) }}
+                  <span>{{ cat.icon }}</span>
+                  <span>{{ cat.name }}</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Date -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Tanggal *</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button
+            v-for="category in categories"
+            :key="category.id"
+            type="button"
+            @click="form.categoryId = category.id"
+            class="p-3 rounded-2xl border transition-all text-center"
+            :class="form.categoryId === category.id
+              ? 'border-lime bg-lime/25 dark:border-lime dark:bg-lime/15 text-ink-900 dark:text-white font-extrabold shadow-sm scale-[1.02]'
+              : 'border-ink-900/10 dark:border-white/10 bg-canvas/40 dark:bg-ink-800/40 text-ink-600 dark:text-slate-300 hover:border-ink-900/20'"
+          >
+            <span class="text-2xl block mb-1">{{ category.icon }}</span>
+            <span class="text-xs font-bold block truncate">{{ category.name }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Amount -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">Jumlah Nominal *</label>
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-extrabold text-ink-400">Rp</span>
           <input
-            v-model="form.transactionDate"
-            type="date"
-            class="input"
+            v-model="form.amount"
+            type="number"
+            class="input h-14 !rounded-2xl !bg-surface/80 dark:!bg-ink-800/80 !border-ink-900/10 dark:!border-white/10 pl-12 text-lg font-display font-extrabold text-ink-900 dark:text-white focus:ring-lime/40"
+            placeholder="0"
             required
-            :max="today"
+            min="0"
+            step="1000"
           />
         </div>
 
-        <!-- Description -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Deskripsi</label>
-          <textarea
-            v-model="form.description"
-            class="input resize-none"
-            rows="3"
-            placeholder="Catatan tambahan (opsional)"
-          ></textarea>
-        </div>
-
-        <!-- Receipt Image -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Foto Struk</label>
-          <div class="space-y-2">
-            <input
-              ref="fileInput"
-              type="file"
-              accept="image/*"
-              @change="handleFileChange"
-              class="hidden"
-            />
-
+        <!-- Quick Amount Chips -->
+        <div class="mt-3 space-y-2">
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
-              v-if="!form.receiptImage"
+              v-for="amount in quickAmounts"
+              :key="amount"
               type="button"
-              @click="$refs.fileInput.click()"
-              class="w-full p-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-500/5 transition-all"
+              @click="form.amount = amount"
+              class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+              :class="Number(form.amount) === amount
+                ? 'bg-ink-900 text-white dark:bg-lime dark:text-ink-900 shadow-sm'
+                : 'bg-canvas dark:bg-ink-800 text-ink-700 dark:text-slate-300 hover:bg-canvas/80'"
             >
-              <svg class="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-              </svg>
-              <span class="text-sm text-slate-400 dark:text-slate-500">Klik untuk upload foto</span>
+              {{ formatQuickAmount(amount) }}
             </button>
+          </div>
 
-            <div v-else class="relative rounded-xl overflow-hidden">
-              <img :src="form.receiptImage" class="w-full h-48 object-cover" />
+          <!-- Recently Used Amounts -->
+          <div v-if="recentAmounts.length > 0" class="flex items-center gap-2 text-xs">
+            <span class="text-ink-500 dark:text-slate-400 flex-shrink-0 text-[11px]">Terakhir:</span>
+            <div class="flex gap-2 overflow-x-auto scrollbar-hide">
               <button
+                v-for="(amount, idx) in recentAmounts"
+                :key="idx"
                 type="button"
-                @click="removeImage"
-                class="absolute top-2 right-2 p-2 bg-red-500/90 backdrop-blur-sm text-white rounded-lg hover:bg-red-600 transition-colors"
+                @click="form.amount = amount"
+                class="flex-shrink-0 px-2.5 py-1 rounded-xl bg-canvas dark:bg-ink-800 border border-ink-900/10 dark:border-white/10 text-ink-700 dark:text-slate-300 text-[11px] font-bold hover:border-lime transition-colors"
               >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                </svg>
+                {{ formatQuickAmount(amount) }}
               </button>
             </div>
-
-            <p v-if="imageError" class="text-sm text-red-600 dark:text-red-400">{{ imageError }}</p>
           </div>
         </div>
+      </div>
 
-        <!-- Recurring -->
-        <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+      <!-- Date -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">Tanggal *</label>
+        <input
+          v-model="form.transactionDate"
+          type="date"
+          class="input h-12 !rounded-2xl !bg-surface/80 dark:!bg-ink-800/80 !border-ink-900/10 dark:!border-white/10 font-bold"
+          required
+          :max="today"
+        />
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">Deskripsi</label>
+        <textarea
+          v-model="form.description"
+          class="input !rounded-2xl !bg-surface/80 dark:!bg-ink-800/80 !border-ink-900/10 dark:!border-white/10 resize-none font-medium text-sm"
+          rows="3"
+          placeholder="Catatan tambahan (opsional)"
+        ></textarea>
+      </div>
+
+      <!-- Receipt Image -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">Foto Struk</label>
+        <div class="space-y-2">
           <input
-            v-model="form.isRecurring"
-            type="checkbox"
-            id="recurring"
-            class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-primary-500 focus:ring-primary-500"
+            ref="fileInput"
+            type="file"
+            accept="image/*"
+            @change="handleFileChange"
+            class="hidden"
           />
-          <label for="recurring" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">Transaksi Berulang</label>
-        </div>
 
-        <div v-if="form.isRecurring">
-          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Frekuensi</label>
-          <BaseSelect v-model="form.recurringFrequency">
-            <option value="daily">Harian</option>
-            <option value="weekly">Mingguan</option>
-            <option value="monthly">Bulanan</option>
-            <option value="yearly">Tahunan</option>
-          </BaseSelect>
-        </div>
+          <button
+            v-if="!form.receiptImage"
+            type="button"
+            @click="$refs.fileInput.click()"
+            class="w-full p-6 border-2 border-dashed border-ink-900/15 dark:border-white/15 rounded-2xl hover:border-lime hover:bg-lime/5 transition-all text-center"
+          >
+            <svg class="w-8 h-8 mx-auto mb-2 text-ink-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+            </svg>
+            <span class="text-xs font-bold text-ink-500 dark:text-slate-400">Klik untuk unggah foto struk</span>
+          </button>
 
-        <!-- Save as Template -->
-        <div v-if="!isEditing" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-          <input
-            v-model="saveAsTemplateChecked"
-            type="checkbox"
-            id="save-template"
-            class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-primary-500 focus:ring-primary-500"
-          />
-          <label for="save-template" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer flex-1">Simpan sebagai template</label>
-        </div>
-        <div v-if="saveAsTemplateChecked && !isEditing">
-          <input
-            v-model="templateName"
-            type="text"
-            class="input"
-            placeholder="Nama template (contoh: Kopi pagi)"
-            maxlength="50"
-          />
-        </div>
+          <div v-else class="relative rounded-2xl overflow-hidden border border-ink-900/10 dark:border-white/10">
+            <img :src="form.receiptImage" class="w-full h-48 object-cover" />
+            <button
+              type="button"
+              @click="removeImage"
+              class="absolute top-2 right-2 p-2 bg-coral text-white rounded-xl hover:bg-coral/90 transition-colors shadow-md"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+            </button>
+          </div>
 
+          <p v-if="imageError" class="text-xs font-bold text-coral">{{ imageError }}</p>
+        </div>
+      </div>
+
+      <!-- Recurring -->
+      <div class="flex items-center gap-3 p-3.5 rounded-2xl bg-canvas dark:bg-ink-800/60 border border-ink-900/10 dark:border-white/10">
+        <input
+          v-model="form.isRecurring"
+          type="checkbox"
+          id="recurring"
+          class="w-4 h-4 rounded-md border-ink-900/20 text-lime focus:ring-lime"
+        />
+        <label for="recurring" class="text-xs font-bold text-ink-900 dark:text-white cursor-pointer">Transaksi Berulang</label>
+      </div>
+
+      <div v-if="form.isRecurring">
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">Frekuensi</label>
+        <BaseSelect v-model="form.recurringFrequency">
+          <option value="daily">Harian</option>
+          <option value="weekly">Mingguan</option>
+          <option value="monthly">Bulanan</option>
+          <option value="yearly">Tahunan</option>
+        </BaseSelect>
+      </div>
+
+      <!-- Save as Template -->
+      <div v-if="!isEditing" class="flex items-center gap-3 p-3.5 rounded-2xl bg-canvas dark:bg-ink-800/60 border border-ink-900/10 dark:border-white/10">
+        <input
+          v-model="saveAsTemplateChecked"
+          type="checkbox"
+          id="save-template"
+          class="w-4 h-4 rounded-md border-ink-900/20 text-lime focus:ring-lime"
+        />
+        <label for="save-template" class="text-xs font-bold text-ink-900 dark:text-white cursor-pointer flex-1">Simpan sebagai template</label>
+      </div>
+      <div v-if="saveAsTemplateChecked && !isEditing">
+        <input
+          v-model="templateName"
+          type="text"
+          class="input h-12 !rounded-2xl !bg-surface/80 dark:!bg-ink-800/80 !border-ink-900/10 dark:!border-white/10 text-xs font-bold"
+          placeholder="Nama template (contoh: Kopi pagi)"
+          maxlength="50"
+        />
+      </div>
     </form>
 
     <template #footer>
-      <div class="flex gap-3">
-        <button type="button" @click="$emit('close')" class="btn btn-secondary flex-1 h-11">
+      <div class="flex items-center gap-3 py-2">
+        <button type="button" @click="$emit('close')" class="btn btn-secondary flex-1 h-12 !rounded-2xl font-extrabold text-sm">
           Batal
         </button>
-        <button type="submit" form="transaction-form" class="btn btn-primary flex-1 h-11" :disabled="isSaving">
+        <button
+          type="submit"
+          form="transaction-form"
+          class="flex-1 h-12 rounded-2xl font-extrabold text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+          :class="type === 'income' ? 'bg-lime text-ink-900 hover:bg-lime/90 shadow-lime/20' : 'bg-coral text-white hover:bg-coral/90 shadow-coral/20'"
+          :disabled="isSaving"
+        >
           <svg v-if="isSaving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          {{ isSaving ? 'Menyimpan...' : (isEditing ? 'Update' : 'Simpan') }}
+          {{ isSaving ? 'Memproses...' : (isEditing ? 'Perbarui Transaksi' : (type === 'income' ? 'Simpan Pemasukan' : 'Simpan Pengeluaran')) }}
         </button>
       </div>
     </template>

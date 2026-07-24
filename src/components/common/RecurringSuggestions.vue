@@ -1,75 +1,72 @@
 <template>
-  <div v-if="suggestions.length > 0" class="card border-l-4 border-l-blue-500">
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex items-center gap-2">
-        <span class="text-lg">🔄</span>
-        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Transaksi Berulang Terdeteksi</h3>
+  <div v-if="suggestions.length > 0" class="card border border-amber-200/60 bg-[#fff7e5] dark:bg-[#d8b866] !text-ink-900 shadow-soft p-4.5">
+    <!-- Card Header (Full Width) -->
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-8 h-8 rounded-xl bg-[#ffd77c] text-amber-950 flex items-center justify-center font-bold text-base flex-shrink-0 shadow-sm">
+        ✦
       </div>
-      <span class="text-xs text-slate-400 dark:text-slate-500">{{ suggestions.length }} ditemukan</span>
+      <div class="min-w-0 flex-1">
+        <strong class="block text-xs font-extrabold text-amber-950 dark:text-ink-900 leading-none">Insight & Transaksi Berulang</strong>
+        <span class="block text-[10px] text-amber-900/80 dark:text-ink-900/70 mt-1">Konfirmasi transaksi rutin otomatis</span>
+      </div>
+      <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-950 dark:bg-ink-900/20 dark:text-ink-900 flex-shrink-0">
+        {{ suggestions.length }} terdeteksi
+      </span>
     </div>
 
-    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
-      Transaksi berikut terlihat berulang. Tandai sebagai recurring agar lebih mudah dilacak.
-    </p>
-
+    <!-- Suggestions List (Full Width, No Indent) -->
     <div class="space-y-2">
       <div
-        v-for="item in suggestions.slice(0, showAll ? undefined : 3)"
+        v-for="item in suggestions.slice(0, showAll ? undefined : 2)"
         :key="item.id"
-        class="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 group"
+        class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/80 dark:bg-ink-900/15 border border-amber-200/40 dark:border-ink-900/10 shadow-sm transition-all hover:bg-white dark:hover:bg-ink-900/25"
       >
-        <!-- Icon -->
-        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0 bg-blue-50 dark:bg-blue-500/10">
-          {{ item.category_icon || '📋' }}
-        </div>
-
-        <!-- Info -->
-        <div class="flex-1 min-w-0">
-          <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{{ item.description }}</p>
-          <div class="flex items-center gap-2 mt-0.5">
-            <span class="text-[10px] text-slate-400 dark:text-slate-500">
-              ~{{ formatCurrency(item.avgAmount) }}
-            </span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 font-medium">
-              {{ getFrequencyLabel(item.frequency) }}
-            </span>
-            <span class="text-[10px] text-slate-400 dark:text-slate-500">
-              {{ item.occurrences }}x
-            </span>
+        <!-- Icon & Description -->
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0 bg-amber-100 dark:bg-ink-900/20 shadow-inner">
+            {{ item.category_icon || '📋' }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-bold text-ink-900 truncate leading-tight">{{ item.description }}</p>
+            <div class="flex items-center gap-1.5 mt-1 text-[10px] text-ink-900/70">
+              <span class="font-extrabold text-ink-900">~{{ formatCurrency(item.avgAmount) }}</span>
+              <span>·</span>
+              <span class="px-1.5 py-0.5 rounded-md bg-amber-200/80 dark:bg-ink-900/20 font-bold text-[9px]">
+                {{ getFrequencyLabel(item.frequency) }}
+              </span>
+              <span>·</span>
+              <span>{{ item.occurrences }}x muncul</span>
+            </div>
           </div>
         </div>
 
-        <!-- Actions -->
-        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-1.5 flex-shrink-0">
           <button
             @click="$emit('mark-recurring', item)"
-            class="p-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-            title="Tandai sebagai recurring"
+            class="px-2.5 py-1.5 rounded-xl bg-ink-900 text-white dark:bg-ink-900 dark:text-lime text-[10px] font-extrabold hover:opacity-90 transition-opacity shadow-sm"
+            title="Tandai sebagai transaksi berulang"
           >
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
+            + Set Recurring
           </button>
           <button
             @click="$emit('dismiss', item.id)"
-            class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 transition-colors"
-            title="Abaikan"
+            class="w-7 h-7 rounded-xl flex items-center justify-center hover:bg-black/10 text-ink-900/60 font-bold text-xs transition-colors"
+            title="Abaikan rekomendasi"
           >
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            ✕
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Show more/less -->
+    <!-- Toggle Show All -->
     <button
-      v-if="suggestions.length > 3"
+      v-if="suggestions.length > 2"
       @click="showAll = !showAll"
-      class="mt-2 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors"
+      class="mt-2.5 text-[11px] font-extrabold text-amber-950 dark:text-ink-900 hover:underline transition-colors block text-center w-full"
     >
-      {{ showAll ? 'Tampilkan lebih sedikit' : `Lihat ${suggestions.length - 3} lainnya` }}
+      {{ showAll ? 'Sembunyikan' : `Lihat ${suggestions.length - 2} rekomendasi lainnya` }}
     </button>
   </div>
 </template>

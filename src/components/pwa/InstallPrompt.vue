@@ -1,57 +1,67 @@
 <template>
   <!-- Install Banner -->
   <Transition
-    enter-active-class="transition-all duration-300 ease-out"
-    enter-from-class="translate-y-full opacity-0"
-    enter-to-class="translate-y-0 opacity-100"
+    enter-active-class="transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1)"
+    enter-from-class="translate-y-10 opacity-0 scale-95"
+    enter-to-class="translate-y-0 opacity-100 scale-100"
     leave-active-class="transition-all duration-200 ease-in"
-    leave-from-class="translate-y-0 opacity-100"
-    leave-to-class="translate-y-full opacity-0"
+    leave-from-class="translate-y-0 opacity-100 scale-100"
+    leave-to-class="translate-y-10 opacity-0 scale-95"
   >
     <div
       v-if="canInstall && !dismissed"
-      class="fixed bottom-20 lg:bottom-4 left-4 right-4 lg:left-auto lg:right-4 lg:w-96 z-50"
+      class="fixed bottom-24 sm:bottom-8 left-4 right-4 sm:left-auto sm:right-8 sm:w-[400px] z-50 pointer-events-auto"
     >
-      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-4">
-        <div class="flex items-start gap-3">
-          <!-- Icon -->
-          <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-          </div>
-
-          <!-- Content -->
-          <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Install DuitKu</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Akses lebih cepat & bisa dipakai offline
-            </p>
-
-            <div class="flex items-center gap-2 mt-3">
-              <button
-                @click="handleInstall"
-                class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors"
-              >
-                Install
-              </button>
-              <button
-                @click="dismiss"
-                class="px-4 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-medium transition-colors"
-              >
-                Nanti
-              </button>
+      <div class="relative bg-surface/95 dark:bg-ink-900/95 backdrop-blur-2xl rounded-3xl border border-ink-900/10 dark:border-white/10 p-5 md:p-6 shadow-2xl space-y-4">
+        <!-- Header Row: Icon, Title, Badge & Close Button -->
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3.5">
+            <!-- Brand Icon -->
+            <div class="w-12 h-12 rounded-2xl bg-lime text-ink-900 flex items-center justify-center font-display font-extrabold text-2xl shadow-md -rotate-2 flex-shrink-0">
+              D
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-display text-base font-extrabold text-ink-900 dark:text-white">Install App DuitKu</h3>
+                <span class="px-2 py-0.5 rounded-full bg-lime/20 text-ink-900 dark:text-lime text-[10px] font-extrabold uppercase tracking-wider">PWA</span>
+              </div>
+              <p class="text-xs text-ink-500 dark:text-slate-400 font-medium">Aplikasi Kas Keuangan</p>
             </div>
           </div>
 
-          <!-- Close -->
+          <!-- Close Button -->
           <button
             @click="dismiss"
-            class="flex-shrink-0 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            class="p-2 rounded-2xl hover:bg-canvas dark:hover:bg-ink-800 text-ink-400 hover:text-ink-900 dark:hover:text-white transition-colors flex-shrink-0"
+            aria-label="Tutup banner install"
           >
-            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
+          </button>
+        </div>
+
+        <!-- Description -->
+        <p class="text-xs text-ink-600 dark:text-slate-300 leading-relaxed bg-canvas/60 dark:bg-ink-800/60 p-3.5 rounded-2xl border border-ink-900/5 dark:border-white/5">
+          Dapatkan akses instan langsung dari layar utama gadget kamu & tetap dapat mencatat keuangan meski tanpa koneksi internet.
+        </p>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-2.5 pt-1">
+          <button
+            @click="handleInstall"
+            class="flex-1 h-11 bg-ink-900 text-white dark:bg-lime dark:text-ink-900 text-xs font-extrabold rounded-2xl shadow-md hover:-translate-y-0.5 hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Install Sekarang
+          </button>
+          <button
+            @click="dismiss"
+            class="h-11 px-4 text-ink-500 dark:text-slate-400 hover:text-ink-900 dark:hover:text-white text-xs font-bold rounded-2xl hover:bg-canvas dark:hover:bg-ink-800 transition-colors"
+          >
+            Nanti saja
           </button>
         </div>
       </div>

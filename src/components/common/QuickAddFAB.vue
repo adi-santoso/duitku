@@ -1,30 +1,34 @@
 <template>
-  <div class="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-40">
+  <div class="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-[55]">
     <!-- Expanded Options -->
     <transition name="fab-expand">
-      <div v-if="isExpanded" class="absolute bottom-16 right-0 space-y-2 mb-2">
+      <div v-if="isExpanded" class="absolute bottom-16 right-0 space-y-2.5 mb-2 z-50">
         <!-- Income -->
         <button
           @click="handleAdd('income')"
-          class="flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all whitespace-nowrap animate-fab-item"
+          class="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-lime text-ink-900 font-extrabold text-xs shadow-lg shadow-lime/20 hover:scale-105 active:scale-95 transition-all whitespace-nowrap animate-fab-item"
           style="animation-delay: 0.05s"
         >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          <span class="text-sm font-semibold">Pemasukan</span>
+          <div class="w-6 h-6 rounded-xl bg-ink-900/10 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+          </div>
+          <span>+ Pemasukan</span>
         </button>
 
         <!-- Expense -->
         <button
           @click="handleAdd('expense')"
-          class="flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/30 hover:bg-red-600 transition-all whitespace-nowrap animate-fab-item"
+          class="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-coral text-white font-extrabold text-xs shadow-lg shadow-coral/20 hover:scale-105 active:scale-95 transition-all whitespace-nowrap animate-fab-item"
           style="animation-delay: 0.1s"
         >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />
-          </svg>
-          <span class="text-sm font-semibold">Pengeluaran</span>
+          <div class="w-6 h-6 rounded-xl bg-white/20 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />
+            </svg>
+          </div>
+          <span>− Pengeluaran</span>
         </button>
       </div>
     </transition>
@@ -33,7 +37,7 @@
     <transition name="fade">
       <div
         v-if="isExpanded"
-        class="fixed inset-0 bg-black/20 backdrop-blur-[1px] -z-10"
+        class="fixed inset-0 bg-ink-900/30 backdrop-blur-[2px] z-40"
         @click="isExpanded = false"
       />
     </transition>
@@ -41,10 +45,11 @@
     <!-- Main FAB Button -->
     <button
       @click="isExpanded = !isExpanded"
-      class="w-14 h-14 rounded-full bg-primary-500 text-white shadow-xl shadow-primary-500/30 hover:bg-primary-600 hover:shadow-primary-500/40 transition-all flex items-center justify-center active:scale-95"
+      class="w-14 h-14 rounded-2xl bg-ink-900 text-white dark:bg-lime dark:text-ink-900 shadow-float border border-white/10 dark:border-ink-900/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
       :class="{ 'rotate-45': isExpanded }"
+      aria-label="Tambah Transaksi Cepat"
     >
-      <svg class="w-6 h-6 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <svg class="w-6 h-6 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
     </button>

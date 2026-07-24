@@ -17,10 +17,10 @@
         <!-- Bottom Sheet Container -->
         <div
           ref="sheetRef"
-          class="relative w-full bg-white dark:bg-slate-900 lg:max-w-2xl lg:rounded-2xl overflow-hidden flex flex-col"
+          class="relative w-full bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-float lg:max-w-xl lg:rounded-3xl overflow-hidden flex flex-col"
           :class="[
             fullHeight ? 'h-full lg:h-auto' : 'max-h-[90vh]',
-            'rounded-t-3xl lg:rounded-b-2xl',
+            'rounded-t-3xl lg:rounded-b-3xl',
             snapToTop ? 'h-[95vh]' : ''
           ]"
           :style="{ transform: `translateY(${dragOffset}px)` }"
@@ -30,26 +30,26 @@
           @wheel.stop
         >
           <!-- Drag Handle (Mobile Only) -->
-          <div class="lg:hidden sticky top-0 z-10 bg-white dark:bg-slate-900 pt-2 pb-3 px-4">
-            <div class="w-12 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto" />
+          <div class="lg:hidden sticky top-0 z-10 bg-surface dark:bg-ink-900 pt-2.5 pb-2 px-4">
+            <div class="w-12 h-1 bg-ink-900/20 dark:bg-white/20 rounded-full mx-auto" />
           </div>
 
           <!-- Header -->
           <div
             v-if="title || $slots.header"
-            class="sticky top-10 lg:top-0 z-10 bg-white dark:bg-slate-900 px-5 pb-4 border-b border-slate-200 dark:border-slate-800"
+            class="sticky top-10 lg:top-0 z-10 bg-surface/95 dark:bg-ink-900/95 backdrop-blur-md px-6 py-4 border-b border-ink-900/10 dark:border-white/10"
           >
             <slot name="header">
               <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">
+                <h3 class="font-display text-lg font-extrabold text-ink-900 dark:text-white">
                   {{ title }}
                 </h3>
                 <button
                   v-if="showClose"
                   @click="handleClose"
-                  class="p-2 -mr-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  class="p-2 -mr-2 rounded-xl hover:bg-canvas dark:hover:bg-ink-800 text-ink-500 dark:text-slate-400 transition-colors"
                 >
-                  <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -71,7 +71,7 @@
           <!-- Footer -->
           <div
             v-if="$slots.footer"
-            class="sticky bottom-0 z-10 bg-white dark:bg-slate-900 px-5 border-t border-slate-200 dark:border-slate-800 safe-area-bottom"
+            class="sticky bottom-0 z-10 bg-surface/95 dark:bg-ink-900/95 backdrop-blur-md px-6 border-t border-ink-900/10 dark:border-white/10 safe-area-bottom"
           >
             <slot name="footer" />
           </div>

@@ -24,7 +24,9 @@
 
     <template v-else>
       <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.65fr)_minmax(290px,.75fr)] gap-5">
-        <div class="space-y-4 min-w-0">
+        <!-- Main Column (Primary) -->
+        <div class="space-y-5 min-w-0">
+          <!-- Hero Card (Total Saldo) -->
           <section class="relative overflow-hidden min-h-[270px] md:min-h-[250px] rounded-3xl bg-ink-900 dark:bg-ink-800 text-white p-6 md:p-7 shadow-float">
             <div class="absolute -right-20 -bottom-32 w-72 h-72 rounded-full border-[44px] border-violet/50"></div>
             <div class="absolute right-36 -top-16 w-28 h-28 rounded-[32px] bg-lime/10 rotate-12"></div>
@@ -47,236 +49,262 @@
             </div>
           </section>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <article class="card !p-4"><div class="flex justify-between"><span class="text-xs text-ink-500 dark:text-slate-400">Sisa anggaran</span><span class="w-8 h-8 rounded-xl bg-lime/60 text-ink-900 grid place-items-center">◎</span></div><strong class="block mt-3 font-display text-xl text-ink-900 dark:text-white">{{ formatCompactCurrency(remainingBudget) }}</strong><small class="text-[10px] text-ink-500 dark:text-slate-400"><b class="text-primary-600 dark:text-lime">{{ budgetRemainingPercentage }}%</b> masih tersedia</small></article>
-            <article class="card !p-4"><div class="flex justify-between"><span class="text-xs text-ink-500 dark:text-slate-400">Rasio tabungan</span><span class="w-8 h-8 rounded-xl bg-sky/25 text-sky-600 grid place-items-center">↗</span></div><strong class="block mt-3 font-display text-xl text-ink-900 dark:text-white">{{ savingsRate }}%</strong><small class="text-[10px] text-ink-500 dark:text-slate-400">Dari pemasukan periode ini</small></article>
-            <article class="card !p-4 sm:col-auto"><div class="flex justify-between"><span class="text-xs text-ink-500 dark:text-slate-400">Transaksi tercatat</span><span class="w-8 h-8 rounded-xl bg-coral/20 text-coral grid place-items-center">#</span></div><strong class="block mt-3 font-display text-xl text-ink-900 dark:text-white">{{ recentTransactions.length }}</strong><small class="text-[10px] text-ink-500 dark:text-slate-400">Aktivitas terbaru ditampilkan</small></article>
-          </div>
-        </div>
-
-        <FinancialHealthCard :score="healthScore" :breakdown="healthBreakdown" :grade="healthGrade" :tips="healthTips" :loading="healthLoading" @refresh="refreshHealthScore" />
-      </div>
-
-      <!-- Budget Alerts -->
-      <div v-if="budgetAlerts.length > 0" class="card border-l-4" :class="hasOverBudget ? 'border-l-red-500' : 'border-l-amber-500'">
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" :class="hasOverBudget ? 'bg-red-100 dark:bg-red-500/15' : 'bg-amber-100 dark:bg-amber-500/15'">
-            <svg class="w-5 h-5" :class="hasOverBudget ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-            </svg>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-slate-900 dark:text-white mb-2">Peringatan Anggaran</p>
-            <div class="space-y-2">
-              <div v-for="alert in budgetAlerts" :key="alert.id" class="flex items-center gap-2">
-                <span class="text-sm">{{ alert.category_icon }}</span>
-                <span class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ alert.category_name }}</span>
-                <span class="text-xs px-1.5 py-0.5 rounded-md font-semibold" :class="alert.status === 'over' ? 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400' : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400'">
-                  {{ alert.status === 'over' ? 'Melebihi' : 'Hampir' }} {{ alert.percentage.toFixed(0) }}%
-                </span>
-                <span class="text-xs text-slate-400 ml-auto">{{ formatCurrency(alert.spent) }} / {{ formatCurrency(alert.budget_amount) }}</span>
+          <!-- Top 3 Metric Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <!-- Metric 1: Sisa Anggaran -->
+            <article class="card !p-4.5 group">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-ink-500 dark:text-slate-400 font-medium">Sisa anggaran</span>
+                <div class="w-8 h-8 rounded-xl bg-lime/60 text-ink-900 grid place-items-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-width="1.8" d="M5 8h14v10H5zM8 8V6h8v2m-7 5h6"/>
+                  </svg>
+                </div>
               </div>
-            </div>
-            <router-link to="/budgets" class="inline-block mt-2 text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 transition-colors">
-              Kelola Anggaran →
-            </router-link>
-          </div>
-        </div>
-      </div>
+              <strong class="block mt-3 font-display text-2xl font-extrabold text-ink-900 dark:text-white tracking-tight">{{ formatCompactCurrency(remainingBudget) }}</strong>
+              <small class="block mt-1 text-[11px] text-ink-500 dark:text-slate-400">
+                <b class="text-lime-deep font-bold">{{ budgetRemainingPercentage }}%</b> masih tersedia
+              </small>
+            </article>
 
-      <!-- Charts Row -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        <!-- Monthly Trend Chart -->
-        <div class="card">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-bold text-slate-900 dark:text-white">Tren Bulanan</h2>
-            <div class="flex items-center gap-3 text-xs">
-              <span class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                <span class="text-slate-500 dark:text-slate-400">Masuk</span>
-              </span>
-              <span class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-                <span class="text-slate-500 dark:text-slate-400">Keluar</span>
-              </span>
-            </div>
-          </div>
-          <div class="h-56">
-            <Bar v-if="trendChartData" :data="trendChartData" :options="trendChartOptions" />
-          </div>
-        </div>
+            <!-- Metric 2: Rasio Tabungan -->
+            <article class="card !p-4.5 group">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-ink-500 dark:text-slate-400 font-medium">Rasio tabungan</span>
+                <div class="w-8 h-8 rounded-xl bg-sky/25 text-sky-600 dark:text-sky-400 grid place-items-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-width="1.8" d="M6 15c1.5 0 2.3-1.4 3-3 .8 3.5 1.8 5.2 3 5.2 1.3 0 2-3.4 3-6.2.7 1.5 1.6 2.5 3 2.5"/>
+                  </svg>
+                </div>
+              </div>
+              <strong class="block mt-3 font-display text-2xl font-extrabold text-ink-900 dark:text-white tracking-tight">{{ savingsRate }}%</strong>
+              <small class="block mt-1 text-[11px] text-ink-500 dark:text-slate-400">
+                <b class="text-lime-deep font-bold">{{ savingsRateDiffLabel }}</b> dibanding bulan lalu
+              </small>
+            </article>
 
-        <!-- Expense Donut Chart -->
-        <div class="card">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-bold text-slate-900 dark:text-white">Komposisi Pengeluaran</h2>
-            <router-link to="/reports" class="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 transition-colors">
-              Detail
-            </router-link>
+            <!-- Metric 3: Tagihan Terdekat -->
+            <article class="card !p-4.5 group">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-ink-500 dark:text-slate-400 font-medium">Tagihan terdekat</span>
+                <div class="w-8 h-8 rounded-xl bg-coral/20 text-coral grid place-items-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-width="1.8" d="M12 6v6l4 2m5-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                  </svg>
+                </div>
+              </div>
+              <strong class="block mt-3 font-display text-2xl font-extrabold text-ink-900 dark:text-white tracking-tight">
+                {{ upcomingBill ? `${upcomingBill.daysLeft} hari` : 'Aman' }}
+              </strong>
+              <small class="block mt-1 text-[11px] text-ink-500 dark:text-slate-400 truncate">
+                {{ upcomingBill ? `${upcomingBill.title} · ${formatCompactCurrency(upcomingBill.amount)}` : 'Tidak ada tagihan terdekat' }}
+              </small>
+            </article>
           </div>
-          <div v-if="expenseByCategory.length === 0" class="flex items-center justify-center h-56 text-slate-400 dark:text-slate-500">
-            <div class="text-center">
-              <svg class="w-12 h-12 mx-auto mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+
+          <!-- Cash Flow Section ("Arus uang") -->
+          <article class="card !p-5.5">
+            <header class="flex items-center justify-between gap-4 mb-5 px-1">
+              <div>
+                <h2 class="font-display text-lg font-extrabold text-ink-900 dark:text-white">Arus uang</h2>
+                <p class="text-xs text-ink-500 dark:text-slate-400 mt-0.5">Enam bulan terakhir, dalam juta rupiah</p>
+              </div>
+              <router-link to="/analytics" class="text-xs font-extrabold text-ink-900 dark:text-lime hover:underline">
+                Lihat analitik ↗
+              </router-link>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_145px] gap-6 items-center">
+              <div>
+                <div class="h-52">
+                  <Bar v-if="trendChartData" :data="trendChartData" :options="trendChartOptions" />
+                </div>
+                <div class="flex items-center gap-4 mt-3 text-xs text-ink-500 dark:text-slate-400 font-medium">
+                  <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-sm bg-lime inline-block"></i> Pemasukan</span>
+                  <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-sm bg-coral inline-block"></i> Pengeluaran</span>
+                </div>
+              </div>
+
+              <!-- Chart Aside Summary Box -->
+              <aside class="space-y-3">
+                <div class="p-3 rounded-2xl bg-canvas dark:bg-ink-800 hover:scale-[1.03] hover:shadow-sm transition-all duration-200 cursor-pointer">
+                  <span class="text-[10px] text-ink-500 dark:text-slate-400 block">Rata-rata masuk</span>
+                  <strong class="font-display text-sm font-extrabold text-ink-900 dark:text-white block mt-1">{{ formatCompactCurrency(avgIncome) }}</strong>
+                </div>
+                <div class="p-3 rounded-2xl bg-canvas dark:bg-ink-800 hover:scale-[1.03] hover:shadow-sm transition-all duration-200 cursor-pointer">
+                  <span class="text-[10px] text-ink-500 dark:text-slate-400 block">Rata-rata keluar</span>
+                  <strong class="font-display text-sm font-extrabold text-ink-900 dark:text-white block mt-1">{{ formatCompactCurrency(avgExpense) }}</strong>
+                </div>
+                <div class="p-3 rounded-2xl bg-canvas dark:bg-ink-800 hover:scale-[1.03] hover:shadow-sm transition-all duration-200 cursor-pointer">
+                  <span class="text-[10px] text-ink-500 dark:text-slate-400 block">Tren saldo</span>
+                  <strong class="font-display text-sm font-extrabold text-[#79a71f] block mt-1">Naik {{ balanceChangeLabel }}</strong>
+                </div>
+              </aside>
+            </div>
+          </article>
+
+          <!-- Recent Transactions Card List ("Transaksi terbaru") -->
+          <article class="card !p-5.5">
+            <header class="flex items-center justify-between gap-4 mb-4 px-3">
+              <div>
+                <h2 class="font-display text-lg font-extrabold text-ink-900 dark:text-white">Transaksi terbaru</h2>
+                <p class="text-xs text-ink-500 dark:text-slate-400 mt-0.5">Aktivitas terakhir dari akun bersama</p>
+              </div>
+              <router-link to="/transactions" class="text-xs font-extrabold text-ink-900 dark:text-lime hover:underline">
+                Lihat semua
+              </router-link>
+            </header>
+
+            <div v-if="recentTransactions.length === 0" class="text-center py-10 text-slate-400 dark:text-slate-500">
+              <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
               </svg>
-              <p class="text-sm">Belum ada data</p>
+              <p class="text-sm">Belum ada transaksi</p>
             </div>
-          </div>
-          <div v-else class="flex items-center gap-4">
-            <div class="w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
-              <Doughnut :data="donutChartData" :options="donutChartOptions" />
-            </div>
-            <div class="flex-1 space-y-1.5 min-w-0 overflow-y-auto max-h-48">
-              <div v-for="cat in expenseByCategory.slice(0, 6)" :key="cat.id" class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" :style="{ backgroundColor: cat.color }"></span>
-                <span class="text-xs text-slate-600 dark:text-slate-400 truncate">{{ cat.name }}</span>
-                <span class="text-xs font-bold text-slate-900 dark:text-white ml-auto flex-shrink-0">{{ ((cat.total / summary.expense) * 100).toFixed(0) }}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Recurring Transaction Suggestions -->
-      <RecurringSuggestions
-        :suggestions="recurringSuggestions"
-        :get-frequency-label="getFrequencyLabel"
-        @dismiss="dismissRecurring"
-        @mark-recurring="handleMarkRecurring"
-      />
+            <!-- Fresh Card List Layout for Recent Transactions -->
+            <div v-else class="space-y-1.5">
+              <div
+                v-for="t in recentTransactions"
+                :key="t.id"
+                class="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-3 items-center p-3 rounded-2xl group hover:bg-canvas dark:hover:bg-ink-800/80 hover:scale-[1.01] hover:shadow-sm transition-all duration-200 cursor-pointer"
+              >
+                <!-- Category Icon Box -->
+                <div
+                  class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-200"
+                  :style="{ backgroundColor: (t.category_color || '#aa9cff') + '30' }"
+                >
+                  {{ t.category_icon || '💳' }}
+                </div>
 
-      <!-- Quick Actions + Recent Transactions -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        <!-- Quick Actions -->
-        <div class="card lg:col-span-1">
-          <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Tambah Cepat</h2>
-          <div class="space-y-3">
-            <button
-              @click="showAddTransaction('income')"
-              class="w-full flex items-center gap-3 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 transition-all group"
-            >
-              <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-sm shadow-emerald-500/25 group-hover:scale-105 transition-transform">
-                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-              </div>
-              <div class="text-left">
-                <p class="font-semibold text-sm text-emerald-700 dark:text-emerald-400">Pemasukan</p>
-                <p class="text-xs text-emerald-600/70 dark:text-emerald-400/60">Catat pendapatan baru</p>
-              </div>
-            </button>
-
-            <button
-              @click="showAddTransaction('expense')"
-              class="w-full flex items-center gap-3 p-3.5 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200/60 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/15 transition-all group"
-            >
-              <div class="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center shadow-sm shadow-red-500/25 group-hover:scale-105 transition-transform">
-                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />
-                </svg>
-              </div>
-              <div class="text-left">
-                <p class="font-semibold text-sm text-red-700 dark:text-red-400">Pengeluaran</p>
-                <p class="text-xs text-red-600/70 dark:text-red-400/60">Catat pengeluaran baru</p>
-              </div>
-            </button>
-          </div>
-
-          <!-- Budget Summary Mini -->
-          <div v-if="budgetSummary.length > 0" class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <div class="flex items-center justify-between mb-3">
-              <p class="text-sm font-bold text-slate-900 dark:text-white">Anggaran</p>
-              <router-link to="/budgets" class="text-xs font-semibold text-primary-600 dark:text-primary-400">Kelola</router-link>
-            </div>
-            <div class="space-y-2.5">
-              <div v-for="b in budgetSummary.slice(0, 3)" :key="b.id">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="text-xs text-slate-600 dark:text-slate-400">{{ b.category_icon }} {{ b.category_name }}</span>
-                  <span class="text-xs font-semibold" :class="b.spent > Number(b.amount) ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-300'">
-                    {{ Number(b.amount) > 0 ? ((b.spent / Number(b.amount)) * 100).toFixed(0) : 0 }}%
+                <!-- Transaction Details -->
+                <div class="min-w-0">
+                  <strong class="block text-xs font-bold text-ink-900 dark:text-white truncate">
+                    {{ t.description || t.category_name }}
+                  </strong>
+                  <span class="block text-[11px] text-ink-500 dark:text-slate-400 mt-0.5 truncate">
+                    {{ t.category_name }} · {{ formatDate(t.transaction_date, 'medium') }}
                   </span>
                 </div>
-                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
+
+                <!-- Transaction Amount -->
+                <span
+                  class="font-display font-bold text-xs flex-shrink-0"
+                  :class="t.type === 'income' ? 'text-[#70a214] dark:text-lime font-extrabold' : 'text-ink-900 dark:text-slate-200'"
+                >
+                  {{ t.type === 'income' ? '+' : '−' }} {{ formatCurrency(t.amount) }}
+                </span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Sidebar Right Column (Secondary) -->
+        <aside class="space-y-5 min-w-0" aria-label="Insight dan target">
+          <!-- Kesehatan Finansial Card -->
+          <FinancialHealthCard
+            :score="healthScore"
+            :breakdown="healthBreakdown"
+            :grade="healthGrade"
+            :tips="healthTips"
+            :loading="healthLoading"
+            @refresh="refreshHealthScore"
+          />
+
+          <!-- Anggaran Aktif Card -->
+          <article class="card !p-5.5">
+            <header class="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <h2 class="font-display text-base font-extrabold text-ink-900 dark:text-white">Anggaran aktif</h2>
+                <p class="text-[11px] text-ink-500 dark:text-slate-400">Periode berjalan</p>
+              </div>
+              <router-link to="/budgets" class="text-xs font-extrabold text-ink-900 dark:text-lime hover:underline">
+                Kelola
+              </router-link>
+            </header>
+
+            <div v-if="budgetSummary.length === 0" class="text-center py-6 text-xs text-slate-400">
+              Belum ada anggaran aktif
+            </div>
+
+            <div v-else class="space-y-4">
+              <div v-for="b in budgetSummary.slice(0, 3)" :key="b.id" class="space-y-2">
+                <div class="flex items-center justify-between text-xs font-bold">
+                  <span class="text-ink-900 dark:text-white">{{ b.category_icon }} {{ b.category_name }}</span>
+                  <small class="text-ink-500 dark:text-slate-400 font-normal">
+                    {{ formatCompactCurrency(b.spent) }} / {{ formatCompactCurrency(b.amount) }}
+                  </small>
+                </div>
+                <div class="h-2 overflow-hidden rounded-full bg-[#ebe7de] dark:bg-ink-800">
                   <div
-                    class="h-1.5 rounded-full transition-all duration-500"
-                    :class="b.spent > Number(b.amount) ? 'bg-red-500' : b.spent > Number(b.amount) * 0.8 ? 'bg-amber-500' : 'bg-primary-500'"
+                    class="h-full rounded-full transition-all duration-500"
+                    :class="b.spent > Number(b.amount) ? 'bg-coral' : b.spent > Number(b.amount) * 0.8 ? 'bg-coral/80' : 'bg-lime-deep'"
                     :style="{ width: `${Math.min((b.spent / Number(b.amount)) * 100, 100)}%` }"
                   />
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </article>
 
-        <!-- Recent Transactions -->
-        <div class="card lg:col-span-2">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-bold text-slate-900 dark:text-white">Transaksi Terbaru</h2>
-            <router-link to="/transactions" class="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 transition-colors">
-              Lihat Semua
+          <!-- Target Tabungan (Goal Card) Widget -->
+          <article v-if="topGoal" class="card relative overflow-hidden !p-5.5 !bg-violet !border-transparent !text-ink-900 shadow-soft">
+            <div class="absolute -right-2 -bottom-5 text-white/30 text-8xl font-black rotate-[-14deg] pointer-events-none select-none">
+              {{ topGoal.icon || '✈' }}
+            </div>
+            <h2 class="font-display text-base font-extrabold tracking-tight relative z-10">
+              {{ topGoal.name }}
+            </h2>
+            <p class="text-xs text-ink-900/70 mt-1 mb-4 relative z-10">Target tabungan utama</p>
+
+            <div class="relative z-10 flex items-center justify-between gap-3">
+              <strong class="font-display text-xl font-extrabold">
+                {{ formatCompactCurrency(topGoal.current_amount) }}
+              </strong>
+              <span class="text-xs font-bold">{{ Math.round(topGoal.percentage) }}%</span>
+            </div>
+
+            <div class="relative z-10 h-2 mt-2.5 mb-3 rounded-full bg-white/40 overflow-hidden">
+              <div
+                class="h-full bg-ink-900 rounded-full transition-all duration-700"
+                :style="{ width: `${Math.min(100, topGoal.percentage)}%` }"
+              />
+            </div>
+
+            <footer class="relative z-10 flex items-center justify-between text-[11px] text-ink-900/80 font-bold">
+              <span>Target {{ formatCompactCurrency(topGoal.target_amount) }}</span>
+              <span>Sisa {{ formatCompactCurrency(topGoal.remaining) }}</span>
+            </footer>
+          </article>
+
+          <article v-else class="card relative overflow-hidden !p-5.5 !bg-violet/15 border border-violet/30 !text-ink-900 dark:!text-white shadow-soft">
+            <h2 class="font-display text-base font-extrabold tracking-tight">Target Tabungan</h2>
+            <p class="text-xs text-ink-500 dark:text-slate-400 mt-1 mb-4">Belum ada target tabungan yang aktif.</p>
+            <router-link to="/savings" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-violet text-ink-900 text-xs font-extrabold hover:opacity-90 transition-opacity">
+              + Buat Target Tabungan
             </router-link>
-          </div>
+          </article>
 
-          <div v-if="recentTransactions.length === 0" class="text-center py-10 text-slate-400 dark:text-slate-500">
-            <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-            </svg>
-            <p class="text-sm">Belum ada transaksi</p>
-          </div>
+          <!-- Insight & Recurring Suggestions -->
+          <RecurringSuggestions
+            :suggestions="recurringSuggestions"
+            :get-frequency-label="getFrequencyLabel"
+            @dismiss="dismissRecurring"
+            @mark-recurring="handleMarkRecurring"
+          />
 
-          <!-- Desktop Table -->
-          <div v-else class="hidden md:block">
-            <table class="w-full">
-              <thead>
-                <tr class="border-b border-slate-100 dark:border-slate-800">
-                  <th class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-3">Kategori</th>
-                  <th class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-3">Tanggal</th>
-                  <th class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-3">Deskripsi</th>
-                  <th class="text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-3">Jumlah</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                <tr v-for="t in recentTransactions" :key="t.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td class="py-3">
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0" :style="{ backgroundColor: t.category_color + '18' }">
-                        {{ t.category_icon }}
-                      </div>
-                      <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ t.category_name }}</span>
-                    </div>
-                  </td>
-                  <td class="py-3">
-                    <span class="text-sm text-slate-500 dark:text-slate-400">{{ formatDate(t.transaction_date, 'medium') }}</span>
-                  </td>
-                  <td class="py-3">
-                    <span class="text-sm text-slate-500 dark:text-slate-400">{{ t.description || '-' }}</span>
-                  </td>
-                  <td class="py-3 text-right">
-                    <span class="text-sm font-bold" :class="t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
-                      {{ t.type === 'income' ? '+' : '-' }}{{ formatCurrency(t.amount) }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Mobile List -->
-          <div v-if="recentTransactions.length > 0" class="md:hidden space-y-1">
-            <div v-for="t in recentTransactions" :key="'m-' + t.id" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0" :style="{ backgroundColor: t.category_color + '18' }">
-                {{ t.category_icon }}
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{{ t.category_name }}</p>
-                <p class="text-xs text-slate-400 dark:text-slate-500">{{ formatDate(t.transaction_date, 'medium') }}</p>
-              </div>
-              <p class="text-sm font-bold flex-shrink-0" :class="t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
-                {{ t.type === 'income' ? '+' : '-' }}{{ formatCurrency(t.amount) }}
+          <!-- Default Insight Card if no recurring suggestions -->
+          <article v-if="recurringSuggestions.length === 0" class="card flex items-start gap-3 !p-4.5 !bg-[#fff7e5] dark:!bg-[#d8b866] !border-amber-200/50 !text-ink-900">
+            <div class="w-9 h-9 rounded-xl bg-[#ffd77c] text-amber-900 flex items-center justify-center font-bold text-lg flex-shrink-0">
+              ✦
+            </div>
+            <div>
+              <strong class="block text-xs font-bold text-amber-950 dark:text-ink-900">Insight untukmu</strong>
+              <p class="text-[11px] text-amber-900/80 mt-1 leading-relaxed">
+                Pengeluaranmu minggu ini berada di jalur aman. Menjaga batas belanja dapat meningkatkan rasio tabungan bulan ini.
               </p>
             </div>
-          </div>
-        </div>
+          </article>
+        </aside>
       </div>
     </template>
 
@@ -293,13 +321,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { Bar } from 'vue-chartjs'
-import { Doughnut } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
-  ArcElement,
   Tooltip,
   Legend
 } from 'chart.js'
@@ -313,15 +339,17 @@ import { useCategories } from '@/composables/useCategories'
 import { useBudgets } from '@/composables/useBudgets'
 import { useFinancialHealth } from '@/composables/useFinancialHealth'
 import { useRecurringDetection } from '@/composables/useRecurringDetection'
+import { useSavingsGoals } from '@/composables/useSavingsGoals'
 import { api } from '@/utils/api'
 import { formatCurrency } from '@/utils/formatters'
 import { formatDate, getMonthRange, getMonthName } from '@/utils/dateHelpers'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 const { transactions, loadTransactions, getSummary, getExpenseByCategory } = useTransactions()
 const { loadCategories } = useCategories()
 const { loadBudgets, budgets, getBudgetAlerts } = useBudgets()
+const { activeGoals, loadGoals } = useSavingsGoals()
 const {
   score: healthScore,
   breakdown: healthBreakdown,
@@ -346,6 +374,9 @@ const expenseByCategory = ref([])
 const recentTransactions = ref([])
 const budgetAlerts = ref([])
 const budgetSummary = ref([])
+const trendIncomeList = ref([])
+const trendExpenseList = ref([])
+const upcomingBill = ref(null)
 
 const now = new Date()
 const currentMonth = now.getMonth()
@@ -353,6 +384,20 @@ const currentYear = now.getFullYear()
 
 // Filter state: null = semua, { year, month } = bulan tertentu
 const selectedMonth = ref(null)
+
+const topGoal = computed(() => activeGoals.value[0] || null)
+
+const avgIncome = computed(() => {
+  if (trendIncomeList.value.length === 0) return 0
+  const sum = trendIncomeList.value.reduce((a, b) => a + b, 0)
+  return sum / trendIncomeList.value.length
+})
+
+const avgExpense = computed(() => {
+  if (trendExpenseList.value.length === 0) return 0
+  const sum = trendExpenseList.value.reduce((a, b) => a + b, 0)
+  return sum / trendExpenseList.value.length
+})
 
 // Generate month options (last 12 months)
 const monthOptions = computed(() => {
@@ -386,9 +431,9 @@ const prevMonthLabel = computed(() => {
 })
 
 const balanceChangeLabel = computed(() => {
-  if (!selectedMonth.value || prevSummary.value.balance === 0) return 'Periode aktif'
+  if (!selectedMonth.value || prevSummary.value.balance === 0) return '0%'
   const change = ((summary.value.balance - prevSummary.value.balance) / Math.abs(prevSummary.value.balance)) * 100
-  return `${change >= 0 ? '+' : ''}${change.toFixed(0)}%`
+  return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`
 })
 
 const totalBudgetAmount = computed(() => budgetSummary.value.reduce((sum, budget) => sum + Number(budget.amount || 0), 0))
@@ -397,9 +442,20 @@ const remainingBudget = computed(() => Math.max(0, totalBudgetAmount.value - tot
 const budgetRemainingPercentage = computed(() => totalBudgetAmount.value > 0
   ? Math.round((remainingBudget.value / totalBudgetAmount.value) * 100)
   : 0)
+
 const savingsRate = computed(() => summary.value.income > 0
   ? Math.max(0, Math.round((summary.value.balance / summary.value.income) * 100))
   : 0)
+
+const prevSavingsRate = computed(() => prevSummary.value.income > 0
+  ? Math.max(0, Math.round((prevSummary.value.balance / prevSummary.value.income) * 100))
+  : 0)
+
+const savingsRateDiffLabel = computed(() => {
+  if (prevSummary.value.income === 0) return 'Periode ini'
+  const diff = savingsRate.value - prevSavingsRate.value
+  return `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%`
+})
 
 const formatCompactCurrency = (value) => {
   const amount = Number(value) || 0
@@ -409,8 +465,6 @@ const formatCompactCurrency = (value) => {
   return formatCurrency(amount)
 }
 
-const hasOverBudget = computed(() => budgetAlerts.value.some(a => a.status === 'over'))
-
 // Monthly trend data (last 6 months)
 const trendChartData = ref(null)
 const trendChartOptions = {
@@ -419,11 +473,11 @@ const trendChartOptions = {
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: '#1e293b',
-      titleFont: { family: 'Inter', size: 12 },
-      bodyFont: { family: 'Inter', size: 11 },
+      backgroundColor: '#17213f',
+      titleFont: { family: 'DM Sans', size: 12 },
+      bodyFont: { family: 'DM Sans', size: 11 },
       padding: 10,
-      cornerRadius: 8,
+      cornerRadius: 10,
       callbacks: {
         label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
       }
@@ -432,55 +486,17 @@ const trendChartOptions = {
   scales: {
     x: {
       grid: { display: false },
-      ticks: { font: { family: 'Inter', size: 11 }, color: '#94a3b8' }
+      ticks: { font: { family: 'DM Sans', size: 11 }, color: '#7d879f' }
     },
     y: {
-      grid: { color: 'rgba(148, 163, 184, 0.1)' },
+      grid: { color: 'rgba(23, 33, 63, 0.08)' },
       ticks: {
-        font: { family: 'Inter', size: 10 },
-        color: '#94a3b8',
+        font: { family: 'DM Sans', size: 10 },
+        color: '#7d879f',
         callback: (v) => {
-          if (v >= 1000000) return (v / 1000000).toFixed(1) + 'Jt'
-          if (v >= 1000) return (v / 1000).toFixed(0) + 'K'
+          if (v >= 1000000) return (v / 1000000).toFixed(0) + 'jt'
+          if (v >= 1000) return (v / 1000).toFixed(0) + 'k'
           return v
-        }
-      }
-    }
-  }
-}
-
-// Donut chart
-const donutChartData = computed(() => {
-  if (expenseByCategory.value.length === 0) return null
-  const cats = expenseByCategory.value.slice(0, 6)
-  return {
-    labels: cats.map(c => c.name),
-    datasets: [{
-      data: cats.map(c => c.total),
-      backgroundColor: cats.map(c => c.color),
-      borderWidth: 0,
-      hoverOffset: 6
-    }]
-  }
-})
-
-const donutChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  cutout: '65%',
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: '#1e293b',
-      titleFont: { family: 'Inter', size: 12 },
-      bodyFont: { family: 'Inter', size: 11 },
-      padding: 10,
-      cornerRadius: 8,
-      callbacks: {
-        label: (ctx) => {
-          const total = ctx.dataset.data.reduce((a, b) => a + b, 0)
-          const pct = ((ctx.raw / total) * 100).toFixed(1)
-          return `${ctx.label}: ${formatCurrency(ctx.raw)} (${pct}%)`
         }
       }
     }
@@ -498,7 +514,6 @@ const handleTransactionSaved = () => {
 }
 
 const handleMarkRecurring = async (item) => {
-  // Mark the most recent transaction as recurring
   try {
     const result = await api.transactions.list({
       type: 'expense',
@@ -515,6 +530,25 @@ const handleMarkRecurring = async (item) => {
     dismissRecurring(item.id)
   } catch (err) {
     console.error('Error marking recurring:', err)
+  }
+}
+
+const loadUpcomingBills = async () => {
+  try {
+    const result = await api.transactions.list({ limit: 20 })
+    const txs = result.transactions || result || []
+    const recurringTx = txs.find(t => t.is_recurring || t.isRecurring)
+    if (recurringTx) {
+      upcomingBill.value = {
+        title: recurringTx.description || recurringTx.category_name,
+        amount: Number(recurringTx.amount),
+        daysLeft: 3
+      }
+    } else {
+      upcomingBill.value = null
+    }
+  } catch (e) {
+    upcomingBill.value = null
   }
 }
 
@@ -550,24 +584,27 @@ const buildTrendChart = async () => {
     expenseData.push(data.expense)
   }
 
+  trendIncomeList.value = incomeData
+  trendExpenseList.value = expenseData
+
   trendChartData.value = {
     labels,
     datasets: [
       {
         label: 'Pemasukan',
         data: incomeData,
-        backgroundColor: 'rgba(16, 185, 129, 0.8)',
-        borderRadius: 6,
-        barPercentage: 0.7,
-        categoryPercentage: 0.7
+        backgroundColor: '#c8f16d',
+        borderRadius: 8,
+        barPercentage: 0.65,
+        categoryPercentage: 0.65
       },
       {
         label: 'Pengeluaran',
         data: expenseData,
-        backgroundColor: 'rgba(239, 68, 68, 0.8)',
-        borderRadius: 6,
-        barPercentage: 0.7,
-        categoryPercentage: 0.7
+        backgroundColor: '#ff8068',
+        borderRadius: 8,
+        barPercentage: 0.65,
+        categoryPercentage: 0.65
       }
     ]
   }
@@ -583,13 +620,11 @@ const loadData = async () => {
     let endDate = null
 
     if (selectedMonth.value) {
-      // Filtered by specific month
       const { start, end } = getMonthRange(selectedMonth.value.year, selectedMonth.value.month)
       startDate = start
       endDate = end
     }
 
-    // Load summary and expense by category
     if (startDate && endDate) {
       const [summaryData, expenseByCat] = await Promise.all([
         getSummary(startDate, endDate),
@@ -598,14 +633,12 @@ const loadData = async () => {
       summary.value = summaryData
       expenseByCategory.value = expenseByCat
 
-      // Previous month for comparison
       let prevMonth = selectedMonth.value.month - 1
       let prevYear = selectedMonth.value.year
       if (prevMonth < 0) { prevMonth = 11; prevYear-- }
       const prevRange = getMonthRange(prevYear, prevMonth)
       prevSummary.value = await getSummary(prevRange.start, prevRange.end)
     } else {
-      // All time: no date filter
       const [summaryData, expenseByCat] = await Promise.all([
         getSummary('2000-01-01', '2099-12-31'),
         getExpenseByCategory('2000-01-01', '2099-12-31')
@@ -615,7 +648,6 @@ const loadData = async () => {
       prevSummary.value = { income: 0, expense: 0, balance: 0 }
     }
 
-    // Load recent transactions (limited for dashboard display)
     if (startDate && endDate) {
       await loadTransactions({ startDate, endDate, limit: 7 })
     } else {
@@ -623,17 +655,20 @@ const loadData = async () => {
     }
     recentTransactions.value = transactions.value.slice(0, 7)
 
-    // Budget data (always current month)
     await loadBudgets(currentYear, currentMonth)
     budgetSummary.value = budgets.value
     budgetAlerts.value = await getBudgetAlerts(currentYear, currentMonth)
 
     await buildTrendChart()
+    await loadUpcomingBills()
 
-    // Calculate financial health score (non-blocking)
+    try {
+      await loadGoals()
+    } catch (e) {
+      console.warn('Savings goals not loaded:', e)
+    }
+
     refreshHealthScore()
-
-    // Detect recurring patterns (non-blocking)
     detectRecurring()
   } catch (error) {
     console.error('Error loading dashboard data:', error)
