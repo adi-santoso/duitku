@@ -1,57 +1,66 @@
 <template>
-  <div class="budget-alert-card" :class="`tier-${alert.tier.toLowerCase()}`">
-    <div class="budget-ring-container">
-      <svg class="progress-ring" viewBox="0 0 120 120">
-        <!-- Background circle -->
+  <div class="p-5 sm:p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft hover:-translate-y-1 hover:shadow-float transition-all duration-300 flex flex-col sm:flex-row items-center gap-5">
+    <!-- SVG Ring Progress -->
+    <div class="relative flex-shrink-0 w-28 h-28">
+      <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
+        <!-- Track circle -->
         <circle
           cx="60"
           cy="60"
-          r="54"
+          r="52"
           fill="none"
-          stroke="#e5e7eb"
-          stroke-width="8"
+          class="stroke-canvas dark:stroke-ink-800"
+          stroke-width="10"
         />
         <!-- Progress circle -->
         <circle
           cx="60"
           cy="60"
-          r="54"
+          r="52"
           fill="none"
-          :stroke="alert.tierColor"
-          stroke-width="8"
+          :stroke="strokeColor"
+          stroke-width="10"
+          stroke-linecap="round"
           :stroke-dasharray="circumference"
           :stroke-dashoffset="progressOffset"
-          transform="rotate(-90 60 60)"
-          class="progress-circle"
+          class="transition-all duration-700 ease-out"
         />
       </svg>
 
-      <div class="ring-center">
-        <span class="category-icon">{{ alert.categoryIcon }}</span>
-        <span class="percentage">{{ alert.percentage }}%</span>
+      <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+        <span class="text-xl leading-none mb-0.5">{{ alert.categoryIcon }}</span>
+        <span class="font-display text-xs font-extrabold text-ink-900 dark:text-white tabular-nums">{{ alert.percentage }}%</span>
       </div>
     </div>
 
-    <div class="budget-content">
-      <h3 class="category-name">{{ alert.categoryName }}</h3>
-
-      <div class="amounts">
-        <p class="spent">{{ formatCurrency(alert.spent) }}</p>
-        <p class="budget-total">dari {{ formatCurrency(alert.budgetAmount) }}</p>
+    <!-- Details -->
+    <div class="flex-1 min-w-0 text-center sm:text-left space-y-2.5 w-full">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <h3 class="font-display text-sm font-extrabold text-ink-900 dark:text-white truncate">{{ alert.categoryName }}</h3>
+        <!-- Tier Badge -->
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider mx-auto sm:mx-0" :class="badgeClass">
+          <span>{{ alert.tierIcon }}</span>
+          <span>{{ alert.tierMessage }}</span>
+        </span>
       </div>
 
-      <div class="tier-badge" :style="{ backgroundColor: alert.tierColor }">
-        <span class="tier-icon">{{ alert.tierIcon }}</span>
-        <span class="tier-message">{{ alert.tierMessage }}</span>
+      <div>
+        <p class="font-display text-lg font-extrabold text-ink-900 dark:text-white">
+          {{ formatCurrency(alert.spent) }}
+        </p>
+        <p class="text-[11px] font-bold text-ink-400 dark:text-slate-400">
+          dari total {{ formatCurrency(alert.budgetAmount) }}
+        </p>
       </div>
 
-      <div v-if="alert.remaining > 0" class="daily-allowance">
-        <p class="allowance-label">Sisa per hari ({{ alert.daysLeft }} hari)</p>
-        <p class="allowance-amount">{{ formatCurrency(alert.dailyAllowance) }}</p>
+      <!-- Sisa Per Hari / Over Budget Chip -->
+      <div v-if="alert.remaining > 0" class="pt-2 border-t border-ink-900/5 dark:border-white/5 flex items-center justify-between text-xs">
+        <span class="text-ink-400 dark:text-slate-400 font-bold">Sisa per hari ({{ alert.daysLeft }}hr)</span>
+        <span class="font-display font-extrabold text-[#70a214] dark:text-lime">{{ formatCurrency(alert.dailyAllowance) }}</span>
       </div>
-
-      <div v-else class="over-budget">
-        <p class="over-amount">Lebih {{ formatCurrency(Math.abs(alert.remaining)) }}</p>
+      <div v-else class="pt-2 border-t border-ink-900/5 dark:border-white/5 flex items-center justify-between text-xs">
+        <span class="text-coral font-bold">Melebihi Anggaran</span>
+        <span class="font-display font-extrabold text-coral">+ {{ formatCurrency(Math.abs(alert.remaining)) }}</span>
       </div>
     </div>
   </div>
@@ -67,10 +76,22 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const circumference = computed(() => 2 * Math.PI * 54)
+const circumference = computed(() => 2 * Math.PI * 52)
 const progressOffset = computed(() => {
-  const progress = Math.min(props.alert.ratio, 1.25) // Cap at 125%
+  const progress = Math.min(props.alert.ratio, 1.25)
   return circumference.value - (progress * circumference.value)
+})
+
+const strokeColor = computed(() => {
+  if (props.alert.ratio > 1) return '#ff8068' // Coral
+  if (props.alert.ratio > 0.8) return '#f59e0b' // Warning Yellow
+  return '#70a214' // Lime Green
+})
+
+const badgeClass = computed(() => {
+  if (props.alert.ratio > 1) return 'bg-coral/20 text-coral'
+  if (props.alert.ratio > 0.8) return 'bg-amber-400/20 text-amber-600 dark:text-amber-400'
+  return 'bg-lime/20 text-ink-900 dark:text-lime'
 })
 
 function formatCurrency(amount: number): string {
@@ -82,223 +103,3 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 </script>
-
-<style scoped>
-.budget-alert-card {
-  display: flex;
-  gap: 1.5rem;
-  padding: 1.5rem;
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  transition: all 0.2s;
-}
-
-.dark .budget-alert-card {
-  background: #1f2937;
-}
-
-.budget-alert-card:hover {
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-}
-
-.budget-ring-container {
-  position: relative;
-  flex-shrink: 0;
-  width: 120px;
-  height: 120px;
-}
-
-.progress-ring {
-  width: 100%;
-  height: 100%;
-}
-
-.progress-circle {
-  transition: stroke-dashoffset 0.5s ease;
-}
-
-.ring-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.category-icon {
-  font-size: 2rem;
-}
-
-.percentage {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.dark .percentage {
-  color: #f3f4f6;
-}
-
-.budget-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.category-name {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.dark .category-name {
-  color: #f3f4f6;
-}
-
-.amounts {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.spent {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
-
-.dark .spent {
-  color: #f3f4f6;
-}
-
-.budget-total {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-.dark .budget-total {
-  color: #9ca3af;
-}
-
-.tier-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  color: white;
-  font-weight: 600;
-  font-size: 0.875rem;
-  width: fit-content;
-}
-
-.tier-icon {
-  font-size: 1rem;
-}
-
-.daily-allowance {
-  margin-top: auto;
-  padding-top: 0.75rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.dark .daily-allowance {
-  border-top-color: #374151;
-}
-
-.allowance-label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin: 0 0 0.25rem 0;
-}
-
-.dark .allowance-label {
-  color: #9ca3af;
-}
-
-.allowance-amount {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #10b981;
-  margin: 0;
-}
-
-.over-budget {
-  margin-top: auto;
-  padding-top: 0.75rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.dark .over-budget {
-  border-top-color: #374151;
-}
-
-.over-amount {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #ef4444;
-  margin: 0;
-}
-
-/* Tier-specific styles */
-.tier-safe {
-  border-left: 4px solid #10b981;
-}
-
-.tier-caution {
-  border-left: 4px solid #f59e0b;
-}
-
-.tier-warning {
-  border-left: 4px solid #f97316;
-}
-
-.tier-exceeded {
-  border-left: 4px solid #ef4444;
-}
-
-.tier-critical {
-  border-left: 4px solid #dc2626;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
-/* Mobile responsive */
-@media (max-width: 640px) {
-  .budget-alert-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .budget-ring-container {
-    width: 100px;
-    height: 100px;
-  }
-
-  .budget-content {
-    align-items: center;
-  }
-
-  .daily-allowance,
-  .over-budget {
-    width: 100%;
-  }
-}
-</style>

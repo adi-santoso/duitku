@@ -1,11 +1,20 @@
 <template>
-  <div class="space-y-4 lg:space-y-6 pb-20 lg:pb-0 animate-fade-in">
-    <!-- Month Selector -->
-    <div class="flex items-center gap-3">
-      <div class="flex-1">
-        <BaseSelect :model-value="selectedMonthIndex" @update:model-value="handleMonthChange">
+  <div class="space-y-6 pb-20 lg:pb-0 animate-fade-in">
+    <!-- Top Header Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="font-display text-2xl font-extrabold text-ink-900 dark:text-white flex items-center gap-2">
+          <span>📊</span>
+          <span>Laporan Keuangan</span>
+        </h1>
+        <p class="text-xs font-medium text-ink-500 dark:text-slate-400">Analisis arus kas, pola transaksi & ringkasan statistik</p>
+      </div>
+
+      <!-- Month Selector Dropdown -->
+      <div class="w-full sm:w-64">
+        <BaseSelect :model-value="selectedMonthIndex" @update:model-value="handleMonthChange" custom-class="!rounded-2xl h-12 !bg-surface dark:!bg-ink-900 !border-ink-900/10 dark:!border-white/10 text-xs font-extrabold text-ink-900 dark:text-white shadow-soft">
           <option v-for="(month, idx) in monthsList" :key="month.label" :value="idx">
-            {{ month.label }}
+            📅 {{ month.label }}
           </option>
         </BaseSelect>
       </div>
@@ -13,7 +22,7 @@
 
     <!-- Loading Skeleton -->
     <template v-if="isLoading">
-      <div class="grid grid-cols-3 gap-3">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <SkeletonCard v-for="i in 3" :key="i" variant="stat" />
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -22,333 +31,413 @@
     </template>
 
     <template v-else>
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-3 gap-3">
-        <div class="card text-center">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Pemasukan</p>
-          <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-            {{ formatNumber(summary.income) }}
-          </p>
-        </div>
-        <div class="card text-center">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Pengeluaran</p>
-          <p class="text-lg font-bold text-red-600 dark:text-red-400">
-            {{ formatNumber(summary.expense) }}
-          </p>
-        </div>
-        <div class="card text-center">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Saldo</p>
-          <p class="text-lg font-bold" :class="summary.balance >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'">
-            {{ formatNumber(summary.balance) }}
-          </p>
-        </div>
-      </div>
+      <!-- Hero Cashflow Overview Banner -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!-- Main Net Balance Hero Card (8 cols) -->
+        <div class="lg:col-span-8 relative overflow-hidden p-6 sm:p-7 rounded-3xl bg-ink-900 text-white dark:bg-lime dark:text-ink-900 shadow-float flex flex-col justify-between">
+          <!-- Background Decorative Circles -->
+          <div class="absolute -right-12 -bottom-16 w-56 h-56 rounded-full border-[32px] opacity-15 pointer-events-none border-white dark:border-ink-900"></div>
+          <div class="absolute -right-4 -top-8 w-28 h-28 rounded-3xl opacity-15 rotate-12 pointer-events-none bg-white dark:bg-ink-900"></div>
 
-      <!-- Charts Row -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        <!-- Expense Donut Chart -->
-        <div class="card">
-          <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Komposisi Pengeluaran</h2>
-
-          <EmptyState
-            v-if="expenseByCategory.length === 0"
-            icon="chart"
-            title="Tidak ada data pengeluaran"
-            description="Tambahkan transaksi pengeluaran untuk melihat komposisi kategori"
-            variant="secondary"
-          />
-
-          <div v-else>
-            <div class="relative h-56 flex items-center justify-center">
-              <Doughnut :data="donutChartData" :options="donutChartOptions" />
+          <div class="relative z-10 space-y-4">
+            <div class="flex items-center justify-between gap-3">
+              <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-white/15 dark:bg-ink-900/15 text-white dark:text-ink-900">
+                ✦ Status Arus Kas Bulan Ini
+              </span>
+              <span
+                class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+                :class="summary.balance >= 0 ? 'bg-lime text-ink-900 dark:bg-ink-900 dark:text-lime' : 'bg-coral text-white'"
+              >
+                {{ summary.balance >= 0 ? '✓ Surplus Sehat' : '⚠️ Defisit' }}
+              </span>
             </div>
-            <!-- Legend -->
-            <div class="mt-4 grid grid-cols-2 gap-2">
-              <div v-for="cat in expenseByCategory.slice(0, 6)" :key="cat.id" class="flex items-center gap-2">
-                <div class="w-3 h-3 rounded-full flex-shrink-0" :style="{ backgroundColor: cat.color }"></div>
-                <span class="text-xs text-slate-600 dark:text-slate-400 truncate">{{ cat.name }}</span>
-                <span class="text-xs font-semibold text-slate-900 dark:text-white ml-auto">{{ Math.round((cat.total / summary.expense) * 100) }}%</span>
+
+            <div>
+              <p class="text-xs font-extrabold uppercase tracking-widest opacity-80">Saldo Netto (Sisa Kas)</p>
+              <h2 class="font-display text-4xl sm:text-5xl font-extrabold tracking-tight mt-1">
+                {{ summary.balance >= 0 ? '+' : '−' }} {{ formatCurrency(Math.abs(summary.balance)) }}
+              </h2>
+            </div>
+
+            <!-- Savings / Income Ratio Visual Bar -->
+            <div class="space-y-1.5 pt-2">
+              <div class="flex justify-between text-xs font-extrabold opacity-90">
+                <span>Rasio Tabungan Bulan Ini</span>
+                <span>{{ summary.income > 0 ? Math.max(0, Math.round((summary.balance / summary.income) * 100)) : 0 }}% Tersimpan</span>
+              </div>
+              <div class="w-full h-3 rounded-full bg-white/20 dark:bg-ink-900/20 overflow-hidden p-0.5">
+                <div
+                  class="h-full rounded-full transition-all duration-700"
+                  :class="summary.balance >= 0 ? 'bg-white dark:bg-ink-900' : 'bg-coral'"
+                  :style="{ width: `${summary.income > 0 ? Math.min(100, Math.max(0, (summary.balance / summary.income) * 100)) : 0}%` }"
+                />
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Monthly Trend Line Chart -->
-        <div class="card">
-          <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Tren 6 Bulan Terakhir</h2>
+        <!-- Sub Cards: Income & Expense (4 cols) -->
+        <div class="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+          <!-- Total Pemasukan Card -->
+          <div class="p-5 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft hover:-translate-y-1 hover:shadow-float transition-all duration-300 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-lime/25 text-ink-900 dark:text-lime flex items-center justify-center font-extrabold text-xl flex-shrink-0">
+              ↑
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">Total Pemasukan</p>
+              <p class="font-display text-xl font-extrabold text-[#70a214] dark:text-lime truncate mt-0.5">
+                {{ formatCurrency(summary.income) }}
+              </p>
+            </div>
+          </div>
 
-          <EmptyState
-            v-if="!trendChartData"
-            icon="chart"
-            title="Tidak ada data trend"
-            description="Tambahkan lebih banyak transaksi untuk melihat tren keuangan"
-            variant="secondary"
-          />
-
-          <div v-else class="h-56">
-            <Line :data="trendChartData" :options="lineChartOptions" />
+          <!-- Total Pengeluaran Card -->
+          <div class="p-5 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft hover:-translate-y-1 hover:shadow-float transition-all duration-300 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-coral/15 text-coral flex items-center justify-center font-extrabold text-xl flex-shrink-0">
+              ↓
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">Total Pengeluaran</p>
+              <p class="font-display text-xl font-extrabold text-coral truncate mt-0.5">
+                {{ formatCurrency(summary.expense) }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Expense by Category Detail -->
-      <div class="card">
-        <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Detail Pengeluaran per Kategori</h2>
+      <!-- Charts & Leaderboard Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Donut Chart & Composition Card (5 cols) -->
+        <div class="lg:col-span-5 p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="font-display text-base font-extrabold text-ink-900 dark:text-white">Komposisi Pengeluaran</h2>
+              <span class="text-xs font-bold text-ink-400 dark:text-slate-500">{{ expenseByCategory.length }} Kategori</span>
+            </div>
 
-        <div v-if="expenseByCategory.length === 0" class="text-center py-8 text-slate-400 dark:text-slate-500">
-          <p class="text-sm">Tidak ada data</p>
+            <EmptyState
+              v-if="expenseByCategory.length === 0"
+              icon="chart"
+              title="Belum ada transaksi"
+              description="Tambahkan pengeluaran bulan ini untuk melihat komposisi"
+              variant="secondary"
+            />
+
+            <div v-else>
+              <div class="relative h-60 flex items-center justify-center my-2">
+                <Doughnut :data="donutChartData" :options="donutChartOptions" />
+                <!-- Centered Donut Label -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400">Total Terpakai</span>
+                  <span class="font-display text-base font-extrabold text-ink-900 dark:text-white">{{ formatCompactNumber(summary.expense) }}</span>
+                </div>
+              </div>
+
+              <!-- Top Legend Grid -->
+              <div class="mt-4 grid grid-cols-2 gap-2">
+                <div v-for="cat in expenseByCategory.slice(0, 4)" :key="cat.id" class="flex items-center gap-2 p-2 rounded-2xl bg-canvas dark:bg-ink-800 border border-ink-900/5 dark:border-white/5">
+                  <div class="w-3 h-3 rounded-full flex-shrink-0" :style="{ backgroundColor: cat.color }"></div>
+                  <span class="text-xs font-bold text-ink-900 dark:text-white truncate flex-1">{{ cat.name }}</span>
+                  <span class="text-xs font-extrabold text-ink-500 dark:text-slate-400">{{ Math.round((cat.total / summary.expense) * 100) }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div v-else class="space-y-3">
-          <div v-for="cat in expenseByCategory" :key="cat.id" class="group">
-            <div class="flex items-center justify-between mb-1.5">
-              <div class="flex items-center gap-2.5">
+        <!-- Ranked Category Leaderboard (7 cols) -->
+        <div class="lg:col-span-7 p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-display text-base font-extrabold text-ink-900 dark:text-white">Leaderboard Pengeluaran Terbesar</h2>
+            <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-canvas dark:bg-ink-800 text-ink-500 dark:text-slate-400 uppercase tracking-wider">Peringkat Kategori</span>
+          </div>
+
+          <div v-if="expenseByCategory.length === 0" class="text-center py-12 text-ink-400 dark:text-slate-500">
+            <p class="text-xs font-bold">Tidak ada data pengeluaran bulan ini</p>
+          </div>
+
+          <div v-else class="space-y-3">
+            <div
+              v-for="(cat, idx) in expenseByCategory"
+              :key="'lb-' + cat.id"
+              class="group p-3 rounded-2xl bg-canvas/60 dark:bg-ink-800/60 hover:bg-canvas dark:hover:bg-ink-800 border border-ink-900/5 dark:border-white/5 transition-all duration-200"
+            >
+              <div class="flex items-center gap-3 mb-2">
+                <!-- Rank Badge -->
+                <span
+                  class="w-6 h-6 rounded-xl flex items-center justify-center font-display text-xs font-extrabold flex-shrink-0"
+                  :class="idx === 0 ? 'bg-coral text-white' : idx === 1 ? 'bg-lime text-ink-900' : 'bg-canvas dark:bg-ink-900 text-ink-500 dark:text-slate-400'"
+                >
+                  #{{ idx + 1 }}
+                </span>
+
+                <!-- Category Icon -->
                 <div
-                  class="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
-                  :style="{ backgroundColor: cat.color + '18' }"
+                  class="w-9 h-9 rounded-2xl flex items-center justify-center text-sm flex-shrink-0 group-hover:scale-110 transition-transform duration-200 shadow-sm"
+                  :style="{ backgroundColor: cat.color + '25' }"
                 >
                   {{ cat.icon }}
                 </div>
-                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ cat.name }}</span>
+
+                <!-- Category Title -->
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-extrabold text-ink-900 dark:text-white truncate">{{ cat.name }}</p>
+                  <p class="text-[10px] font-bold text-ink-400 dark:text-slate-400 truncate">
+                    {{ Math.round((cat.total / summary.expense) * 100) }}% dari total pengeluaran
+                  </p>
+                </div>
+
+                <!-- Amount -->
+                <div class="text-right flex-shrink-0">
+                  <p class="font-display text-xs font-extrabold text-ink-900 dark:text-white">{{ formatCurrency(cat.total) }}</p>
+                </div>
               </div>
-              <div class="text-right">
-                <span class="text-sm font-bold text-slate-900 dark:text-white">{{ formatCurrency(cat.total) }}</span>
-                <span class="text-xs text-slate-400 dark:text-slate-500 ml-2">{{ Math.round((cat.total / summary.expense) * 100) }}%</span>
+
+              <!-- Animated Progress Fill -->
+              <div class="w-full bg-surface dark:bg-ink-900 rounded-full h-2 overflow-hidden">
+                <div
+                  class="h-2 rounded-full transition-all duration-700"
+                  :style="{
+                    width: `${(cat.total / summary.expense) * 100}%`,
+                    backgroundColor: cat.color
+                  }"
+                />
               </div>
-            </div>
-            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-              <div
-                class="h-2 rounded-full transition-all duration-700"
-                :style="{
-                  width: `${(cat.total / summary.expense) * 100}%`,
-                  backgroundColor: cat.color
-                }"
-              />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Spending Patterns -->
-      <div v-if="spendingPatterns" class="card">
-        <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Pola Pengeluaran</h2>
-
-        <!-- Key Insights -->
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Rata-rata/hari</p>
-            <p class="text-sm font-bold text-slate-900 dark:text-white">{{ formatCurrency(spendingPatterns.dailyAverage) }}</p>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Hari terboros</p>
-            <p class="text-sm font-bold text-red-600 dark:text-red-400">{{ spendingPatterns.peakDay?.day }}</p>
+      <!-- Trend Chart Section (Full Width) -->
+      <div class="p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="font-display text-base font-extrabold text-ink-900 dark:text-white">Tren Keuangan 6 Bulan Terakhir</h2>
+            <p class="text-[11px] font-medium text-ink-500 dark:text-slate-400">Perbandingan pergerakan pemasukan & pengeluaran berkala</p>
           </div>
         </div>
 
-        <!-- Day of Week Distribution -->
-        <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Pengeluaran per Hari</p>
-        <div class="space-y-1.5 mb-4">
-          <div v-for="day in spendingPatterns.dayOfWeek" :key="day.dayIndex" class="flex items-center gap-2">
-            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 w-12">{{ day.day.substring(0, 3) }}</span>
-            <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-              <div
-                class="h-2 rounded-full transition-all duration-500"
-                :class="day.dayIndex === spendingPatterns.peakDay?.dayIndex ? 'bg-red-500' : 'bg-blue-400 dark:bg-blue-500'"
-                :style="{ width: `${maxDayTotal > 0 ? (day.total / maxDayTotal) * 100 : 0}%` }"
-              />
+        <EmptyState
+          v-if="!trendChartData"
+          icon="chart"
+          title="Tidak ada data tren"
+          description="Tambahkan transaksi berkala untuk mengaktifkan grafik tren"
+          variant="secondary"
+        />
+
+        <div v-else class="h-64 sm:h-72">
+          <Line :data="trendChartData" :options="lineChartOptions" />
+        </div>
+      </div>
+
+      <!-- Financial Habits & Spending Patterns Grid -->
+      <div v-if="spendingPatterns" class="p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-display text-base font-extrabold text-ink-900 dark:text-white">Pola & Kebiasaan Transaksi</h2>
+            <p class="text-[11px] font-medium text-ink-500 dark:text-slate-400">Deteksi kebiasaan belanja harian & tren pengeluaran</p>
+          </div>
+        </div>
+
+        <!-- Key Insights Grid Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Card 1: Rata-rata Harian -->
+          <div class="p-4.5 rounded-2xl bg-canvas/70 dark:bg-ink-800/70 border border-ink-900/5 dark:border-white/5 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-lime/25 text-ink-900 dark:text-lime flex items-center justify-center text-lg flex-shrink-0">
+              📅
             </div>
-            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 w-16 text-right">{{ formatCompactNumber(day.total) }}</span>
-          </div>
-        </div>
-
-        <!-- Period Analysis -->
-        <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Distribusi per Periode</p>
-        <div class="space-y-2 mb-4">
-          <div v-for="period in spendingPatterns.periodAnalysis" :key="period.label" class="flex items-center gap-2">
-            <span class="text-[11px] text-slate-500 dark:text-slate-400 w-28 flex-shrink-0">{{ period.label }}</span>
-            <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-              <div
-                class="h-2 rounded-full bg-purple-400 dark:bg-purple-500 transition-all duration-500"
-                :style="{ width: `${period.percentage}%` }"
-              />
+            <div>
+              <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">Rata-rata/Hari</p>
+              <p class="font-display text-sm font-extrabold text-ink-900 dark:text-white mt-0.5">{{ formatCurrency(spendingPatterns.dailyAverage) }}</p>
             </div>
-            <span class="text-[10px] font-bold text-slate-600 dark:text-slate-400 w-8 text-right">{{ period.percentage }}%</span>
+          </div>
+
+          <!-- Card 2: Hari Terboros -->
+          <div class="p-4.5 rounded-2xl bg-canvas/70 dark:bg-ink-800/70 border border-ink-900/5 dark:border-white/5 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-coral/20 text-coral flex items-center justify-center text-lg flex-shrink-0">
+              🔥
+            </div>
+            <div>
+              <p class="text-[10px] font-extrabold uppercase tracking-wider text-coral">Hari Terboros</p>
+              <p class="font-display text-sm font-extrabold text-coral mt-0.5">{{ spendingPatterns.peakDay?.day || 'TBA' }}</p>
+            </div>
+          </div>
+
+          <!-- Card 3: Status Pola -->
+          <div class="p-4.5 rounded-2xl bg-canvas/70 dark:bg-ink-800/70 border border-ink-900/5 dark:border-white/5 flex items-center gap-3 sm:col-span-2 lg:col-span-1">
+            <div class="w-10 h-10 rounded-2xl bg-violet/20 text-violet dark:text-lime flex items-center justify-center text-lg flex-shrink-0">
+              ⚡
+            </div>
+            <div>
+              <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">Status Konsumsi</p>
+              <p class="font-display text-sm font-extrabold text-ink-900 dark:text-white mt-0.5">
+                {{ summary.income > 0 && summary.expense > summary.income ? 'Pengeluaran Tinggi' : 'Terkendali Safe' }}
+              </p>
+            </div>
           </div>
         </div>
 
-        <!-- Category Trends -->
-        <div v-if="spendingPatterns.categoryTrends.length > 0">
-          <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Tren Kategori (vs bulan lalu)</p>
-          <div class="space-y-1.5">
-            <div
-              v-for="trend in spendingPatterns.categoryTrends.slice(0, 5)"
-              :key="trend.categoryId"
-              class="flex items-center gap-2 py-1"
-            >
-              <span class="text-base">{{ trend.categoryIcon }}</span>
-              <span class="text-xs text-slate-600 dark:text-slate-400 flex-1 truncate">{{ trend.categoryName }}</span>
-              <span
-                class="text-xs font-bold px-1.5 py-0.5 rounded"
-                :class="{
-                  'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10': trend.direction === 'up',
-                  'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10': trend.direction === 'down',
-                  'text-slate-500 bg-slate-100 dark:bg-slate-800': trend.direction === 'stable',
-                  'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10': trend.direction === 'new',
-                }"
-              >
-                {{ trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : trend.direction === 'new' ? 'Baru' : '→' }}
-                {{ trend.direction !== 'new' && trend.direction !== 'stable' ? Math.abs(trend.change) + '%' : '' }}
-              </span>
+        <!-- Day of Week Histogram & Period Distribution -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+          <!-- Day of Week Distribution -->
+          <div class="space-y-3">
+            <p class="text-xs font-extrabold uppercase tracking-wider text-ink-500 dark:text-slate-400">Intensitas Pengeluaran per Hari</p>
+            <div class="space-y-2">
+              <div v-for="day in spendingPatterns.dayOfWeek" :key="day.dayIndex" class="flex items-center gap-3">
+                <span class="text-[11px] font-extrabold text-ink-500 dark:text-slate-400 w-10 flex-shrink-0">{{ day.day.substring(0, 3) }}</span>
+                <div class="flex-1 bg-canvas dark:bg-ink-800 rounded-full h-3 overflow-hidden">
+                  <div
+                    class="h-3 rounded-full transition-all duration-500"
+                    :class="day.dayIndex === spendingPatterns.peakDay?.dayIndex ? 'bg-coral' : 'bg-lime dark:bg-lime-deep'"
+                    :style="{ width: `${maxDayTotal > 0 ? (day.total / maxDayTotal) * 100 : 0}%` }"
+                  />
+                </div>
+                <span class="text-[11px] font-extrabold text-ink-900 dark:text-white w-16 text-right tabular-nums">{{ formatCompactNumber(day.total) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Period Distribution -->
+          <div class="space-y-3">
+            <p class="text-xs font-extrabold uppercase tracking-wider text-ink-500 dark:text-slate-400">Distribusi per Periode Waktu</p>
+            <div class="space-y-2.5">
+              <div v-for="period in spendingPatterns.periodAnalysis" :key="period.label" class="flex items-center gap-3 p-2 rounded-2xl bg-canvas/60 dark:bg-ink-800/60">
+                <span class="text-[11px] font-bold text-ink-500 dark:text-slate-400 w-28 flex-shrink-0 truncate">{{ period.label }}</span>
+                <div class="flex-1 bg-surface dark:bg-ink-900 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    class="h-2.5 rounded-full bg-violet transition-all duration-500"
+                    :style="{ width: `${period.percentage}%` }"
+                  />
+                </div>
+                <span class="text-[11px] font-extrabold text-ink-900 dark:text-white w-10 text-right">{{ period.percentage }}%</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Monthly Comparison Table (with category breakdown) -->
-      <div class="card">
-        <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Perbandingan Bulanan</h2>
-        <div class="space-y-0 divide-y divide-slate-100 dark:divide-slate-800">
-          <div v-for="(month, idx) in comparisonData" :key="month.label" class="py-3 first:pt-0 last:pb-0">
+      <!-- Monthly Comparison Timeline Card -->
+      <div class="p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft">
+        <h2 class="font-display text-base font-extrabold text-ink-900 dark:text-white mb-4">Perbandingan Bulanan & Riwayat Trend</h2>
+        <div class="space-y-0 divide-y divide-ink-900/5 dark:divide-white/5">
+          <div v-for="(month, idx) in comparisonData" :key="month.label" class="py-3.5 first:pt-0 last:pb-0">
             <div class="flex items-center justify-between mb-2">
-              <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ month.label }}</p>
+              <p class="font-display text-xs font-extrabold text-ink-900 dark:text-white">{{ month.label }}</p>
               <button
                 @click="toggleMonthDetail(idx)"
-                class="text-[10px] font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 transition-colors"
+                class="px-3 py-1 rounded-xl text-[10px] font-extrabold bg-canvas dark:bg-ink-800 text-ink-900 dark:text-white hover:bg-lime hover:text-ink-900 transition-all"
               >
-                {{ expandedMonthIdx === idx ? 'Tutup' : 'Detail' }}
+                {{ expandedMonthIdx === idx ? 'Tutup Detail' : 'Lihat Detail' }}
               </button>
             </div>
             <div class="grid grid-cols-3 gap-3">
               <div>
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Pemasukan</p>
-                <p class="text-sm font-bold text-emerald-600 dark:text-emerald-400">{{ formatCurrency(month.income) }}</p>
+                <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400 mb-0.5">Pemasukan</p>
+                <p class="font-display text-xs font-extrabold text-[#70a214] dark:text-lime">{{ formatCurrency(month.income) }}</p>
               </div>
               <div>
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Pengeluaran</p>
-                <p class="text-sm font-bold text-red-600 dark:text-red-400">{{ formatCurrency(month.expense) }}</p>
+                <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400 mb-0.5">Pengeluaran</p>
+                <p class="font-display text-xs font-extrabold text-coral">{{ formatCurrency(month.expense) }}</p>
               </div>
               <div>
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Saldo</p>
-                <p class="text-sm font-bold" :class="month.balance >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'">
+                <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400 mb-0.5">Saldo</p>
+                <p class="font-display text-xs font-extrabold" :class="month.balance >= 0 ? 'text-ink-900 dark:text-white' : 'text-coral'">
                   {{ formatCurrency(month.balance) }}
                 </p>
               </div>
             </div>
-            <!-- Visual bar comparison -->
-            <div class="mt-2 flex gap-1.5 h-2 rounded-full overflow-hidden">
-              <div
-                class="bg-emerald-400 dark:bg-emerald-500 rounded-full transition-all duration-500"
-                :style="{ width: month.income > 0 || month.expense > 0 ? `${(month.income / Math.max(month.income + month.expense, 1)) * 100}%` : '50%' }"
-              />
-              <div
-                class="bg-red-400 dark:bg-red-500 rounded-full transition-all duration-500"
-                :style="{ width: month.income > 0 || month.expense > 0 ? `${(month.expense / Math.max(month.income + month.expense, 1)) * 100}%` : '50%' }"
-              />
-            </div>
 
             <!-- Expanded Category Breakdown -->
-            <div v-if="expandedMonthIdx === idx" class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 animate-fade-in">
+            <div v-if="expandedMonthIdx === idx" class="mt-3 pt-3 border-t border-ink-900/5 dark:border-white/5 animate-fade-in">
               <div v-if="monthDetailLoading" class="text-center py-3">
-                <span class="text-xs text-slate-400">Memuat detail...</span>
+                <span class="text-xs font-bold text-ink-400">Memuat detail...</span>
               </div>
               <div v-else-if="monthDetailData.length > 0" class="space-y-2">
-                <div v-for="cat in monthDetailData" :key="cat.id" class="flex items-center gap-2">
+                <div v-for="cat in monthDetailData" :key="cat.id" class="flex items-center gap-2 p-2 rounded-2xl bg-canvas/60 dark:bg-ink-800/60">
                   <span class="text-sm">{{ cat.icon }}</span>
-                  <span class="text-xs text-slate-600 dark:text-slate-400 flex-1 truncate">{{ cat.name }}</span>
-                  <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ formatCurrency(cat.total) }}</span>
-                  <span
-                    v-if="cat.change !== null"
-                    class="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                    :class="{
-                      'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-500/10': cat.change > 10,
-                      'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10': cat.change < -10,
-                      'text-slate-500 bg-slate-100 dark:bg-slate-800': cat.change >= -10 && cat.change <= 10,
-                    }"
-                  >
-                    {{ cat.change > 0 ? '+' : '' }}{{ cat.change }}%
-                  </span>
+                  <span class="text-xs font-bold text-ink-900 dark:text-white flex-1 truncate">{{ cat.name }}</span>
+                  <span class="font-display text-xs font-extrabold text-ink-900 dark:text-white">{{ formatCurrency(cat.total) }}</span>
                 </div>
-              </div>
-              <div v-else class="text-center py-2">
-                <span class="text-xs text-slate-400">Tidak ada data pengeluaran</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <!-- Year-in-Review -->
-      <div class="card">
+
+      <!-- Year-in-Review Showcase Card -->
+      <div class="p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-base font-bold text-slate-900 dark:text-white">Ringkasan Tahunan</h2>
+          <div>
+            <h2 class="font-display text-base font-extrabold text-ink-900 dark:text-white">Ringkasan Tahunan Showcase</h2>
+            <p class="text-[11px] font-medium text-ink-500 dark:text-slate-400">Evaluasi performa finansial secara keseluruhan</p>
+          </div>
           <BaseSelect
             v-model="reviewYear"
             @update:modelValue="loadYearReview"
             size="sm"
+            custom-class="!rounded-xl !bg-canvas dark:!bg-ink-800 !border-ink-900/10 text-xs font-bold"
           >
             <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
           </BaseSelect>
         </div>
 
         <div v-if="yearReviewLoading" class="text-center py-8">
-          <div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div class="w-8 h-8 border-2 border-lime border-t-transparent rounded-full animate-spin mx-auto"></div>
         </div>
 
         <div v-else-if="yearReview">
-          <!-- Key Stats -->
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-0.5">Total Pemasukan</p>
-              <p class="text-sm font-bold text-emerald-700 dark:text-emerald-300">{{ formatCurrency(yearReview.totalIncome) }}</p>
+          <!-- Key Stats Grid -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+            <div class="p-4 rounded-2xl bg-lime/15 dark:bg-lime/10 border border-lime/20">
+              <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-900 dark:text-lime mb-1">Total Pemasukan</p>
+              <p class="font-display text-sm font-extrabold text-[#70a214] dark:text-lime truncate">{{ formatCurrency(yearReview.totalIncome) }}</p>
             </div>
-            <div class="p-3 rounded-xl bg-red-50 dark:bg-red-500/10">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400 mb-0.5">Total Pengeluaran</p>
-              <p class="text-sm font-bold text-red-700 dark:text-red-300">{{ formatCurrency(yearReview.totalExpense) }}</p>
+            <div class="p-4 rounded-2xl bg-coral/15 dark:bg-coral/10 border border-coral/20">
+              <p class="text-[10px] font-extrabold uppercase tracking-wider text-coral mb-1">Total Pengeluaran</p>
+              <p class="font-display text-sm font-extrabold text-coral truncate">{{ formatCurrency(yearReview.totalExpense) }}</p>
             </div>
-            <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-500/10">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-0.5">Total Ditabung</p>
-              <p class="text-sm font-bold text-blue-700 dark:text-blue-300">{{ formatCurrency(yearReview.totalSaved) }}</p>
+            <div class="p-4 rounded-2xl bg-canvas dark:bg-ink-800 border border-ink-900/5 dark:border-white/5">
+              <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400 mb-1">Total Ditabung</p>
+              <p class="font-display text-sm font-extrabold text-ink-900 dark:text-white truncate">{{ formatCurrency(yearReview.totalSaved) }}</p>
             </div>
-            <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/10">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-0.5">Rasio Tabungan</p>
-              <p class="text-sm font-bold text-purple-700 dark:text-purple-300">{{ yearReview.savingsRate }}%</p>
-            </div>
-          </div>
-
-          <!-- Highlights -->
-          <div class="space-y-2 mb-4">
-            <div v-if="yearReview.bestMonth" class="flex items-center gap-2 text-xs">
-              <span class="text-emerald-500">🏆</span>
-              <span class="text-slate-600 dark:text-slate-400">Bulan terbaik:</span>
-              <span class="font-bold text-slate-700 dark:text-slate-300">{{ yearReview.bestMonth.label }}</span>
-            </div>
-            <div v-if="yearReview.highestExpenseMonth" class="flex items-center gap-2 text-xs">
-              <span class="text-red-500">💸</span>
-              <span class="text-slate-600 dark:text-slate-400">Pengeluaran tertinggi:</span>
-              <span class="font-bold text-slate-700 dark:text-slate-300">{{ yearReview.highestExpenseMonth.label }} ({{ formatCurrency(yearReview.highestExpenseMonth.expense) }})</span>
-            </div>
-            <div class="flex items-center gap-2 text-xs">
-              <span>📝</span>
-              <span class="text-slate-600 dark:text-slate-400">Total transaksi:</span>
-              <span class="font-bold text-slate-700 dark:text-slate-300">{{ yearReview.totalTransactions }}</span>
+            <div class="p-4 rounded-2xl bg-canvas dark:bg-ink-800 border border-ink-900/5 dark:border-white/5">
+              <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400 mb-1">Rasio Tabungan</p>
+              <p class="font-display text-sm font-extrabold text-violet dark:text-lime truncate">{{ yearReview.savingsRate }}%</p>
             </div>
           </div>
 
-          <!-- Top Categories -->
-          <div v-if="yearReview.topCategories.length > 0">
-            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Top Kategori Pengeluaran</p>
-            <div class="space-y-1.5">
-              <div v-for="(cat, i) in yearReview.topCategories" :key="cat.id" class="flex items-center gap-2">
-                <span class="text-[10px] font-bold text-slate-400 w-4">{{ i + 1 }}</span>
-                <span class="text-sm">{{ cat.icon }}</span>
-                <span class="text-xs text-slate-600 dark:text-slate-400 flex-1">{{ cat.name }}</span>
-                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ formatCurrency(cat.total) }}</span>
+          <!-- Highlights & Top Categories -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <div v-if="yearReview.bestMonth" class="flex items-center gap-2.5 text-xs p-3 rounded-2xl bg-canvas/60 dark:bg-ink-800/60">
+                <span class="text-base">🏆</span>
+                <span class="text-ink-500 dark:text-slate-400 font-bold">Bulan Terbaik:</span>
+                <span class="font-extrabold text-ink-900 dark:text-white ml-auto">{{ yearReview.bestMonth.label }}</span>
+              </div>
+              <div v-if="yearReview.highestExpenseMonth" class="flex items-center gap-2.5 text-xs p-3 rounded-2xl bg-canvas/60 dark:bg-ink-800/60">
+                <span class="text-base">💸</span>
+                <span class="text-ink-500 dark:text-slate-400 font-bold">Pengeluaran Tertinggi:</span>
+                <span class="font-extrabold text-coral ml-auto">{{ yearReview.highestExpenseMonth.label }} ({{ formatCurrency(yearReview.highestExpenseMonth.expense) }})</span>
+              </div>
+            </div>
+
+            <div v-if="yearReview.topCategories.length > 0">
+              <p class="text-xs font-extrabold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">Top Kategori Tahunan</p>
+              <div class="space-y-1.5">
+                <div v-for="(cat, i) in yearReview.topCategories.slice(0, 3)" :key="'yr-' + cat.id" class="flex items-center gap-2.5 p-2.5 rounded-2xl bg-canvas/60 dark:bg-ink-800/60">
+                  <span class="text-[10px] font-extrabold text-ink-400 w-4">#{{ i + 1 }}</span>
+                  <span class="text-base">{{ cat.icon }}</span>
+                  <span class="text-xs font-bold text-ink-900 dark:text-white flex-1 truncate">{{ cat.name }}</span>
+                  <span class="font-display text-xs font-extrabold text-ink-900 dark:text-white">{{ formatCurrency(cat.total) }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div v-else class="text-center py-6 text-slate-400 dark:text-slate-500">
-          <p class="text-sm">Belum ada data untuk tahun ini</p>
+        <div v-else class="text-center py-6 text-ink-400 dark:text-slate-500">
+          <p class="text-xs font-bold">Belum ada data untuk tahun ini</p>
         </div>
       </div>
     </template>
@@ -557,18 +646,18 @@ const buildTrendChart = (comparisons) => {
       {
         label: 'Pemasukan',
         data: comparisons.map(c => c.income).reverse(),
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.08)',
+        borderColor: '#70a214',
+        backgroundColor: 'rgba(200, 241, 109, 0.2)',
         fill: true,
-        borderWidth: 2
+        borderWidth: 2.5
       },
       {
         label: 'Pengeluaran',
         data: comparisons.map(c => c.expense).reverse(),
-        borderColor: '#ef4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+        borderColor: '#ff8068',
+        backgroundColor: 'rgba(255, 128, 104, 0.15)',
         fill: true,
-        borderWidth: 2
+        borderWidth: 2.5
       }
     ]
   }

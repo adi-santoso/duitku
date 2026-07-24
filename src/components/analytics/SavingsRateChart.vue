@@ -1,26 +1,33 @@
 <template>
-  <div class="savings-rate-chart">
-    <div class="chart-header">
-      <h3 class="chart-title">📈 Savings Rate Timeline</h3>
-      <p class="chart-subtitle">
-        Rata-rata: <strong>{{ data.avgSavingsRate.toFixed(1) }}%</strong>
-        • Target: <strong>{{ data.targetRate }}%</strong>
-      </p>
+  <div class="p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div>
+        <h3 class="font-display text-base font-extrabold text-ink-900 dark:text-white flex items-center gap-2">
+          <span>📈</span>
+          <span>Timeline Savings Rate (%)</span>
+        </h3>
+        <p class="text-xs font-medium text-ink-500 dark:text-slate-400">
+          Rata-rata: <strong class="text-ink-900 dark:text-white font-extrabold">{{ data.avgSavingsRate.toFixed(1) }}%</strong>
+          • Target: <strong class="text-coral font-extrabold">{{ data.targetRate }}%</strong>
+        </p>
+      </div>
+
+      <!-- Legend Pills -->
+      <div class="flex items-center gap-3 text-xs font-bold text-ink-500 dark:text-slate-400">
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-lime"></span>
+          <span>Savings Rate</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-0.5 border-b-2 border-dashed border-coral"></span>
+          <span>Target ({{ data.targetRate }}%)</span>
+        </div>
+      </div>
     </div>
 
-    <div class="chart-container">
+    <!-- Chart Container -->
+    <div class="h-64 sm:h-72">
       <Line :data="chartData" :options="chartOptions" />
-    </div>
-
-    <div class="legend">
-      <div class="legend-item">
-        <span class="legend-color" style="background-color: #10b981"></span>
-        <span>Savings Rate</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-color dashed" style="background-color: #ef4444"></span>
-        <span>Target ({{ data.targetRate }}%)</span>
-      </div>
     </div>
   </div>
 </template>
@@ -55,17 +62,18 @@ const chartData = computed(() => ({
     {
       label: 'Savings Rate (%)',
       data: props.data.history.map((h) => h.savingsRate),
-      borderColor: '#10b981',
-      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      borderColor: '#70a214',
+      backgroundColor: 'rgba(200, 241, 109, 0.2)',
       fill: true,
       tension: 0.4,
+      borderWidth: 2.5,
       pointRadius: 4,
       pointHoverRadius: 6,
     },
     {
       label: 'Target',
       data: props.data.history.map(() => props.data.targetRate),
-      borderColor: '#ef4444',
+      borderColor: '#ff8068',
       borderDash: [5, 5],
       borderWidth: 2,
       pointRadius: 0,
@@ -82,6 +90,11 @@ const chartOptions = computed(() => ({
       display: false,
     },
     tooltip: {
+      backgroundColor: '#0c131d',
+      titleFont: { size: 12 },
+      bodyFont: { size: 11 },
+      padding: 10,
+      cornerRadius: 8,
       callbacks: {
         label: (context: any) => {
           const label = context.dataset.label || ''
@@ -92,7 +105,7 @@ const chartOptions = computed(() => ({
           if (label === 'Savings Rate (%)') {
             return [
               `${label}: ${value}%`,
-              `Saved: ${formatCurrency(saved)}`,
+              `Tersimpan: ${formatCurrency(saved)}`,
             ]
           }
           return `${label}: ${value}%`
@@ -104,13 +117,16 @@ const chartOptions = computed(() => ({
     y: {
       beginAtZero: true,
       ticks: {
+        font: { size: 11 },
+        color: '#94a3b8',
         callback: (value: any) => value + '%',
       },
       grid: {
-        color: 'rgba(0, 0, 0, 0.05)',
+        color: 'rgba(255, 255, 255, 0.05)',
       },
     },
     x: {
+      ticks: { font: { size: 11 }, color: '#94a3b8' },
       grid: {
         display: false,
       },
@@ -127,86 +143,3 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 </script>
-
-<style scoped>
-.savings-rate-chart {
-  padding: 1.5rem;
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-}
-
-.dark .savings-rate-chart {
-  background: #1f2937;
-}
-
-.chart-header {
-  margin-bottom: 1.5rem;
-}
-
-.chart-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 0.5rem 0;
-}
-
-.dark .chart-title {
-  color: #f3f4f6;
-}
-
-.chart-subtitle {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-.dark .chart-subtitle {
-  color: #9ca3af;
-}
-
-.chart-container {
-  height: 300px;
-  margin-bottom: 1rem;
-}
-
-.legend {
-  display: flex;
-  gap: 1.5rem;
-  justify-content: center;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.dark .legend-item {
-  color: #9ca3af;
-}
-
-.legend-color {
-  width: 1.5rem;
-  height: 0.25rem;
-  border-radius: 9999px;
-}
-
-.legend-color.dashed {
-  background: repeating-linear-gradient(
-    to right,
-    currentColor 0,
-    currentColor 5px,
-    transparent 5px,
-    transparent 10px
-  );
-}
-
-@media (max-width: 640px) {
-  .chart-container {
-    height: 250px;
-  }
-}
-</style>

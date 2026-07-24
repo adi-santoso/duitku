@@ -1,52 +1,57 @@
 <template>
-  <div class="forecast-chart">
-    <div class="chart-header">
-      <h3 class="chart-title">🔮 Cashflow Forecast</h3>
-      <p class="chart-subtitle">Proyeksi {{ data.forecast.length }} bulan ke depan</p>
+  <div class="p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft space-y-5">
+    <div>
+      <h3 class="font-display text-base font-extrabold text-ink-900 dark:text-white flex items-center gap-2">
+        <span>🔮</span>
+        <span>Proyeksi Arus Kas (Cashflow Forecast)</span>
+      </h3>
+      <p class="text-xs font-medium text-ink-500 dark:text-slate-400">Prediksi tren {{ data.forecast.length }} bulan ke depan berdasarkan algoritma historis</p>
     </div>
 
     <!-- Alerts -->
-    <div v-if="data.alerts.length > 0" class="alerts">
-      <div v-for="(alert, index) in data.alerts" :key="index" class="alert-item">
-        <span class="alert-icon">⚠️</span>
+    <div v-if="data.alerts.length > 0" class="space-y-2">
+      <div v-for="(alert, index) in data.alerts" :key="index" class="p-3.5 rounded-2xl bg-amber-400/15 border border-amber-400/20 flex items-center gap-3 text-xs text-amber-600 dark:text-amber-400 font-bold">
+        <span class="text-base">⚠️</span>
         <p>{{ alert.message }} di bulan {{ alert.month }}</p>
       </div>
     </div>
 
     <!-- Chart -->
-    <div class="chart-container">
+    <div class="h-64 sm:h-72">
       <Line :data="chartData" :options="chartOptions" />
     </div>
 
     <!-- Forecast Table -->
-    <div class="forecast-table">
-      <h4 class="table-title">Detail Proyeksi</h4>
-      <div class="table-responsive">
-        <table>
+    <div class="space-y-3 pt-2 border-t border-ink-900/5 dark:border-white/5">
+      <h4 class="text-xs font-extrabold uppercase tracking-wider text-ink-500 dark:text-slate-400">Detail Rincian Proyeksi</h4>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
           <thead>
-            <tr>
-              <th>Bulan</th>
-              <th>Income</th>
-              <th>Expense</th>
-              <th>Balance</th>
-              <th>Confidence</th>
+            <tr class="border-b border-ink-900/10 dark:border-white/10 text-ink-400 dark:text-slate-400 font-extrabold uppercase text-[10px]">
+              <th class="py-2.5 px-3">Bulan</th>
+              <th class="py-2.5 px-3">Prediksi Income</th>
+              <th class="py-2.5 px-3">Prediksi Expense</th>
+              <th class="py-2.5 px-3">Saldo Netto</th>
+              <th class="py-2.5 px-3">Tingkat Kepercayaan</th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="(item, index) in data.forecast" :key="index">
-              <td>{{ item.label }}</td>
-              <td class="income">{{ formatCurrency(item.predictedIncome) }}</td>
-              <td class="expense">{{ formatCurrency(item.predictedExpense) }}</td>
-              <td :class="balanceClass(item.predictedBalance)">
+          <tbody class="divide-y divide-ink-900/5 dark:divide-white/5">
+            <tr v-for="(item, index) in data.forecast" :key="index" class="hover:bg-canvas/50 dark:hover:bg-ink-800/50 transition-colors">
+              <td class="py-3 px-3 font-extrabold text-ink-900 dark:text-white">{{ item.label }}</td>
+              <td class="py-3 px-3 font-display font-extrabold text-[#70a214] dark:text-lime">{{ formatCurrency(item.predictedIncome) }}</td>
+              <td class="py-3 px-3 font-display font-extrabold text-coral">{{ formatCurrency(item.predictedExpense) }}</td>
+              <td class="py-3 px-3 font-display font-extrabold" :class="item.predictedBalance >= 0 ? 'text-ink-900 dark:text-white' : 'text-coral'">
                 {{ formatCurrency(item.predictedBalance) }}
               </td>
-              <td>
-                <div class="confidence-bar">
-                  <div
-                    class="confidence-fill"
-                    :style="{ width: item.confidence + '%' }"
-                  ></div>
-                  <span class="confidence-text">{{ item.confidence }}%</span>
+              <td class="py-3 px-3 min-w-[140px]">
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 bg-canvas dark:bg-ink-800 rounded-full h-2 overflow-hidden">
+                    <div
+                      class="h-2 rounded-full bg-lime dark:bg-lime-deep transition-all duration-500"
+                      :style="{ width: item.confidence + '%' }"
+                    />
+                  </div>
+                  <span class="text-[10px] font-extrabold text-ink-500 dark:text-slate-400 w-8 text-right">{{ item.confidence }}%</span>
                 </div>
               </td>
             </tr>
@@ -87,8 +92,8 @@ const chartData = computed(() => ({
     {
       label: 'Predicted Expense',
       data: props.data.forecast.map((f) => f.predictedExpense),
-      borderColor: '#ef4444',
-      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      borderColor: '#ff8068',
+      backgroundColor: 'rgba(255, 128, 104, 0.15)',
       fill: '+1',
       tension: 0.4,
       pointRadius: 5,
@@ -98,7 +103,7 @@ const chartData = computed(() => ({
       label: 'Range Min',
       data: props.data.forecast.map((f) => f.range.min),
       borderColor: 'transparent',
-      backgroundColor: 'rgba(239, 68, 68, 0.05)',
+      backgroundColor: 'rgba(255, 128, 104, 0.05)',
       fill: false,
       pointRadius: 0,
     },
@@ -106,7 +111,7 @@ const chartData = computed(() => ({
       label: 'Range Max',
       data: props.data.forecast.map((f) => f.range.max),
       borderColor: 'transparent',
-      backgroundColor: 'rgba(239, 68, 68, 0.05)',
+      backgroundColor: 'rgba(255, 128, 104, 0.05)',
       fill: '-1',
       pointRadius: 0,
     },
@@ -121,6 +126,11 @@ const chartOptions = computed(() => ({
       display: false,
     },
     tooltip: {
+      backgroundColor: '#0c131d',
+      titleFont: { size: 12 },
+      bodyFont: { size: 11 },
+      padding: 10,
+      cornerRadius: 8,
       callbacks: {
         label: (context: any) => {
           const dataIndex = context.dataIndex
@@ -128,9 +138,9 @@ const chartOptions = computed(() => ({
 
           if (context.datasetIndex === 0) {
             return [
-              `Expense: ${formatCurrency(item.predictedExpense)}`,
-              `Range: ${formatCurrency(item.range.min)} - ${formatCurrency(item.range.max)}`,
-              `Confidence: ${item.confidence}%`,
+              `Pengeluaran: ${formatCurrency(item.predictedExpense)}`,
+              `Rentang: ${formatCurrency(item.range.min)} - ${formatCurrency(item.range.max)}`,
+              `Tingkat Kepercayaan: ${item.confidence}%`,
             ]
           }
           return ''
@@ -142,23 +152,22 @@ const chartOptions = computed(() => ({
     y: {
       beginAtZero: true,
       ticks: {
+        font: { size: 11 },
+        color: '#94a3b8',
         callback: (value: any) => formatCurrencyShort(value),
       },
       grid: {
-        color: 'rgba(0, 0, 0, 0.05)',
+        color: 'rgba(255, 255, 255, 0.05)',
       },
     },
     x: {
+      ticks: { font: { size: 11 }, color: '#94a3b8' },
       grid: {
         display: false,
       },
     },
   },
 }))
-
-function balanceClass(balance: number): string {
-  return balance >= 0 ? 'balance-positive' : 'balance-negative'
-}
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('id-ID', {
@@ -178,198 +187,3 @@ function formatCurrencyShort(amount: number): string {
   return amount.toString()
 }
 </script>
-
-<style scoped>
-.forecast-chart {
-  padding: 1.5rem;
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-}
-
-.dark .forecast-chart {
-  background: #1f2937;
-}
-
-.chart-header {
-  margin-bottom: 1.5rem;
-}
-
-.chart-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 0.25rem 0;
-}
-
-.dark .chart-title {
-  color: #f3f4f6;
-}
-
-.chart-subtitle {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-.dark .chart-subtitle {
-  color: #9ca3af;
-}
-
-.alerts {
-  margin-bottom: 1.5rem;
-}
-
-.alert-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  margin-bottom: 0.75rem;
-  background-color: #fef3c7;
-  color: #92400e;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.dark .alert-item {
-  background-color: #78350f;
-  color: #fef3c7;
-}
-
-.alert-icon {
-  font-size: 1.25rem;
-}
-
-.alert-item p {
-  margin: 0;
-}
-
-.chart-container {
-  height: 300px;
-  margin-bottom: 1.5rem;
-}
-
-.forecast-table {
-  margin-top: 1.5rem;
-}
-
-.table-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 1rem 0;
-}
-
-.dark .table-title {
-  color: #f3f4f6;
-}
-
-.table-responsive {
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-thead {
-  background-color: #f9fafb;
-}
-
-.dark thead {
-  background-color: #111827;
-}
-
-th {
-  padding: 0.75rem 1rem;
-  text-align: left;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #6b7280;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.dark th {
-  color: #9ca3af;
-  border-bottom-color: #374151;
-}
-
-td {
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  color: #111827;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.dark td {
-  color: #f3f4f6;
-  border-bottom-color: #374151;
-}
-
-.income {
-  color: #10b981;
-  font-weight: 600;
-}
-
-.expense {
-  color: #ef4444;
-  font-weight: 600;
-}
-
-.balance-positive {
-  color: #10b981;
-  font-weight: 700;
-}
-
-.balance-negative {
-  color: #ef4444;
-  font-weight: 700;
-}
-
-.confidence-bar {
-  position: relative;
-  width: 100%;
-  height: 1.5rem;
-  background-color: #e5e7eb;
-  border-radius: 0.25rem;
-  overflow: hidden;
-}
-
-.dark .confidence-bar {
-  background-color: #374151;
-}
-
-.confidence-fill {
-  height: 100%;
-  background: linear-gradient(to right, #3b82f6, #10b981);
-  transition: width 0.5s ease;
-}
-
-.confidence-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.dark .confidence-text {
-  color: #f3f4f6;
-}
-
-@media (max-width: 640px) {
-  .chart-container {
-    height: 250px;
-  }
-
-  th,
-  td {
-    padding: 0.5rem;
-    font-size: 0.75rem;
-  }
-}
-</style>

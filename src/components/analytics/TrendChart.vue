@@ -1,43 +1,60 @@
 <template>
-  <div class="trend-chart">
-    <div class="chart-header">
-      <h3 class="chart-title">📊 Income vs Expense Trend</h3>
-      <div class="chart-controls">
-        <select v-model="granularity" class="granularity-select">
-          <option value="day">Harian</option>
-          <option value="week">Mingguan</option>
-          <option value="month">Bulanan</option>
-          <option value="year">Tahunan</option>
-        </select>
+  <div class="p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft space-y-5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <h3 class="font-display text-base font-extrabold text-ink-900 dark:text-white flex items-center gap-2">
+        <span>📊</span>
+        <span>Tren Pemasukan vs Pengeluaran</span>
+      </h3>
+
+      <!-- Granularity Selector Pills -->
+      <div class="inline-flex p-1 rounded-2xl bg-canvas dark:bg-ink-800 border border-ink-900/5 dark:border-white/5 text-xs font-bold">
+        <button
+          v-for="opt in [
+            { value: 'day', label: 'Harian' },
+            { value: 'week', label: 'Mingguan' },
+            { value: 'month', label: 'Bulanan' },
+            { value: 'year', label: 'Tahunan' },
+          ]"
+          :key="opt.value"
+          @click="granularity = opt.value as any"
+          class="px-3 py-1.5 rounded-xl transition-all"
+          :class="granularity === opt.value ? 'bg-surface dark:bg-ink-900 text-ink-900 dark:text-white shadow-soft font-extrabold' : 'text-ink-500 dark:text-slate-400 hover:text-ink-900'"
+        >
+          {{ opt.label }}
+        </button>
       </div>
     </div>
 
-    <div class="summary-badges">
-      <div class="badge badge-income">
-        <p class="badge-label">Total Income</p>
-        <p class="badge-value">{{ formatCurrency(data.summary.totalIncome) }}</p>
+    <!-- Summary Badges Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="p-4 rounded-2xl bg-lime/15 dark:bg-lime/10 border border-lime/20 space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-900 dark:text-lime">Total Pemasukan</p>
+        <p class="font-display text-base font-extrabold text-[#70a214] dark:text-lime truncate">{{ formatCurrency(data.summary.totalIncome) }}</p>
       </div>
-      <div class="badge badge-expense">
-        <p class="badge-label">Total Expense</p>
-        <p class="badge-value">{{ formatCurrency(data.summary.totalExpense) }}</p>
+
+      <div class="p-4 rounded-2xl bg-coral/15 dark:bg-coral/10 border border-coral/20 space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-coral">Total Pengeluaran</p>
+        <p class="font-display text-base font-extrabold text-coral truncate">{{ formatCurrency(data.summary.totalExpense) }}</p>
       </div>
-      <div class="badge badge-trend">
-        <p class="badge-label">Trend</p>
-        <p class="badge-value">
+
+      <div class="p-4 rounded-2xl bg-canvas/70 dark:bg-ink-800/70 border border-ink-900/5 dark:border-white/5 space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">Arah Tren</p>
+        <p class="font-display text-base font-extrabold text-ink-900 dark:text-white truncate">
           {{ trendIcon }} {{ trendText }}
-          <span class="trend-percentage">({{ formatTrendPercentage }})</span>
+          <span class="text-xs text-ink-500 dark:text-slate-400 font-bold ml-1">({{ formatTrendPercentage }})</span>
         </p>
       </div>
     </div>
 
-    <div class="chart-container">
+    <!-- Line Chart Container -->
+    <div class="h-64 sm:h-80">
       <Line :data="chartData" :options="chartOptions" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -68,21 +85,23 @@ const chartData = computed(() => ({
   labels: props.data.periods.map((p) => formatPeriodLabel(p.period)),
   datasets: [
     {
-      label: 'Income',
+      label: 'Pemasukan',
       data: props.data.periods.map((p) => p.income),
-      borderColor: '#10b981',
-      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      borderColor: '#70a214',
+      backgroundColor: 'rgba(200, 241, 109, 0.2)',
       tension: 0.4,
+      borderWidth: 2.5,
       fill: false,
       pointRadius: 4,
       pointHoverRadius: 6,
     },
     {
-      label: 'Expense',
+      label: 'Pengeluaran',
       data: props.data.periods.map((p) => p.expense),
-      borderColor: '#ef4444',
-      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      borderColor: '#ff8068',
+      backgroundColor: 'rgba(255, 128, 104, 0.15)',
       tension: 0.4,
+      borderWidth: 2.5,
       fill: false,
       pointRadius: 4,
       pointHoverRadius: 6,
@@ -100,13 +119,19 @@ const chartOptions = computed(() => ({
   plugins: {
     legend: {
       position: 'bottom' as const,
+      labels: { boxWidth: 12, padding: 16, font: { size: 11 } }
     },
     tooltip: {
+      backgroundColor: '#0c131d',
+      titleFont: { size: 12 },
+      bodyFont: { size: 11 },
+      padding: 10,
+      cornerRadius: 8,
       callbacks: {
         label: (context: any) => {
           const label = context.dataset.label || ''
           const value = formatCurrency(context.parsed.y)
-          return `${label}: ${value}`
+          return ` ${label}: ${value}`
         },
       },
     },
@@ -115,13 +140,16 @@ const chartOptions = computed(() => ({
     y: {
       beginAtZero: true,
       ticks: {
+        font: { size: 11 },
+        color: '#94a3b8',
         callback: (value: any) => formatCurrencyShort(value),
       },
       grid: {
-        color: 'rgba(0, 0, 0, 0.05)',
+        color: 'rgba(255, 255, 255, 0.05)',
       },
     },
     x: {
+      ticks: { font: { size: 11 }, color: '#94a3b8' },
       grid: {
         display: false,
       },
@@ -196,146 +224,7 @@ function formatCurrencyShort(amount: number): string {
   return amount.toString()
 }
 
-// Watch granularity changes
-import { watch } from 'vue'
 watch(granularity, (newValue) => {
   emit('update:granularity', newValue)
 })
 </script>
-
-<style scoped>
-.trend-chart {
-  padding: 1.5rem;
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-}
-
-.dark .trend-chart {
-  background: #1f2937;
-}
-
-.chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.chart-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
-
-.dark .chart-title {
-  color: #f3f4f6;
-}
-
-.granularity-select {
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  background-color: white;
-  color: #111827;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.dark .granularity-select {
-  background-color: #374151;
-  border-color: #4b5563;
-  color: #f3f4f6;
-}
-
-.summary-badges {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.badge {
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border-left: 4px solid;
-}
-
-.badge-income {
-  background-color: #d1fae5;
-  border-left-color: #10b981;
-}
-
-.dark .badge-income {
-  background-color: #065f46;
-}
-
-.badge-expense {
-  background-color: #fee2e2;
-  border-left-color: #ef4444;
-}
-
-.dark .badge-expense {
-  background-color: #7f1d1d;
-}
-
-.badge-trend {
-  background-color: #dbeafe;
-  border-left-color: #3b82f6;
-}
-
-.dark .badge-trend {
-  background-color: #1e3a8a;
-}
-
-.badge-label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin: 0 0 0.25rem 0;
-}
-
-.dark .badge-label {
-  color: #9ca3af;
-}
-
-.badge-value {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
-
-.dark .badge-value {
-  color: #f3f4f6;
-}
-
-.trend-percentage {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.dark .trend-percentage {
-  color: #9ca3af;
-}
-
-.chart-container {
-  height: 350px;
-}
-
-@media (max-width: 640px) {
-  .chart-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-
-  .summary-badges {
-    grid-template-columns: 1fr;
-  }
-
-  .chart-container {
-    height: 300px;
-  }
-}
-</style>

@@ -1,89 +1,94 @@
 <template>
-  <div class="category-insight-card">
-    <div class="card-header" :style="{ borderLeftColor: insight.categoryColor }">
-      <div class="header-left">
-        <span class="category-icon">{{ insight.categoryIcon }}</span>
+  <div class="space-y-4">
+    <!-- Header Hero Card -->
+    <div class="p-5 rounded-2xl bg-canvas/80 dark:bg-ink-800/80 border border-ink-900/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-sm"
+          :style="{ backgroundColor: (insight.categoryColor || '#70a214') + '25' }"
+        >
+          {{ insight.categoryIcon }}
+        </div>
         <div>
-          <h3 class="category-name">{{ insight.categoryName }}</h3>
-          <p class="transaction-count">{{ insight.currentMonth.transactionCount }} transaksi</p>
+          <h3 class="font-display text-lg font-extrabold text-ink-900 dark:text-white">{{ insight.categoryName }}</h3>
+          <p class="text-xs font-medium text-ink-500 dark:text-slate-400">{{ insight.currentMonth.transactionCount }} transaksi bulan ini</p>
         </div>
       </div>
-      <div class="header-right">
-        <p class="current-amount">{{ formatCurrency(insight.currentMonth.amount) }}</p>
+      <div class="text-left sm:text-right">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">Total Terpakai</p>
+        <p class="font-display text-2xl font-extrabold text-ink-900 dark:text-white">{{ formatCurrency(insight.currentMonth.amount) }}</p>
       </div>
     </div>
 
-    <!-- Anomaly Alert -->
-    <div v-if="insight.anomaly.detected" class="anomaly-alert" :class="`severity-${insight.anomaly.severity}`">
-      <span class="anomaly-icon">{{ insight.anomaly.direction === 'spike' ? '⬆️' : '⬇️' }}</span>
+    <!-- Anomaly Alert Pill -->
+    <div v-if="insight.anomaly.detected" class="p-4 rounded-2xl flex items-center gap-3 text-xs font-bold" :class="insight.anomaly.direction === 'spike' ? 'bg-coral/15 border border-coral/20 text-coral' : 'bg-lime/20 border border-lime/30 text-ink-900 dark:text-lime'">
+      <span class="text-lg">{{ insight.anomaly.direction === 'spike' ? '⬆️' : '⬇️' }}</span>
       <p>
-        <strong>{{ insight.anomaly.direction === 'spike' ? 'Naik' : 'Turun' }}</strong>
-        {{ Math.abs(insight.anomaly.percentageFromMean).toFixed(0) }}% dari rata-rata
-        (Z-score: {{ insight.anomaly.zScore }})
+        Anomali Terdeteksi: Pengeluaran <strong class="font-extrabold">{{ insight.anomaly.direction === 'spike' ? 'Naik' : 'Turun' }} {{ Math.abs(insight.anomaly.percentageFromMean).toFixed(0) }}%</strong> dari rata-rata biasanya.
       </p>
     </div>
 
-    <!-- Comparisons -->
-    <div class="comparisons">
-      <div class="comparison-item">
-        <p class="comparison-label">vs Bulan Lalu</p>
-        <p class="comparison-value" :class="changeClass(insight.comparison.prevMonth.change)">
+    <!-- Month Comparisons Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="p-4 rounded-2xl bg-canvas/60 dark:bg-ink-800/60 border border-ink-900/5 dark:border-white/5 space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">vs Bulan Lalu</p>
+        <p class="font-display text-base font-extrabold" :class="insight.comparison.prevMonth.change > 0 ? 'text-coral' : 'text-[#70a214] dark:text-lime'">
           {{ formatChange(insight.comparison.prevMonth.change) }}
         </p>
       </div>
-      <div class="comparison-item">
-        <p class="comparison-label">vs Rata-rata 3 Bulan</p>
-        <p class="comparison-value" :class="changeClass(insight.comparison.threeMonthAvg.change)">
+      <div class="p-4 rounded-2xl bg-canvas/60 dark:bg-ink-800/60 border border-ink-900/5 dark:border-white/5 space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">vs Rata-rata 3 Bulan</p>
+        <p class="font-display text-base font-extrabold" :class="insight.comparison.threeMonthAvg.change > 0 ? 'text-coral' : 'text-[#70a214] dark:text-lime'">
           {{ formatChange(insight.comparison.threeMonthAvg.change) }}
         </p>
       </div>
     </div>
 
-    <!-- Patterns -->
-    <div v-if="insight.patterns.peakDay" class="patterns">
-      <h4 class="section-title">🔍 Pola Pengeluaran</h4>
-      <div class="pattern-grid">
-        <div class="pattern-item">
-          <span class="pattern-icon">📅</span>
-          <div>
-            <p class="pattern-label">Hari Puncak</p>
-            <p class="pattern-value">{{ insight.patterns.peakDay }}</p>
-            <p class="pattern-detail">Rata-rata {{ formatCurrency(insight.patterns.peakDayAvg) }}</p>
-          </div>
-        </div>
+    <!-- Pola Pengeluaran & Peak Day -->
+    <div v-if="insight.patterns.peakDay" class="p-4 rounded-2xl bg-canvas/60 dark:bg-ink-800/60 border border-ink-900/5 dark:border-white/5 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl bg-lime/25 text-ink-900 dark:text-lime flex items-center justify-center text-lg flex-shrink-0">
+        📅
+      </div>
+      <div>
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">Hari Puncak Belanja</p>
+        <p class="font-display text-xs font-extrabold text-ink-900 dark:text-white mt-0.5">
+          {{ insight.patterns.peakDay }} • Rata-rata {{ formatCurrency(insight.patterns.peakDayAvg) }}
+        </p>
       </div>
     </div>
 
-    <!-- Top Merchants -->
-    <div v-if="insight.patterns.topMerchants.length > 0" class="top-merchants">
-      <h4 class="section-title">🏆 Top Merchants</h4>
-      <div class="merchant-list">
+    <!-- Top Merchants List -->
+    <div v-if="insight.patterns.topMerchants.length > 0" class="space-y-2 pt-1">
+      <h4 class="text-xs font-extrabold uppercase tracking-wider text-ink-500 dark:text-slate-400">🏆 Top Tempat Transaksi (Merchants)</h4>
+      <div class="space-y-2">
         <div
           v-for="(merchant, index) in insight.patterns.topMerchants.slice(0, 3)"
           :key="index"
-          class="merchant-item"
+          class="flex items-center gap-3 p-3 rounded-2xl bg-canvas/60 dark:bg-ink-800/60 border border-ink-900/5 dark:border-white/5"
         >
-          <span class="merchant-rank">#{{ index + 1 }}</span>
-          <div class="merchant-info">
-            <p class="merchant-name">{{ merchant.name }}</p>
-            <p class="merchant-stats">{{ merchant.count }}x • {{ formatCurrency(merchant.total) }}</p>
+          <span class="w-6 h-6 rounded-xl bg-lime/25 text-ink-900 dark:text-lime font-display text-xs font-extrabold flex items-center justify-center flex-shrink-0">
+            #{{ index + 1 }}
+          </span>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-extrabold text-ink-900 dark:text-white truncate">{{ merchant.name }}</p>
+            <p class="text-[10px] font-bold text-ink-400 dark:text-slate-400">{{ merchant.count }}x transaksi</p>
           </div>
+          <span class="font-display text-xs font-extrabold text-ink-900 dark:text-white flex-shrink-0">{{ formatCurrency(merchant.total) }}</span>
         </div>
       </div>
     </div>
 
     <!-- Recommendations -->
-    <div v-if="insight.recommendations.length > 0" class="recommendations">
-      <h4 class="section-title">💡 Rekomendasi</h4>
+    <div v-if="insight.recommendations.length > 0" class="space-y-2 pt-2 border-t border-ink-900/5 dark:border-white/5">
+      <h4 class="text-xs font-extrabold uppercase tracking-wider text-ink-500 dark:text-slate-400">💡 Rekomendasi Finansial</h4>
       <div
         v-for="(rec, index) in insight.recommendations"
         :key="index"
-        class="recommendation-item"
-        :class="`priority-${rec.priority}`"
+        class="p-4 rounded-2xl bg-lime/15 border border-lime/20 space-y-1 text-xs text-ink-900 dark:text-white"
       >
-        <p class="rec-action">{{ rec.action }}</p>
-        <p class="rec-impact">{{ rec.impact }}</p>
-        <ul v-if="rec.tips && rec.tips.length > 0" class="rec-tips">
+        <p class="font-extrabold text-ink-900 dark:text-lime">{{ rec.action }}</p>
+        <p class="text-[11px] font-medium text-ink-500 dark:text-slate-300">{{ rec.impact }}</p>
+        <ul v-if="rec.tips && rec.tips.length > 0" class="list-disc list-inside space-y-0.5 text-[11px] font-medium text-ink-500 dark:text-slate-400 pt-1">
           <li v-for="(tip, tipIndex) in rec.tips" :key="tipIndex">{{ tip }}</li>
         </ul>
       </div>
@@ -113,366 +118,4 @@ function formatChange(change: number): string {
   const prefix = change > 0 ? '+' : ''
   return `${prefix}${change.toFixed(1)}%`
 }
-
-function changeClass(change: number): string {
-  if (change > 10) return 'change-up'
-  if (change < -10) return 'change-down'
-  return 'change-neutral'
-}
 </script>
-
-<style scoped>
-.category-insight-card {
-  padding: 1.5rem;
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  border-left: 4px solid transparent;
-}
-
-.dark .category-insight-card {
-  background: #1f2937;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.dark .card-header {
-  border-bottom-color: #374151;
-}
-
-.header-left {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.category-icon {
-  font-size: 2.5rem;
-}
-
-.category-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
-
-.dark .category-name {
-  color: #f3f4f6;
-}
-
-.transaction-count {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0.25rem 0 0 0;
-}
-
-.dark .transaction-count {
-  color: #9ca3af;
-}
-
-.current-amount {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
-
-.dark .current-amount {
-  color: #f3f4f6;
-}
-
-.anomaly-alert {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.severity-high {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
-.dark .severity-high {
-  background-color: #7f1d1d;
-  color: #fee2e2;
-}
-
-.severity-medium {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.dark .severity-medium {
-  background-color: #78350f;
-  color: #fef3c7;
-}
-
-.anomaly-icon {
-  font-size: 1.5rem;
-}
-
-.anomaly-alert p {
-  margin: 0;
-}
-
-.comparisons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.comparison-item {
-  padding: 0.75rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-  text-align: center;
-}
-
-.dark .comparison-item {
-  background-color: #111827;
-}
-
-.comparison-label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin: 0 0 0.25rem 0;
-}
-
-.dark .comparison-label {
-  color: #9ca3af;
-}
-
-.comparison-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.change-up {
-  color: #ef4444;
-}
-
-.change-down {
-  color: #10b981;
-}
-
-.change-neutral {
-  color: #6b7280;
-}
-
-.section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 0.75rem 0;
-}
-
-.dark .section-title {
-  color: #f3f4f6;
-}
-
-.patterns {
-  margin-bottom: 1rem;
-}
-
-.pattern-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.pattern-item {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-}
-
-.dark .pattern-item {
-  background-color: #111827;
-}
-
-.pattern-icon {
-  font-size: 1.5rem;
-}
-
-.pattern-label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-.dark .pattern-label {
-  color: #9ca3af;
-}
-
-.pattern-value {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0.25rem 0;
-}
-
-.dark .pattern-value {
-  color: #f3f4f6;
-}
-
-.pattern-detail {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-.dark .pattern-detail {
-  color: #9ca3af;
-}
-
-.top-merchants {
-  margin-bottom: 1rem;
-}
-
-.merchant-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.merchant-item {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  padding: 0.75rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-}
-
-.dark .merchant-item {
-  background-color: #111827;
-}
-
-.merchant-rank {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #f59e0b;
-  min-width: 2rem;
-}
-
-.merchant-info {
-  flex: 1;
-}
-
-.merchant-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.dark .merchant-name {
-  color: #f3f4f6;
-}
-
-.merchant-stats {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin: 0.25rem 0 0 0;
-}
-
-.dark .merchant-stats {
-  color: #9ca3af;
-}
-
-.recommendations {
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.dark .recommendations {
-  border-top-color: #374151;
-}
-
-.recommendation-item {
-  padding: 1rem;
-  margin-bottom: 0.75rem;
-  border-radius: 0.5rem;
-  border-left: 3px solid;
-}
-
-.priority-high {
-  background-color: #fee2e2;
-  border-left-color: #ef4444;
-  color: #991b1b;
-}
-
-.dark .priority-high {
-  background-color: #7f1d1d;
-  color: #fee2e2;
-}
-
-.priority-medium {
-  background-color: #fef3c7;
-  border-left-color: #f59e0b;
-  color: #92400e;
-}
-
-.dark .priority-medium {
-  background-color: #78350f;
-  color: #fef3c7;
-}
-
-.priority-alert {
-  background-color: #fed7aa;
-  border-left-color: #f97316;
-  color: #7c2d12;
-}
-
-.dark .priority-alert {
-  background-color: #7c2d12;
-  color: #fed7aa;
-}
-
-.rec-action {
-  font-weight: 600;
-  margin: 0 0 0.25rem 0;
-}
-
-.rec-impact {
-  font-size: 0.875rem;
-  margin: 0 0 0.5rem 0;
-}
-
-.rec-tips {
-  margin: 0.5rem 0 0 0;
-  padding-left: 1.25rem;
-  font-size: 0.875rem;
-}
-
-.rec-tips li {
-  margin-bottom: 0.25rem;
-}
-
-@media (max-width: 640px) {
-  .comparisons {
-    grid-template-columns: 1fr;
-  }
-
-  .header-left {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-</style>

@@ -1,61 +1,64 @@
 <template>
-  <div class="analytics-view">
-    <div class="page-header">
-      <h1 class="page-title">📊 Analytics & Insights</h1>
-      <p class="page-subtitle">Analisis mendalam tentang keuangan Anda</p>
+  <div class="space-y-6 pb-20 lg:pb-0 animate-fade-in">
+    <div class="flex flex-col gap-1">
+      <h1 class="font-display text-2xl font-extrabold text-ink-900 dark:text-white flex items-center gap-2">
+        <span>📊</span>
+        <span>Analytics & Insights</span>
+      </h1>
+      <p class="text-xs font-medium text-ink-500 dark:text-slate-400">Analisis mendalam & kecerdasan keuangan Anda</p>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-      <p>Memuat data analytics...</p>
+    <div v-if="loading" class="flex flex-col items-center justify-center min-h-[300px] gap-3">
+      <div class="w-10 h-10 border-3 border-lime border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-ink-500 dark:text-slate-400">Memuat data analytics...</p>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="error-container">
-      <p class="error-message">❌ {{ error }}</p>
-      <button @click="loadAllAnalytics" class="retry-button">Coba Lagi</button>
+    <div v-else-if="error" class="p-6 rounded-3xl bg-coral/10 border border-coral/20 text-center space-y-3">
+      <p class="text-sm font-bold text-coral">❌ {{ error }}</p>
+      <button @click="loadAllAnalytics" class="px-4 py-2 rounded-2xl bg-coral text-white font-extrabold text-xs shadow-md active:scale-95 transition-all">Coba Lagi</button>
     </div>
 
     <!-- Content -->
-    <div v-else class="analytics-content">
+    <div v-else class="space-y-6">
       <!-- Budget Alerts Section -->
-      <section v-if="budgetAlerts && budgetAlerts.length > 0" class="analytics-section">
-        <h2 class="section-title">🎯 Budget Alerts</h2>
-        <div class="budget-alerts-grid">
+      <section v-if="budgetAlerts && budgetAlerts.length > 0" class="space-y-3">
+        <h2 class="font-display text-base font-extrabold text-ink-900 dark:text-white">🎯 Budget Alerts</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <BudgetAlertCard
             v-for="alert in priorityAlerts"
             :key="alert.budgetId"
             :alert="alert"
           />
         </div>
-        <div v-if="budgetAlerts.length > 3" class="show-more">
-          <button @click="showAllBudgets = !showAllBudgets" class="show-more-button">
+        <div v-if="budgetAlerts.length > 3" class="text-center pt-2">
+          <button @click="showAllBudgets = !showAllBudgets" class="px-5 py-2.5 rounded-2xl bg-canvas dark:bg-ink-800 text-ink-900 dark:text-white font-extrabold text-xs hover:bg-lime hover:text-ink-900 shadow-soft transition-all">
             {{ showAllBudgets ? 'Tampilkan Lebih Sedikit' : `Tampilkan Semua (${budgetAlerts.length})` }}
           </button>
         </div>
       </section>
 
       <!-- Spending Velocity -->
-      <section v-if="spendingVelocity" class="analytics-section">
+      <section v-if="spendingVelocity">
         <SpendingVelocityWidget :velocity="spendingVelocity" />
       </section>
 
       <!-- Savings Rate History -->
-      <section v-if="savingsRateHistory" class="analytics-section">
+      <section v-if="savingsRateHistory">
         <SavingsRateChart :data="savingsRateHistory" />
       </section>
 
       <!-- Income vs Expense Trend -->
-      <section v-if="trendData" class="analytics-section">
+      <section v-if="trendData">
         <TrendChart :data="trendData" @update:granularity="handleGranularityChange" />
       </section>
 
       <!-- Category Insights Section -->
-      <section class="analytics-section">
-        <div class="section-header">
-          <h2 class="section-title">🔍 Category Insights</h2>
-          <select v-model="selectedCategoryId" class="category-select">
+      <section class="p-5 sm:p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h2 class="font-display text-base font-extrabold text-ink-900 dark:text-white">🔍 Category Insights</h2>
+          <select v-model="selectedCategoryId" class="px-4 py-2 rounded-2xl bg-canvas dark:bg-ink-800 border border-ink-900/10 dark:border-white/10 text-xs font-bold text-ink-900 dark:text-white focus:ring-lime/40">
             <option :value="null" disabled>Pilih Kategori</option>
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">
               {{ cat.icon }} {{ cat.name }}
@@ -63,18 +66,18 @@
           </select>
         </div>
         <CategoryInsightCard v-if="categoryInsights" :insight="categoryInsights" />
-        <div v-else class="empty-state">
-          <p>Pilih kategori untuk melihat insights</p>
+        <div v-else class="text-center py-8 bg-canvas/50 dark:bg-ink-800/50 rounded-2xl border border-ink-900/5">
+          <p class="text-xs font-bold text-ink-400 dark:text-slate-500">Pilih kategori di atas untuk melihat analisis komprehensif</p>
         </div>
       </section>
 
       <!-- Cashflow Forecast -->
-      <section v-if="cashflowForecast" class="analytics-section">
+      <section v-if="cashflowForecast">
         <ForecastChart :data="cashflowForecast" />
       </section>
 
       <!-- Recurring Patterns Detection -->
-      <section v-if="recurringPatterns" class="analytics-section">
+      <section v-if="recurringPatterns">
         <RecurringPatternsCard
           :data="recurringPatterns"
           @create-recurring="handleCreateRecurring"

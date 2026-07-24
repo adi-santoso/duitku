@@ -1,63 +1,66 @@
 <template>
-  <div class="velocity-widget" :class="`velocity-${velocity.velocity}`">
-    <div class="widget-header">
-      <h3 class="widget-title">
-        <span class="fire-icon">🔥</span>
-        Spending Velocity
+  <div class="p-6 rounded-3xl bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 shadow-soft space-y-5">
+    <div class="flex items-center justify-between">
+      <h3 class="font-display text-base font-extrabold text-ink-900 dark:text-white flex items-center gap-2">
+        <span>🔥</span>
+        <span>Kecepatan Pengeluaran (Velocity)</span>
       </h3>
-      <span class="velocity-badge" :class="`badge-${velocity.velocity}`">
+      <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider" :class="badgeClass">
         {{ velocityText }}
       </span>
     </div>
 
-    <div class="velocity-bar-container">
-      <div class="velocity-bar">
+    <!-- Progress Bar -->
+    <div class="space-y-1.5">
+      <div class="flex justify-between text-xs font-bold text-ink-500 dark:text-slate-400">
+        <span>Hari ke-{{ velocity.daysPassed }} dari {{ velocity.daysInMonth }} hari</span>
+        <span class="font-display font-extrabold text-ink-900 dark:text-white tabular-nums">{{ progressPercentage.toFixed(0) }}% Bulan Berjalan</span>
+      </div>
+      <div class="w-full h-3 rounded-full bg-canvas dark:bg-ink-800 overflow-hidden p-0.5">
         <div
-          class="velocity-progress"
-          :style="{ width: `${progressPercentage}%`, backgroundColor: velocityColor }"
-        ></div>
-      </div>
-      <span class="velocity-percentage">{{ progressPercentage.toFixed(0) }}%</span>
-    </div>
-
-    <div class="velocity-stats">
-      <div class="stat-item">
-        <p class="stat-label">Rata-rata per hari</p>
-        <p class="stat-value">{{ formatCurrency(velocity.dailyRate) }}</p>
-      </div>
-
-      <div class="stat-item">
-        <p class="stat-label">Terpakai ({{ velocity.daysPassed }} hari)</p>
-        <p class="stat-value">{{ formatCurrency(velocity.currentSpent) }}</p>
-      </div>
-
-      <div class="stat-item">
-        <p class="stat-label">Proyeksi akhir bulan</p>
-        <p class="stat-value projected">{{ formatCurrency(velocity.projectedTotal) }}</p>
+          class="h-full rounded-full transition-all duration-700"
+          :class="velocity.velocity === 'fast' ? 'bg-coral' : velocity.velocity === 'slow' ? 'bg-lime dark:bg-lime-deep' : 'bg-violet'"
+          :style="{ width: `${progressPercentage}%` }"
+        />
       </div>
     </div>
 
-    <div v-if="velocity.isOverpacing" class="warning-message">
-      <span class="warning-icon">⚠️</span>
+    <!-- Stats Grid Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="p-4 rounded-2xl bg-canvas/70 dark:bg-ink-800/70 border border-ink-900/5 dark:border-white/5 space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">Rata-rata / Hari</p>
+        <p class="font-display text-sm font-extrabold text-ink-900 dark:text-white truncate">{{ formatCurrency(velocity.dailyRate) }}</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-canvas/70 dark:bg-ink-800/70 border border-ink-900/5 dark:border-white/5 space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">Terpakai ({{ velocity.daysPassed }}hr)</p>
+        <p class="font-display text-sm font-extrabold text-ink-900 dark:text-white truncate">{{ formatCurrency(velocity.currentSpent) }}</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-canvas/70 dark:bg-ink-800/70 border border-ink-900/5 dark:border-white/5 space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-ink-400 dark:text-slate-400">Proyeksi Akhir Bulan</p>
+        <p class="font-display text-sm font-extrabold text-violet dark:text-lime truncate">{{ formatCurrency(velocity.projectedTotal) }}</p>
+      </div>
+    </div>
+
+    <!-- Status Message Pill -->
+    <div v-if="velocity.isOverpacing" class="p-4 rounded-2xl bg-coral/15 border border-coral/20 flex items-center gap-3 text-xs text-coral font-bold">
+      <span class="text-base">⚠️</span>
       <p>
-        Pengeluaran
-        <strong>{{ Math.abs(velocity.percentageVsHistorical).toFixed(0) }}% lebih cepat</strong>
-        dari biasanya ({{ velocity.daysLeft }} hari tersisa)
+        Pengeluaran <strong class="font-extrabold">{{ Math.abs(velocity.percentageVsHistorical).toFixed(0) }}% lebih cepat</strong> dari biasanya. Sisa {{ velocity.daysLeft }} hari lagi!
       </p>
     </div>
 
-    <div v-else-if="velocity.percentageVsHistorical < -20" class="success-message">
-      <span class="success-icon">✅</span>
+    <div v-else-if="velocity.percentageVsHistorical < -20" class="p-4 rounded-2xl bg-lime/20 border border-lime/30 flex items-center gap-3 text-xs text-ink-900 dark:text-lime font-bold">
+      <span class="text-base">✅</span>
       <p>
-        Pengeluaran
-        <strong>{{ Math.abs(velocity.percentageVsHistorical).toFixed(0) }}% lebih hemat</strong>
-        dari biasanya!
+        Hebat! Pengeluaran <strong class="font-extrabold">{{ Math.abs(velocity.percentageVsHistorical).toFixed(0) }}% lebih hemat</strong> dari ritme biasanya!
       </p>
     </div>
 
-    <div v-else class="neutral-message">
-      <span class="neutral-icon">📊</span>
-      <p>Pengeluaran dalam batas normal</p>
+    <div v-else class="p-4 rounded-2xl bg-canvas dark:bg-ink-800 border border-ink-900/5 dark:border-white/5 flex items-center gap-3 text-xs text-ink-500 dark:text-slate-400 font-bold">
+      <span class="text-base">📊</span>
+      <p>Laju pengeluaran keuangan Anda berjalan stabil dalam batas normal.</p>
     </div>
   </div>
 </template>
@@ -75,22 +78,22 @@ const props = defineProps<Props>()
 const velocityText = computed(() => {
   switch (props.velocity.velocity) {
     case 'fast':
-      return 'Cepat'
+      return 'Laju Cepat'
     case 'slow':
-      return 'Lambat'
+      return 'Laju Hemat'
     default:
-      return 'Normal'
+      return 'Laju Normal'
   }
 })
 
-const velocityColor = computed(() => {
+const badgeClass = computed(() => {
   switch (props.velocity.velocity) {
     case 'fast':
-      return '#ef4444'
+      return 'bg-coral/20 text-coral'
     case 'slow':
-      return '#10b981'
+      return 'bg-lime/20 text-ink-900 dark:text-lime'
     default:
-      return '#3b82f6'
+      return 'bg-canvas dark:bg-ink-800 text-ink-500 dark:text-slate-400'
   }
 })
 
@@ -108,202 +111,3 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 </script>
-
-<style scoped>
-.velocity-widget {
-  padding: 1.5rem;
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-}
-
-.dark .velocity-widget {
-  background: #1f2937;
-}
-
-.widget-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.widget-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
-
-.dark .widget-title {
-  color: #f3f4f6;
-}
-
-.fire-icon {
-  font-size: 1.5rem;
-}
-
-.velocity-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: white;
-}
-
-.badge-fast {
-  background-color: #ef4444;
-}
-
-.badge-slow {
-  background-color: #10b981;
-}
-
-.badge-normal {
-  background-color: #3b82f6;
-}
-
-.velocity-bar-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.velocity-bar {
-  flex: 1;
-  height: 0.75rem;
-  background-color: #e5e7eb;
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.dark .velocity-bar {
-  background-color: #374151;
-}
-
-.velocity-progress {
-  height: 100%;
-  border-radius: 9999px;
-  transition: width 0.5s ease, background-color 0.3s ease;
-}
-
-.velocity-percentage {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #374151;
-  min-width: 3rem;
-  text-align: right;
-}
-
-.dark .velocity-percentage {
-  color: #f3f4f6;
-}
-
-.velocity-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.stat-item {
-  padding: 0.75rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-}
-
-.dark .stat-item {
-  background-color: #111827;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin: 0 0 0.25rem 0;
-}
-
-.dark .stat-label {
-  color: #9ca3af;
-}
-
-.stat-value {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
-
-.dark .stat-value {
-  color: #f3f4f6;
-}
-
-.stat-value.projected {
-  color: #3b82f6;
-}
-
-.warning-message,
-.success-message,
-.neutral-message {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.warning-message {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.dark .warning-message {
-  background-color: #78350f;
-  color: #fef3c7;
-}
-
-.success-message {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
-.dark .success-message {
-  background-color: #065f46;
-  color: #d1fae5;
-}
-
-.neutral-message {
-  background-color: #dbeafe;
-  color: #1e40af;
-}
-
-.dark .neutral-message {
-  background-color: #1e3a8a;
-  color: #dbeafe;
-}
-
-.warning-icon,
-.success-icon,
-.neutral-icon {
-  font-size: 1.25rem;
-  flex-shrink: 0;
-}
-
-.warning-message p,
-.success-message p,
-.neutral-message p {
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* Mobile responsive */
-@media (max-width: 640px) {
-  .velocity-stats {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
