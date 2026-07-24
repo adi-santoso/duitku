@@ -1,135 +1,112 @@
-# 💰 DuitKu - Personal Finance Manager
+# 💰 DuitKu v2.0 - Modern Personal Finance Manager
 
-Aplikasi pencatatan keuangan personal yang modern dan mudah digunakan, dibangun dengan Vue.js 3 dan Tailwind CSS.
+Aplikasi pencatatan dan analisis keuangan personal yang modern, intuitif, dan estetis, dibangun menggunakan **Vue.js 3**, **Tailwind CSS**, dan skema desain **Fresh UI System**.
 
-## ✨ Fitur
+![UI Theme](https://img.shields.io/badge/Theme-Fresh%20Lime%20%26%20Coral-c8f16d?style=for-the-badge)
+![Vue 3](https://img.shields.io/badge/Vue.js%203-Composition%20API-4fc08d?style=for-the-badge)
+![PWA Ready](https://img.shields.io/badge/PWA-Installable-blue?style=for-the-badge)
 
-- ✅ Pencatatan pemasukan & pengeluaran
-- ✅ Kategorisasi transaksi (default + custom)
-- ✅ Dashboard interaktif dengan summary
-- ✅ Laporan dan perbandingan bulanan
-- ✅ Upload foto struk (compressed)
-- ✅ Transaksi berulang
-- ✅ Anggaran per kategori + budget forecast
-- ✅ Target tabungan (savings goals) dengan kontribusi berkala
-- ✅ Multi-user (owner + staff)
-- ✅ CSV import & export JSON
-- ✅ Dark mode
-- ✅ Mobile-first responsive design
-- ✅ PWA (installable, offline indicator)
+---
+
+## ✨ Fitur Utama (v2.0 Overhaul)
+
+### 🎨 1. Design System & Estetika Premium (Fresh UI)
+- **Skema Warna Kurasi**: Palette *Ink Canvas* (`#0c131d`), *Fresh Lime Accent* (`#c8f16d` / `#70a214`), *Soft Coral Accent* (`#ff8068`), dan kartu `bg-surface`.
+- **Typography Modern**: Penggunaan font display **Manrope** (`font-display font-extrabold`) untuk visualisasi angka nominal yang sangat mudah dibaca.
+- **Eleva 3D & Mikro-Animasi**: Bayangan melayang `shadow-soft` & `shadow-float`, efek *hover lift* `hover:-translate-y-1`, zoom ikon `group-hover:scale-110`, serta transisi *fade-in* yang halus.
+
+---
+
+### 💳 2. Pengelolaan Transaksi Interaktif (`/transactions`)
+- **Pencatatan & Filter Cepat**: Filter tipe transaksi (*Semua*, *Pemasukan*, *Pengeluaran*), bar pencarian modern, dan pemilih rentang tanggal.
+- **Header Tanggal Sticky**: Kelompok tanggal bergaya *backdrop-blur* `rounded-2xl`.
+- **Creative Hero Detail Modal**: Modal detail transaksi dengan Banner Card Hero (Lime untuk Pemasukan, Coral untuk Pengeluaran), kartu pratinjau foto struk, dan grid spesifikasi transaksi.
+- **Interactive Spreadsheet View Mode**: Mode tampilan tabel data grid seperti Excel/Spreadsheet lengkap dengan **Toolbar Rumus `fx SUMMARY(Transactions)`**, kolom indeks baris `#`, badge kategori berikon, *zebra striping*, dan *hover highlight*.
+
+---
+
+### 📊 3. Laporan Keuangan Total (`/reports`)
+- **Hero Banner Arus Kas Asimetris**: Banner kas utama dengan nominal Saldo Netto raksasa, indikator kesehatan kas (*✓ Surplus Sehat* vs *⚠️ Defisit*), dan **Visual Progress Bar Rasio Tabungan** terintegrasi.
+- **Leaderboard Pengeluaran Terbesar**: Peringkat kategori pengeluaran (#1, #2, #3...) dengan badge ranking, avatar icon melayang, dan progress fill animasi.
+- **Donut Chart Cutout Label**: Grafik lingkaran dengan **Label Nominal Tengah** (`TOTAL TERPAKAI`).
+- **Grid Kebiasaan & Pola Belanja**: Insight rata-rata harian, *Hari Terboros dengan Icon Api 🔥*, histogram intensitas per hari (Senin-Minggu), dan distribusi waktu.
+- **Performance Timeline & Showcase Tahunan**: Perbandingan bulanan berkala dan kartu evaluasi tahunan.
+
+---
+
+### 📈 4. Modul Analitik & Insights Inteligensi (`/analytics`)
+- **🎯 BudgetAlertCard**: Meteran progress melingkar SVG `stroke-width="10"` dengan warna dinamis (Lime/Yellow/Coral) & rekomendasi *Sisa Anggaran per Hari*.
+- **🔥 SpendingVelocityWidget**: Pengukur kecepatan pengeluaran real-time (*Laju Hemat*, *Laju Cepat*, *Laju Normal*) dengan 3 mini stat card dan pesan peringatan otomatis.
+- **📈 SavingsRateChart**: Timeline rasio tabungan dengan area fill *Lime* & garis benchmark target *Coral*.
+- **📊 TrendChart**: Grafik tren Pemasukan vs Pengeluaran dengan switcher granulasi (*Harian*, *Mingguan*, *Bulanan*, *Tahunan*).
+- **🔍 CategoryInsightCard**: Wawasan kategori mendalam dengan deteksi anomali (*Spike/Drop*) & leaderboard tempat belanja (*Top Merchants*).
+- **🔮 ForecastChart**: Prediksi arus kas {{ N }} bulan ke depan lengkap dengan progress bar *Confidence Score*.
+- **🔄 RecurringPatternsCard**: Auto-detect transaksi rutin bulanan/mingguan dengan satu-klik CTA `✅ Jadikan Transaksi Berulang`.
+
+---
 
 ## 🚀 Tech Stack
 
-- **Framework**: Vue 3 (Composition API)
-- **Styling**: Tailwind CSS
+- **Framework**: Vue 3 (Composition API, `<script setup>`)
+- **Styling**: Tailwind CSS + Custom Design Tokens (Ink, Lime, Coral, Canvas, Surface)
 - **Routing**: Vue Router 4
-- **Charts**: Chart.js + vue-chartjs
-- **Image Compression**: browser-image-compression
-- **Build Tool**: Vite
-- **Backend**: [DuitKu API](../duitku-api) (Express + Drizzle + Neon Postgres)
-- **Auth**: Custom JWT (Bearer token)
-- **Deployment**: Vercel
+- **Charts**: Chart.js 4 + `vue-chartjs`
+- **Image Compression**: `browser-image-compression`
+- **Build Tool**: Vite 5
+- **Backend API**: Express.js + Drizzle ORM + PostgreSQL (Neon)
+- **PWA**: `vite-plugin-pwa` (Installable, Service Worker precache)
 
-## 📦 Installation
+---
+
+## 📦 Instalasi & Penggunaan
 
 ```bash
-# Install dependencies
+# 1. Clone repository & install dependencies
 npm install
 
-# Configure environment
+# 2. Konfigurasi Environment Variable
 cp .env.example .env
-# Edit .env: set VITE_API_URL to your backend URL
+# Set VITE_API_URL ke backend API (e.g. http://localhost:3000/api)
 
-# Run development server
+# 3. Jalankan server Development
 npm run dev
 
-# Build for production
+# 4. Build untuk Production
 npm run build
 
-# Preview production build
+# 5. Preview hasil build
 npm run preview
 ```
 
-## 🔧 Environment Variables
+---
 
-| Variable | Description |
-|---|---|
-| `VITE_API_URL` | Base URL of the DuitKu API (e.g. `http://localhost:3000/api` or `https://duitku-api.vercel.app/api`) |
-
-## 🔐 Authentication
-
-User membuat akun owner via halaman Register, lalu owner bisa membuat akun staff dari halaman Team. Staff & owner berbagi data yang sama (data milik owner).
-
-JWT disimpan di `localStorage` dan dikirim sebagai `Authorization: Bearer <token>` header oleh `src/utils/api.js`.
-
-## 📂 Project Structure
+## 📂 Struktur Proyek
 
 ```
 src/
-├── assets/styles/      # Global CSS
+├── assets/styles/      # Design system CSS & custom utility tokens
 ├── components/
-│   ├── budget/
-│   ├── category/
-│   ├── chart/
-│   ├── common/
-│   ├── layout/
-│   ├── pwa/
-│   └── transaction/
-├── composables/        # Vue composables (auth, transactions, budgets, dll)
-├── utils/
-│   ├── api.js          # HTTP client untuk backend
-│   ├── dateHelpers.js
-│   ├── formatters.js
-│   ├── exportHelpers.js
-│   └── importData.js
-├── views/              # Halaman per route
-├── router/             # Vue Router config
+│   ├── analytics/      # Widget analitik (BudgetAlert, Velocity, Forecast, dll)
+│   ├── budget/         # Komponen manajemen anggaran
+│   ├── category/       # Modal & chip kategori
+│   ├── common/         # Base UI (BaseSelect, EmptyState, SkeletonCard)
+│   ├── layout/         # Header & Navbar navigasi
+│   ├── pwa/            # Toast update PWA & indikator offline
+│   └── transaction/    # Detail Modal, Filter Modal, Spreadsheet Table
+├── composables/        # Vue composables (useAnalytics, useTransactions, dll)
+├── utils/              # Helper formatters, date helpers, export/import
+├── views/              # Halaman per route (Dashboard, Transactions, Reports, Analytics)
+├── router/             # Vue Router configuration
 ├── App.vue
 └── main.js
 ```
 
-## 🗄️ Data
+---
 
-Tidak ada database di sisi frontend. Semua data diakses melalui REST API backend (`VITE_API_URL`). Backend menggunakan PostgreSQL (Neon) sebagai datastore tunggal.
+## 📄 Lisensi
 
-## 🚢 Deployment ke Vercel
-
-### Via GitHub
-
-1. Push code ke GitHub
-2. Import project di [Vercel](https://vercel.com)
-3. Vercel auto-detect Vite config
-4. Set environment variable `VITE_API_URL`
-5. Deploy
-
-### Via Vercel CLI
-
-```bash
-npm i -g vercel
-vercel
-vercel --prod
-```
-
-## 📝 Development Guidelines
-
-Lihat `assistant.md` (assistant.md) untuk:
-- Code style guidelines
-- Naming conventions
-- Component structure
-- Git commit conventions
-- Testing checklist
-
-## 🔮 Future Enhancements
-
-- [ ] Budget alerts & notifications
-- [ ] Receipt OCR
-- [ ] AI-powered categorization
-- [ ] Financial insights (advanced)
-
-## 📄 License
-
-MIT License - feel free to use for personal projects
+MIT License - Bebas digunakan untuk proyek personal & komersial.
 
 ---
 
-Made with ❤️ using Vue.js & Tailwind CSS
+Made with ❤️ using Vue 3, Tailwind CSS & Fresh UI System
