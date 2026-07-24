@@ -3,37 +3,37 @@
     <!-- Search & View Toggle -->
     <div class="flex items-center gap-3">
       <div class="relative flex-1">
-        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
         </svg>
         <input
           v-model="searchQuery"
           type="text"
           placeholder="Cari transaksi... (coba: '50k', 'januari', nama kategori)"
-          class="input pl-10 h-10 text-sm"
+          class="input h-12 !rounded-2xl !bg-surface/90 dark:!bg-ink-900/90 !border-ink-900/10 dark:!border-white/10 pl-11 pr-10 text-sm font-bold text-ink-900 dark:text-white focus:ring-lime/40"
           @keyup.enter="fetchTransactions"
         />
         <button
           v-if="searchQuery"
           @click="searchQuery = ''"
-          class="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          class="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-xl hover:bg-canvas dark:hover:bg-ink-800 text-ink-400 hover:text-ink-900 dark:hover:text-white transition-colors"
         >
-          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
         <!-- Search hint badge -->
-        <div v-if="searchQuery && paginatedTransactions.length > 0" class="absolute -bottom-6 left-0 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium animate-fade-in">
+        <div v-if="searchQuery && paginatedTransactions.length > 0" class="absolute -bottom-6 left-1 text-[11px] text-lime-deep dark:text-lime font-extrabold animate-fade-in">
           ✓ {{ paginatedTransactions.length }} hasil ditemukan
         </div>
       </div>
 
       <!-- View Mode Toggle -->
-      <div class="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1">
+      <div class="flex items-center bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 rounded-2xl p-1 shadow-soft">
         <button
           @click="viewMode = 'default'"
-          class="p-2 rounded-lg transition-all"
-          :class="viewMode === 'default' ? 'bg-primary-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'"
+          class="p-2.5 rounded-xl transition-all"
+          :class="viewMode === 'default' ? 'bg-ink-900 text-white dark:bg-lime dark:text-ink-900 shadow-sm font-extrabold' : 'text-ink-500 hover:text-ink-900 dark:text-slate-400 dark:hover:text-white'"
           title="Tampilan Default"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -42,8 +42,8 @@
         </button>
         <button
           @click="viewMode = 'compact'"
-          class="p-2 rounded-lg transition-all"
-          :class="viewMode === 'compact' ? 'bg-primary-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'"
+          class="p-2.5 rounded-xl transition-all"
+          :class="viewMode === 'compact' ? 'bg-ink-900 text-white dark:bg-lime dark:text-ink-900 shadow-sm font-extrabold' : 'text-ink-500 hover:text-ink-900 dark:text-slate-400 dark:hover:text-white'"
           title="Tampilan Compact"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -52,8 +52,8 @@
         </button>
         <button
           @click="viewMode = 'spreadsheet'"
-          class="p-2 rounded-lg transition-all"
-          :class="viewMode === 'spreadsheet' ? 'bg-primary-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'"
+          class="p-2.5 rounded-xl transition-all"
+          :class="viewMode === 'spreadsheet' ? 'bg-ink-900 text-white dark:bg-lime dark:text-ink-900 shadow-sm font-extrabold' : 'text-ink-500 hover:text-ink-900 dark:text-slate-400 dark:hover:text-white'"
           title="Tampilan Spreadsheet"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -64,64 +64,66 @@
     </div>
 
     <!-- Filters Row -->
-    <div class="flex items-center gap-2">
-      <!-- Type Filter -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+      <!-- Type Filter Pills -->
       <button
         v-for="filter in typeFilters"
         :key="filter.value"
         @click="filterType = filter.value"
-        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
+        class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap flex-shrink-0"
         :class="filterType === filter.value
-          ? filter.activeClass
-          : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'"
+          ? 'bg-ink-900 text-white dark:bg-lime dark:text-ink-900 shadow-sm'
+          : 'bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 text-ink-600 dark:text-slate-300 hover:border-ink-900/20'"
       >
         {{ filter.label }}
       </button>
 
-      <div class="flex-1" />
+      <div class="flex-1 min-w-[8px]" />
 
       <!-- Filter Button -->
       <button
         @click="showFilterModal = true"
-        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
+        class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 flex-shrink-0 shadow-soft"
         :class="hasActiveFilterOptions
-          ? 'bg-primary-500 text-white shadow-sm'
-          : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'"
+          ? 'bg-ink-900 text-white dark:bg-lime dark:text-ink-900'
+          : 'bg-surface dark:bg-ink-900 border border-ink-900/10 dark:border-white/10 text-ink-700 dark:text-slate-300 hover:border-lime'"
       >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
         </svg>
         <span>Filter</span>
-        <span v-if="activeFilterCount > 0" class="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] font-bold">
+        <span v-if="activeFilterCount > 0" class="px-1.5 py-0.5 rounded-full bg-lime text-ink-900 text-[10px] font-extrabold">
           {{ activeFilterCount }}
         </span>
       </button>
 
       <!-- Result count -->
-      <span class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
-        {{ totalTransactions }}
+      <span class="text-xs font-bold text-ink-500 dark:text-slate-400 hidden sm:block flex-shrink-0">
+        {{ totalTransactions }} transaksi
       </span>
     </div>
 
     <!-- Quick Actions -->
-    <div v-if="lastTransaction && !isLoading" class="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-500/10 dark:to-blue-500/10 border border-primary-200 dark:border-primary-500/20 animate-fade-in">
-      <svg class="w-5 h-5 text-primary-500 dark:text-primary-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-      </svg>
+    <div v-if="lastTransaction && !isLoading" class="flex items-center gap-3 p-3.5 rounded-2xl bg-lime/15 dark:bg-lime/10 border border-lime/25 animate-fade-in">
+      <div class="w-8 h-8 rounded-xl bg-lime/40 text-ink-900 flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+        </svg>
+      </div>
       <div class="flex-1 min-w-0">
-        <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Aksi Cepat</p>
-        <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-          Terakhir: {{ lastTransaction.category_name }} - Rp {{ Number(lastTransaction.amount).toLocaleString('id-ID') }}
+        <p class="text-xs font-extrabold text-ink-900 dark:text-white">Aksi Cepat Transaksi</p>
+        <p class="text-[11px] text-ink-500 dark:text-slate-400 truncate">
+          Terakhir: {{ lastTransaction.category_name }} · Rp {{ Number(lastTransaction.amount).toLocaleString('id-ID') }}
         </p>
       </div>
       <button
         @click="duplicateLastTransaction"
-        class="px-3 py-1.5 rounded-lg bg-primary-500 hover:bg-primary-600 text-white text-xs font-semibold transition-all shadow-sm hover:shadow active:scale-95 flex items-center gap-1.5 flex-shrink-0"
+        class="px-4 py-2 rounded-xl bg-lime text-ink-900 text-xs font-extrabold shadow-sm hover:bg-lime/90 active:scale-95 transition-all flex items-center gap-1.5 flex-shrink-0"
       >
         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
         </svg>
-        <span class="hidden sm:inline">Duplikat</span>
+        <span>Duplikat</span>
       </button>
     </div>
 
@@ -218,19 +220,19 @@
         <div class="hidden md:block space-y-6">
           <div v-for="group in groupedTransactions" :key="group.label" class="space-y-2">
             <!-- Sticky Date Header -->
-            <div class="sticky top-0 z-10 bg-slate-100/80 dark:bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+            <div class="sticky top-0 z-10 bg-surface/90 dark:bg-ink-900/90 backdrop-blur-md px-4.5 py-3 rounded-2xl border border-ink-900/10 dark:border-white/10 shadow-soft">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                  <span class="text-sm font-bold text-slate-900 dark:text-white">
+                  <span class="font-display text-sm font-extrabold text-ink-900 dark:text-white">
                     {{ group.label }}
                   </span>
-                  <span class="text-xs text-slate-400 dark:text-slate-500">
+                  <span class="text-xs text-ink-500 dark:text-slate-400 font-medium">
                     {{ group.transactions.length }} transaksi
                   </span>
                 </div>
                 <span
-                  class="text-sm font-semibold"
-                  :class="group.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
+                  class="text-sm font-extrabold font-display"
+                  :class="group.total >= 0 ? 'text-[#70a214] dark:text-lime' : 'text-coral'"
                 >
                   {{ group.total >= 0 ? '+' : '' }}{{ formatCurrency(Math.abs(group.total)) }}
                 </span>
@@ -240,45 +242,45 @@
             <!-- Transactions Table -->
             <div class="overflow-x-auto">
               <table class="w-full">
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody class="divide-y divide-ink-900/5 dark:divide-white/5">
                   <tr
                     v-for="transaction in group.transactions"
                     :key="transaction.id"
-                    class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                    class="group hover:bg-canvas dark:hover:bg-ink-800/80 transition-all duration-200 cursor-pointer rounded-2xl"
                     @click="viewTransaction(transaction)"
                   >
-                    <td class="py-3.5 pl-4">
+                    <td class="py-3.5 pl-4 rounded-l-2xl">
                       <div class="flex items-center gap-3">
                         <div
-                          class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-                          :style="{ backgroundColor: transaction.category_color + '18' }"
+                          class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-200"
+                          :style="{ backgroundColor: transaction.category_color + '25' }"
                         >
                           {{ transaction.category_icon }}
                         </div>
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ transaction.category_name }}</span>
+                        <span class="text-sm font-bold text-ink-900 dark:text-white">{{ transaction.category_name }}</span>
                       </div>
                     </td>
                     <td class="py-3.5">
                       <div class="flex items-center gap-2">
                         <button
                           @click.stop="togglePin(transaction.id)"
-                          class="flex-shrink-0 p-0.5 rounded transition-colors"
-                          :class="isPinned(transaction.id) ? 'text-amber-500' : 'text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100'"
+                          class="flex-shrink-0 p-1 rounded-xl transition-colors"
+                          :class="isPinned(transaction.id) ? 'text-amber-500' : 'text-ink-300 dark:text-slate-600 opacity-0 group-hover:opacity-100'"
                           :title="isPinned(transaction.id) ? 'Unpin' : 'Pin'"
                         >
-                          <svg class="w-3.5 h-3.5" :fill="isPinned(transaction.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <svg class="w-4 h-4" :fill="isPinned(transaction.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                           </svg>
                         </button>
-                        <span class="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[200px]">{{ transaction.description || '-' }}</span>
-                        <span v-for="tag in getTags(transaction.id)" :key="tag" class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 font-medium">#{{ tag }}</span>
-                        <span v-if="transaction.receipt_image" class="text-slate-400" title="Ada foto struk">
+                        <span class="text-xs font-medium text-ink-500 dark:text-slate-400 truncate max-w-[220px]">{{ transaction.description || '-' }}</span>
+                        <span v-for="tag in getTags(transaction.id)" :key="tag" class="text-[9px] px-2 py-0.5 rounded-full bg-violet/15 text-violet dark:text-lime font-extrabold">#{{ tag }}</span>
+                        <span v-if="transaction.receipt_image" class="text-ink-400" title="Ada foto struk">
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
                           </svg>
                         </span>
-                        <span v-if="transaction.is_recurring" class="text-slate-400" title="Transaksi berulang">
+                        <span v-if="transaction.is_recurring" class="text-ink-400" title="Transaksi berulang">
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
                           </svg>
@@ -287,18 +289,18 @@
                     </td>
                     <td class="py-3.5">
                       <span
-                        class="badge"
-                        :class="transaction.type === 'income' ? 'badge-green' : 'badge-red'"
+                        class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+                        :class="transaction.type === 'income' ? 'bg-lime/20 text-ink-900 dark:text-lime' : 'bg-coral/20 text-coral'"
                       >
                         {{ transaction.type === 'income' ? 'Masuk' : 'Keluar' }}
                       </span>
                     </td>
-                    <td class="py-3.5 text-right pr-4">
+                    <td class="py-3.5 text-right pr-4 rounded-r-2xl">
                       <span
-                        class="text-sm font-bold"
-                        :class="transaction.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
+                        class="font-display text-sm font-extrabold"
+                        :class="transaction.type === 'income' ? 'text-[#70a214] dark:text-lime' : 'text-ink-900 dark:text-white'"
                       >
-                        {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                        {{ transaction.type === 'income' ? '+' : '−' }} {{ formatCurrency(transaction.amount) }}
                       </span>
                     </td>
                   </tr>
@@ -309,22 +311,22 @@
         </div>
 
         <!-- Mobile Grouped List -->
-        <div class="md:hidden space-y-6">
+        <div class="md:hidden space-y-5">
           <div v-for="group in groupedTransactions" :key="group.label" class="space-y-2">
             <!-- Sticky Date Header (Mobile) -->
-            <div class="sticky top-0 z-10 bg-slate-100/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+            <div class="sticky top-0 z-10 bg-surface/90 dark:bg-ink-900/90 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-ink-900/10 dark:border-white/10 shadow-soft">
               <div class="flex items-center justify-between">
                 <div>
-                  <span class="text-sm font-bold text-slate-900 dark:text-white block">
+                  <span class="font-display text-xs font-extrabold text-ink-900 dark:text-white block">
                     {{ group.label }}
                   </span>
-                  <span class="text-[10px] text-slate-400 dark:text-slate-500">
+                  <span class="text-[10px] text-ink-500 dark:text-slate-400 font-medium">
                     {{ group.transactions.length }} transaksi
                   </span>
                 </div>
                 <span
-                  class="text-sm font-bold"
-                  :class="group.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
+                  class="font-display text-xs font-extrabold"
+                  :class="group.total >= 0 ? 'text-[#70a214] dark:text-lime' : 'text-coral'"
                 >
                   {{ group.total >= 0 ? '+' : '' }}{{ formatCurrency(Math.abs(group.total)) }}
                 </span>
@@ -332,7 +334,7 @@
             </div>
 
             <!-- Transactions List (Mobile) -->
-            <div class="space-y-1">
+            <div class="space-y-1.5">
               <SwipeableTransactionItem
                 v-for="(transaction, idx) in group.transactions"
                 :key="'m-' + transaction.id"
@@ -342,35 +344,35 @@
                 @click="viewTransaction(transaction)"
               >
                 <div
-                  class="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-slate-900 hover:shadow-sm transition-shadow"
+                  class="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-3 items-center p-3 rounded-2xl bg-surface dark:bg-ink-900 border border-ink-900/5 dark:border-white/5 hover:bg-canvas dark:hover:bg-ink-800 transition-colors group cursor-pointer"
                   :class="{ 'opacity-60 animate-pulse': transaction._optimistic }"
                 >
                   <div
-                    class="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-transform hover:scale-110"
-                    :style="{ backgroundColor: transaction.category_color + '18' }"
+                    class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-200"
+                    :style="{ backgroundColor: transaction.category_color + '25' }"
                   >
                     {{ transaction.category_icon }}
                   </div>
 
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{{ transaction.category_name }}</p>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-ink-900 dark:text-white truncate">{{ transaction.category_name }}</p>
                     <div class="flex items-center gap-1.5 mt-0.5">
-                      <p class="text-xs text-slate-400 dark:text-slate-500 truncate">
+                      <p class="text-[11px] text-ink-500 dark:text-slate-400 truncate">
                         <span v-if="transaction.description">{{ transaction.description }}</span>
                         <span v-else class="italic">Tidak ada deskripsi</span>
                       </p>
-                      <span v-for="tag in getTags(transaction.id)" :key="tag" class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 font-medium flex-shrink-0">#{{ tag }}</span>
+                      <span v-for="tag in getTags(transaction.id)" :key="tag" class="text-[9px] px-1.5 py-0.5 rounded-full bg-violet/15 text-violet dark:text-lime font-extrabold flex-shrink-0">#{{ tag }}</span>
                     </div>
                   </div>
 
                   <div class="text-right flex-shrink-0">
                     <p
-                      class="text-sm font-bold"
-                      :class="transaction.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
+                      class="font-display text-xs font-extrabold"
+                      :class="transaction.type === 'income' ? 'text-[#70a214] dark:text-lime' : 'text-ink-900 dark:text-white'"
                     >
-                      {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                      {{ transaction.type === 'income' ? '+' : '−' }} {{ formatCurrency(transaction.amount) }}
                     </p>
-                    <div class="flex items-center gap-1 justify-end mt-0.5 text-slate-400">
+                    <div class="flex items-center gap-1 justify-end mt-0.5 text-ink-400">
                       <svg v-if="transaction.receipt_image" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
@@ -470,58 +472,109 @@
 
       <!-- SPREADSHEET VIEW MODE -->
       <template v-if="!isLoading && paginatedTransactions.length > 0 && viewMode === 'spreadsheet'">
-        <div
-          ref="spreadsheetContainer"
-          class="spreadsheet-view overflow-x-auto"
-          :style="spreadsheetStyles"
-          @touchstart="handleTouchStart"
-          @touchmove="handleTouchMove"
-          @touchend="handleTouchEnd"
-        >
-          <table class="spreadsheet-table">
-            <thead class="spreadsheet-header">
-              <tr>
-                <th class="text-left">Tanggal</th>
-                <th class="text-left">Kategori</th>
-                <th class="text-left">Deskripsi</th>
-                <th class="text-left">Tipe</th>
-                <th class="text-right">Jumlah</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(transaction, index) in paginatedTransactions"
-                :key="'s-' + transaction.id"
-                :class="[
-                  index % 2 === 0 ? 'row-even' : 'row-odd',
-                  { 'opacity-60 animate-pulse': transaction._optimistic }
-                ]"
-                @click="viewTransaction(transaction)"
-              >
-                <td class="tabular-nums">{{ formatDate(transaction.transaction_date, 'short') }}</td>
-                <td>
-                  <span class="category-cell">
-                    <span class="category-icon">{{ transaction.category_icon }}</span>
-                    <span>{{ transaction.category_name }}</span>
-                  </span>
-                </td>
-                <td class="description-cell">{{ transaction.description || '-' }}</td>
-                <td>
-                  <span class="type-badge" :class="transaction.type === 'income' ? 'type-income' : 'type-expense'">
-                    {{ transaction.type === 'income' ? 'Masuk' : 'Keluar' }}
-                  </span>
-                </td>
-                <td class="text-right tabular-nums amount-cell" :class="transaction.type === 'income' ? 'amount-income' : 'amount-expense'">
-                  {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="rounded-3xl border border-ink-900/10 dark:border-white/10 bg-surface dark:bg-ink-900 shadow-float overflow-hidden">
+          <!-- Spreadsheet Formula & Status Header Bar -->
+          <div class="px-4 py-2.5 bg-canvas/80 dark:bg-ink-800/80 border-b border-ink-900/10 dark:border-white/10 flex items-center justify-between text-xs gap-3">
+            <div class="flex items-center gap-2 font-mono">
+              <span class="px-2 py-0.5 rounded-lg bg-ink-900 text-white dark:bg-lime dark:text-ink-900 font-extrabold text-[10px]">fx</span>
+              <span class="font-extrabold text-ink-900 dark:text-white text-[11px] truncate">SUMMARY(Transactions)</span>
+              <span class="text-ink-400 dark:text-slate-500 hidden sm:inline">| {{ paginatedTransactions.length }} baris terdaftar</span>
+            </div>
+
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="text-[11px] font-bold text-ink-500 dark:text-slate-400 hidden sm:inline">Skala Zoom:</span>
+              <div class="flex items-center bg-surface dark:bg-ink-900 rounded-xl p-0.5 border border-ink-900/10 dark:border-white/10">
+                <button
+                  @click="adjustZoom(-10)"
+                  class="w-6 h-6 rounded-lg text-ink-600 dark:text-slate-300 hover:bg-canvas dark:hover:bg-ink-800 flex items-center justify-center font-bold"
+                  title="Zoom Out"
+                >
+                  −
+                </button>
+                <button
+                  @click="resetZoom"
+                  class="px-2 text-[11px] font-extrabold text-ink-900 dark:text-lime"
+                  title="Reset Zoom"
+                >
+                  {{ zoomLevel }}%
+                </button>
+                <button
+                  @click="adjustZoom(10)"
+                  class="w-6 h-6 rounded-lg text-ink-600 dark:text-slate-300 hover:bg-canvas dark:hover:bg-ink-800 flex items-center justify-center font-bold"
+                  title="Zoom In"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spreadsheet Scrollable Table Grid -->
+          <div
+            ref="spreadsheetContainer"
+            class="spreadsheet-view overflow-x-auto"
+            :style="spreadsheetStyles"
+            @touchstart="handleTouchStart"
+            @touchmove="handleTouchMove"
+            @touchend="handleTouchEnd"
+          >
+            <table class="spreadsheet-table w-full">
+              <thead class="spreadsheet-header">
+                <tr>
+                  <th class="w-10 text-center !px-2">#</th>
+                  <th class="text-left">Tanggal</th>
+                  <th class="text-left">Kategori</th>
+                  <th class="text-left">Deskripsi</th>
+                  <th class="text-center">Tipe</th>
+                  <th class="text-right">Jumlah (Nominal)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(transaction, index) in paginatedTransactions"
+                  :key="'s-' + transaction.id"
+                  :class="[
+                    index % 2 === 0 ? 'row-even' : 'row-odd',
+                    { 'opacity-60 animate-pulse': transaction._optimistic }
+                  ]"
+                  @click="viewTransaction(transaction)"
+                >
+                  <td class="text-center font-mono text-[11px] text-ink-400 dark:text-slate-500 bg-canvas/40 dark:bg-ink-800/40 font-bold border-r border-ink-900/10 dark:border-white/10 select-none">
+                    {{ (currentPage - 1) * perPage + index + 1 }}
+                  </td>
+                  <td class="tabular-nums font-mono text-xs font-bold text-ink-900 dark:text-white">
+                    {{ formatDate(transaction.transaction_date, 'short') }}
+                  </td>
+                  <td>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-canvas dark:bg-ink-800 border border-ink-900/5 dark:border-white/5 font-extrabold text-xs text-ink-900 dark:text-white">
+                      <span>{{ transaction.category_icon }}</span>
+                      <span>{{ transaction.category_name }}</span>
+                    </span>
+                  </td>
+                  <td class="description-cell font-bold text-xs text-ink-600 dark:text-slate-300 max-w-[280px] truncate">
+                    <span>{{ transaction.description || '-' }}</span>
+                    <span v-for="tag in getTags(transaction.id)" :key="tag" class="ml-1 text-[9px] px-1.5 py-0.5 rounded-full bg-violet/15 text-violet dark:text-lime font-extrabold">#{{ tag }}</span>
+                  </td>
+                  <td class="text-center">
+                    <span
+                      class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider inline-block"
+                      :class="transaction.type === 'income' ? 'bg-lime/25 text-ink-900 dark:text-lime' : 'bg-coral/20 text-coral'"
+                    >
+                      {{ transaction.type === 'income' ? 'Masuk' : 'Keluar' }}
+                    </span>
+                  </td>
+                  <td class="text-right tabular-nums amount-cell font-display font-extrabold text-xs" :class="transaction.type === 'income' ? 'amount-income' : 'amount-expense'">
+                    {{ transaction.type === 'income' ? '+' : '−' }} {{ formatCurrency(transaction.amount) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Zoom Toast -->
         <transition name="toast">
-          <div v-if="showZoomToast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-slate-900 dark:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-2xl">
+          <div v-if="showZoomToast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-ink-900 dark:bg-lime text-white dark:text-ink-900 text-xs font-extrabold rounded-2xl shadow-float">
             🔍 Zoom {{ zoomLevel }}%
           </div>
         </transition>
@@ -529,8 +582,8 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="totalPages > 1" class="flex items-center justify-between">
-      <p class="text-xs text-slate-500 dark:text-slate-400">
+    <div v-if="totalPages > 1" class="flex items-center justify-between pt-2">
+      <p class="text-xs font-medium text-ink-500 dark:text-slate-400">
         {{ (currentPage - 1) * perPage + 1 }}-{{ Math.min(currentPage * perPage, totalTransactions) }} dari {{ totalTransactions }}
       </p>
 
@@ -538,7 +591,7 @@
         <button
           @click="currentPage = 1"
           :disabled="currentPage === 1"
-          class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          class="p-2 rounded-xl text-ink-500 dark:text-slate-400 hover:bg-canvas dark:hover:bg-ink-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           title="Halaman pertama"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -548,7 +601,7 @@
         <button
           @click="currentPage--"
           :disabled="currentPage === 1"
-          class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          class="p-2 rounded-xl text-ink-500 dark:text-slate-400 hover:bg-canvas dark:hover:bg-ink-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -559,20 +612,20 @@
           <button
             v-if="page !== '...'"
             @click="currentPage = page"
-            class="w-8 h-8 rounded-lg text-xs font-semibold transition-all"
+            class="w-8 h-8 rounded-xl text-xs font-extrabold transition-all"
             :class="currentPage === page
-              ? 'bg-primary-500 text-white shadow-sm shadow-primary-500/25'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800'"
+              ? 'bg-ink-900 text-white dark:bg-lime dark:text-ink-900 shadow-sm'
+              : 'text-ink-600 dark:text-slate-400 hover:bg-canvas dark:hover:bg-ink-800'"
           >
             {{ page }}
           </button>
-          <span v-else class="w-8 h-8 flex items-center justify-center text-xs text-slate-400">...</span>
+          <span v-else class="w-8 h-8 flex items-center justify-center text-xs text-ink-400">...</span>
         </template>
 
         <button
           @click="currentPage++"
           :disabled="currentPage === totalPages"
-          class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          class="p-2 rounded-xl text-ink-500 dark:text-slate-400 hover:bg-canvas dark:hover:bg-ink-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -581,7 +634,7 @@
         <button
           @click="currentPage = totalPages"
           :disabled="currentPage === totalPages"
-          class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          class="p-2 rounded-xl text-ink-500 dark:text-slate-400 hover:bg-canvas dark:hover:bg-ink-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           title="Halaman terakhir"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -591,7 +644,7 @@
       </div>
 
       <!-- Per page selector -->
-      <BaseSelect v-model="perPage" size="sm">
+      <BaseSelect v-model="perPage" size="sm" custom-class="!rounded-xl !bg-surface dark:!bg-ink-900 !border-ink-900/10 dark:!border-white/10 text-xs font-bold">
         <option :value="15">15/hal</option>
         <option :value="25">25/hal</option>
         <option :value="50">50/hal</option>
@@ -1161,7 +1214,7 @@ onMounted(async () => {
 
 /* Spreadsheet Mode Styles */
 .spreadsheet-view {
-  background: white;
+  background: transparent;
   border-radius: 0;
   overflow: auto;
   max-height: 70vh;
@@ -1171,50 +1224,43 @@ onMounted(async () => {
   touch-action: pan-x pan-y pinch-zoom;
 }
 
-.dark .spreadsheet-view {
-  background: rgb(15 23 42); /* slate-900 */
-}
-
 .spreadsheet-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  border: 1px solid rgb(226 232 240); /* slate-200 */
-}
-
-.dark .spreadsheet-table {
-  border-color: rgb(51 65 85); /* slate-700 */
+  border: none;
 }
 
 .spreadsheet-header {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgb(248 250 252); /* slate-50 */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--canvas-color, #f4f3ed);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .dark .spreadsheet-header {
-  background: rgb(30 41 59); /* slate-800 */
+  background: #182232;
 }
 
 .spreadsheet-header th {
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 800;
   text-transform: uppercase;
-  font-size: 0.85em;
-  letter-spacing: 0.05em;
-  color: rgb(71 85 105); /* slate-600 */
-  padding: calc(var(--spreadsheet-row-height, 36px) * 0.3) 12px;
-  border-right: 1px solid rgb(226 232 240); /* slate-200 */
-  border-bottom: 2px solid rgb(226 232 240);
+  font-size: 0.75em;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  padding: calc(var(--spreadsheet-row-height, 36px) * 0.28) 12px;
+  border-right: 1px solid rgba(22, 28, 45, 0.08);
+  border-bottom: 1px solid rgba(22, 28, 45, 0.1);
   white-space: nowrap;
   transition: padding 0.15s ease;
 }
 
 .dark .spreadsheet-header th {
-  color: rgb(148 163 184); /* slate-400 */
-  border-right-color: rgb(51 65 85); /* slate-700 */
-  border-bottom-color: rgb(51 65 85);
+  color: #94a3b8;
+  border-right-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
 .spreadsheet-header th:last-child {
@@ -1223,38 +1269,38 @@ onMounted(async () => {
 
 .spreadsheet-table tbody tr {
   cursor: pointer;
-  transition: background-color 0.1s ease;
+  transition: background-color 0.15s ease;
 }
 
 .spreadsheet-table tbody tr:hover {
-  background: rgb(241 245 249) !important; /* slate-100 */
+  background: rgba(200, 241, 109, 0.2) !important;
 }
 
 .dark .spreadsheet-table tbody tr:hover {
-  background: rgb(30 41 59) !important; /* slate-800 */
+  background: rgba(200, 241, 109, 0.12) !important;
 }
 
 .spreadsheet-table tbody tr.row-even {
-  background: white;
+  background: var(--surface-color, #ffffff);
 }
 
 .spreadsheet-table tbody tr.row-odd {
-  background: rgb(248 250 252); /* slate-50 */
+  background: var(--canvas-color, #f8f7f2);
 }
 
 .dark .spreadsheet-table tbody tr.row-even {
-  background: rgb(15 23 42); /* slate-900 */
+  background: #0f172a;
 }
 
 .dark .spreadsheet-table tbody tr.row-odd {
-  background: rgb(15 23 42 / 0.5);
+  background: #141f30;
 }
 
 .spreadsheet-table tbody td {
-  padding: calc(var(--spreadsheet-row-height, 36px) * 0.15) 12px;
-  border-right: 1px solid rgb(226 232 240); /* slate-200 */
-  border-bottom: 1px solid rgb(226 232 240);
-  color: rgb(51 65 85); /* slate-700 */
+  padding: calc(var(--spreadsheet-row-height, 36px) * 0.18) 12px;
+  border-right: 1px solid rgba(22, 28, 45, 0.06);
+  border-bottom: 1px solid rgba(22, 28, 45, 0.06);
+  color: #161c2d;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1262,13 +1308,29 @@ onMounted(async () => {
 }
 
 .dark .spreadsheet-table tbody td {
-  color: rgb(203 213 225); /* slate-300 */
-  border-right-color: rgb(51 65 85); /* slate-700 */
-  border-bottom-color: rgb(51 65 85);
+  color: #f8fafc;
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
 .spreadsheet-table tbody td:last-child {
   border-right: none;
+}
+
+.amount-income {
+  color: #70a214 !important;
+}
+
+.amount-expense {
+  color: #161c2d !important;
+}
+
+.dark .amount-income {
+  color: #c8f16d !important;
+}
+
+.dark .amount-expense {
+  color: #ffffff !important;
 }
 
 .category-cell {

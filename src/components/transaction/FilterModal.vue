@@ -5,13 +5,13 @@
     :show-close="true"
     @close="handleClose"
   >
-    <div class="space-y-5">
+    <div class="space-y-5 p-1">
       <!-- Category Filter -->
       <div>
-        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">
           Kategori
         </label>
-        <BaseSelect v-model="localFilters.category" size="sm" class="w-full">
+        <BaseSelect v-model="localFilters.category" size="sm" custom-class="w-full !rounded-2xl !bg-surface/80 dark:!bg-ink-800/80 !border-ink-900/10 dark:!border-white/10 text-xs font-bold">
           <option :value="null">Semua Kategori</option>
           <option v-for="cat in categories" :key="cat.id" :value="cat.id">
             {{ cat.icon }} {{ cat.name }}
@@ -21,10 +21,10 @@
 
       <!-- Month Filter -->
       <div>
-        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">
           Bulan
         </label>
-        <BaseSelect v-model="localFilters.month" size="sm" class="w-full">
+        <BaseSelect v-model="localFilters.month" size="sm" custom-class="w-full !rounded-2xl !bg-surface/80 dark:!bg-ink-800/80 !border-ink-900/10 dark:!border-white/10 text-xs font-bold">
           <option :value="null">Semua Bulan</option>
           <option v-for="m in availableMonths" :key="m.value" :value="m.value">
             {{ m.label }}
@@ -34,10 +34,10 @@
 
       <!-- Sort -->
       <div>
-        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">
           Urutkan
         </label>
-        <BaseSelect v-model="localFilters.sortBy" size="sm" class="w-full">
+        <BaseSelect v-model="localFilters.sortBy" size="sm" custom-class="w-full !rounded-2xl !bg-surface/80 dark:!bg-ink-800/80 !border-ink-900/10 dark:!border-white/10 text-xs font-bold">
           <option value="date_desc">Terbaru</option>
           <option value="date_asc">Terlama</option>
           <option value="amount_desc">Terbesar</option>
@@ -47,28 +47,28 @@
 
       <!-- Amount Range -->
       <div>
-        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">
+        <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 dark:text-slate-400 mb-2">
           Rentang Jumlah
         </label>
         <div class="flex items-center gap-2">
           <div class="relative flex-1">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Min</span>
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-extrabold text-ink-400">Min</span>
             <input
               v-model="localFilters.amountMin"
               type="number"
-              class="input h-10 text-sm pl-10 w-full"
+              class="input h-12 !rounded-2xl !bg-surface/80 dark:!bg-ink-800/80 !border-ink-900/10 dark:!border-white/10 text-xs font-bold pl-10 w-full"
               placeholder="0"
               min="0"
               step="10000"
             />
           </div>
-          <span class="text-xs text-slate-400">—</span>
+          <span class="text-xs text-ink-400 font-bold">—</span>
           <div class="relative flex-1">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Max</span>
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-extrabold text-ink-400">Max</span>
             <input
               v-model="localFilters.amountMax"
               type="number"
-              class="input h-10 text-sm pl-11 w-full"
+              class="input h-12 !rounded-2xl !bg-surface/80 dark:!bg-ink-800/80 !border-ink-900/10 dark:!border-white/10 text-xs font-bold pl-11 w-full"
               placeholder="∞"
               min="0"
               step="10000"
@@ -82,13 +82,13 @@
       <div class="flex items-center gap-3 py-3">
         <button
           @click="handleReset"
-          class="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          class="btn btn-secondary flex-1 h-12 !rounded-2xl font-extrabold text-xs"
         >
-          Reset
+          Reset Filter
         </button>
         <button
           @click="handleApply"
-          class="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-primary-500 hover:bg-primary-600 transition-colors shadow-sm"
+          class="flex-1 h-12 rounded-2xl font-extrabold text-xs bg-ink-900 text-white dark:bg-lime dark:text-ink-900 hover:opacity-90 active:scale-95 transition-all shadow-md"
         >
           Terapkan Filter
         </button>
